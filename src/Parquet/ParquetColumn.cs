@@ -42,6 +42,11 @@ namespace Parquet
       {
 
       }
+
+      public void Add(params T[] values)
+      {
+         base.Add(values);
+      }
    }
 
    /// <summary>
@@ -49,19 +54,20 @@ namespace Parquet
    /// </summary>
    public class ParquetColumn : IEquatable<ParquetColumn>
    {
+      private SchemaElement _schema;
+
       public ParquetColumn(string name, Type systemType)
       {
          Name = name ?? throw new ArgumentNullException(nameof(name));
-         //todo: ParquetRawType
-         Values = CreateValuesList(systemType);
-         //todo: SystemType
-         throw new NotImplementedException();
+         _schema = new SchemaElement(name);
+         Values = CreateValuesList(systemType, _schema);
+         SystemType = systemType;
       }
 
       internal ParquetColumn(string name, SchemaElement schema)
       {
          Name = name ?? throw new ArgumentNullException(nameof(name));
-         ParquetRawType = schema.Type.ToString();
+         _schema = schema ?? throw new ArgumentNullException(nameof(schema));
          Values = CreateValuesList(schema, out Type systemType);
          SystemType = systemType;
       }
@@ -79,12 +85,25 @@ namespace Parquet
       /// <summary>
       /// Parquet type as read from schema
       /// </summary>
-      public string ParquetRawType { get; internal set; }
+      public string ParquetRawType => _schema.Type.ToString();
+
+      internal TType Type => _schema.Type;
 
       /// <summary>
       /// List of values
       /// </summary>
       public IList Values { get; private set; }
+
+      internal SchemaElement Schema => _schema;
+
+      /// <summary>
+      /// Adds values
+      /// </summary>
+      /// <param name="values"></param>
+      public void Add(params object[] values)
+      {
+         Add(values);
+      }
 
       /// <summary>
       /// Merges values into this column from the passed column
@@ -194,9 +213,15 @@ namespace Parquet
          }
       }
 
-      internal static IList CreateValuesList(Type systemType)
+      private static IList CreateValuesList(Type systemType, SchemaElement schema)
       {
-         throw new NotImplementedException();
+         if (systemType == typeof(int))
+         {
+            schema.Type = TType.INT32;
+            return new List<int>();
+         }
+
+         throw new NotImplementedException($"type {systemType} not implemented");
       }
    }
 }
