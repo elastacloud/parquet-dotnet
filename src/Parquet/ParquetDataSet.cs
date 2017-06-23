@@ -89,19 +89,6 @@ namespace Parquet
       /// <summary>
       /// Returns total number of rows
       /// </summary>
-      public long Count => _columns.FirstOrDefault().Value.Values.Count;
+      public long Count => _columns.FirstOrDefault().Value.ValuesFinal.Count;
    }
-
-   /*public class ParquetRow
-   {
-      public ParquetRow(IEnumerable<object> row)
-      {
-                  
-      }
-      public Get()
-      {
-         foreach (var kv in source._columns)
-         {
-         }
-   }*/
 }

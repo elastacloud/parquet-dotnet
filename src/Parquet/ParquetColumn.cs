@@ -78,7 +78,8 @@ namespace Parquet
       {
          Name = name ?? throw new ArgumentNullException(nameof(name));
          _schema = new SchemaElement(name);
-         Values = CreateValuesList(systemType, _schema);
+         ValuesInitial = CreateValuesList(systemType, _schema);
+         ValuesInitial = CreateValuesList(systemType, _schema);
          SystemType = systemType;
       }
 
@@ -105,7 +106,7 @@ namespace Parquet
       /// <summary>
       /// Parquet type as read from schema
       /// </summary>
-      public string ParquetRawType => _schema.Type.ToString();
+      public string ParquetRawType { get; }
 
       internal TType Type => _schema.Type;
 

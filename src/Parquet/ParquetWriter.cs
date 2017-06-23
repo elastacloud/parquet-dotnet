@@ -96,11 +96,12 @@ namespace Parquet
          chunk.Meta_data.Codec = CompressionCodec.UNCOMPRESSED;   //todo: compression should be passed as parameter
          chunk.Meta_data.Data_page_offset = startPos;
 
-         _plainWriter.Write(_writer, column.Schema,
+         /*_plainWriter.Write(_writer, column.Schema,
             column.Values.OfType<object>().Skip((int)rowIdx).Take((int)groupSize).ToList()); //todo: heavy, must be rewritten
 
          long endPos = _output.Position;
          chunk.Meta_data.Total_compressed_size = chunk.Meta_data.Total_uncompressed_size = endPos - startPos;
+         */
 
          return chunk;
       }
