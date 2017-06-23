@@ -51,22 +51,6 @@ namespace Parquet
       }
    }
 
-   public class ParquetValueStructure
-   {
-      public ParquetValueStructure(IList uniqueValuesList, IList valuesList, List<int> indexes, List<int> definitions)
-      {
-         UniqueValuesList = uniqueValuesList;
-         ValuesList = valuesList;
-         Indexes = indexes;
-         Definitions = definitions;
-      }
-
-      public IList UniqueValuesList { get; private set; }
-      public IList ValuesList { get; private set; }
-      public List<int> Indexes { get; private set; }
-      public  List<int> Definitions { get; private set; }
-   }
-
    /// <summary>
    /// Represents a column
    /// </summary>
@@ -89,7 +73,7 @@ namespace Parquet
          ParquetRawType = schema.Type.ToString();
          (IList a, IList b) = CreateValuesList(schema, out Type systemType);
          ValuesInitial = a;
-         ValuesFinal = b;
+         Values = b;
          SystemType = systemType;
       }
 
@@ -110,11 +94,12 @@ namespace Parquet
 
       internal TType Type => _schema.Type;
 
+      internal IList ValuesInitial { get; private set; }
+
       /// <summary>
       /// List of values
       /// </summary>
-      public IList ValuesInitial { get; private set; }
-      public IList ValuesFinal { get; private set; }
+      public IList Values { get; private set; }
 
       internal SchemaElement Schema => _schema;
 
@@ -145,7 +130,7 @@ namespace Parquet
          //todo: if properly casted speed will increase
          foreach (var value in values)
          {
-            ValuesFinal.Add(value);
+            Values.Add(value);
          }
       }
 
@@ -157,7 +142,7 @@ namespace Parquet
           * 0  1 */
          if (parquetValues.UniqueValuesList == null)
          {
-            ValuesFinal = parquetValues.ValuesList;
+            Values = parquetValues.ValuesList;
             return;
          }
 
@@ -173,7 +158,7 @@ namespace Parquet
             }
             parquetValues.ValuesList.Add(null);
          }
-         ValuesFinal = parquetValues.ValuesList;
+         Values = parquetValues.ValuesList;
       }
 
       /// <summary>
@@ -266,4 +251,21 @@ namespace Parquet
          throw new NotImplementedException($"type {systemType} not implemented");
       }
    }
+
+   class ParquetValueStructure
+   {
+      public ParquetValueStructure(IList uniqueValuesList, IList valuesList, List<int> indexes, List<int> definitions)
+      {
+         UniqueValuesList = uniqueValuesList;
+         ValuesList = valuesList;
+         Indexes = indexes;
+         Definitions = definitions;
+      }
+
+      public IList UniqueValuesList { get; private set; }
+      public IList ValuesList { get; private set; }
+      public List<int> Indexes { get; private set; }
+      public List<int> Definitions { get; private set; }
+   }
+
 }

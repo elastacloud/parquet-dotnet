@@ -89,6 +89,6 @@ namespace Parquet
       /// <summary>
       /// Returns total number of rows
       /// </summary>
-      public long Count => _columns.FirstOrDefault().Value.ValuesFinal.Count;
+      public long Count => _columns.FirstOrDefault().Value.Values.Count;
    }
 }
