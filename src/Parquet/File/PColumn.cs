@@ -133,7 +133,8 @@ namespace Parquet.File
          List<int> indexesMod = new List<int>();
          indexesMod = indexes != null
             ? indexes.Take(ph.Data_page_header.Num_values).ToList()
-            : result.Values.Cast<bool>().Select(item => item ? 1 : 0).ToList();
+            : ((List<int?>)(result.Values)).Select(i => i.Value).ToList();
+            //: result.Values.Cast<bool>().Select(item => item ? 1 : 0).ToList();
 
 
          var definitionsMod = definitions != null
