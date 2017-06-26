@@ -7,6 +7,7 @@ using Type = System.Type;
 using NetBox.FileFormats;
 using System.Collections.Generic;
 using Xunit;
+using System;
 
 namespace Parquet.Test.Reader
 {
@@ -47,10 +48,43 @@ namespace Parquet.Test.Reader
             Assert.Equal(cc.Count, pc.Values.Count);
 
             //validate actual values
-
-            
-
+            Compare(pc, cc);   
          }
+      }
+
+      private void Compare(ParquetColumn pc, List<string> cc)
+      {
+         for(int i = 0; i < pc.Values.Count; i++)
+         {
+            //todo: this comparison needs to be improved, probably doesn't handle nulls etc.
+
+            object pv = pc.Values[i];
+            object cv = ChangeType(cc[i], pc.SystemType);
+
+            Assert.True(pv.Equals(cv),
+               $"expected {cv} but was {pv} in column {pc.Name}, value #{i}");
+         }
+      }
+
+      private object ChangeType(string v, Type t)
+      {
+         Type gt = null;
+
+         try
+         {
+            gt = t.GetGenericTypeDefinition();
+         }
+         catch(InvalidOperationException)
+         {
+            //when type is not generic
+         }
+
+         if (gt != null && gt == typeof(Nullable<>))
+         {
+            return Convert.ChangeType(v, t.GenericTypeArguments[0]);
+         }
+
+         return Convert.ChangeType(v, t);
       }
 
       private ParquetDataSet ReadParquet(string name)
