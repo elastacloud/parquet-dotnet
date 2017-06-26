@@ -56,10 +56,10 @@ namespace Parquet.Test.Reader
             typeof(int?),
             typeof(int?),
             typeof(int?),
-            typeof(int?),
+            typeof(long?),
             typeof(float?),
             typeof(double?),
-            typeof(DateTime?),
+            typeof(string),
             typeof(string),
             typeof(DateTime?));
       }
