@@ -42,6 +42,14 @@ namespace Parquet.Test.Reader
 
             //validate column type
             Assert.True(expectedColumnType == pc.SystemType, $"expected {expectedColumnType} for column {pc.Name} but found {pc.SystemType}");
+
+            //validate number of values
+            Assert.Equal(cc.Count, pc.Values.Count);
+
+            //validate actual values
+
+            
+
          }
       }
 
