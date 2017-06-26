@@ -99,11 +99,22 @@ namespace Parquet
             Num_values = column.Values.Count
          };
 
-         _thrift.Write(ph);
-         _writer.Write((int)0);
-         _plainWriter.Write(_writer, column.Schema, column.Values);
 
-         ph.Compressed_page_size = ph.Uncompressed_page_size = (int)(_output.Position - startPos);
+         using (var ms = new MemoryStream())
+         {
+            using (var columnWriter = new BinaryWriter(ms))
+            {
+               columnWriter.Write((int)0);   //definition levels
+               _plainWriter.Write(columnWriter, column.Schema, column.Values);
+
+               //
+
+               ph.Compressed_page_size = ph.Uncompressed_page_size = (int)ms.Length;
+               byte[] data = ms.ToArray();
+               _thrift.Write(ph);
+               _output.Write(data, 0, data.Length);
+            }
+         }
 
          chunk.Meta_data.Total_compressed_size = chunk.Meta_data.Total_uncompressed_size = _output.Position - startPos;
 
