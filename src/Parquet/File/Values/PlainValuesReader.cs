@@ -15,7 +15,7 @@ namespace Parquet.File.Values
    {
       private static readonly System.Text.Encoding UTF8 = System.Text.Encoding.UTF8;
 
-      public void Read(BinaryReader reader, SchemaElement schema, IList destination)
+      public void Read(BinaryReader reader, SchemaElement schema, IList destination, long maxValues)
       {
          long byteCount = reader.BaseStream.Length - reader.BaseStream.Position;
          byte[] data = reader.ReadBytes((int)byteCount);
@@ -23,7 +23,7 @@ namespace Parquet.File.Values
          switch (schema.Type)
          {
             case TType.BOOLEAN:
-               ReadPlainBoolean(data, 8, destination);
+               ReadPlainBoolean(data, maxValues, destination);
                break;
             case TType.INT32:
                ReadInt32(data, schema, destination);
@@ -43,13 +43,16 @@ namespace Parquet.File.Values
             case TType.BYTE_ARRAY:
                ReadByteArray(data, schema, destination);
                break;
+            case TType.FIXED_LEN_BYTE_ARRAY:
+               ReadFixedLenByteArray(data, schema, destination);
+               break;
             default:
                throw new NotImplementedException($"type {schema.Type} not implemented");
          }
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      private static void ReadPlainBoolean(byte[] data, int count, IList destination)
+      private static void ReadPlainBoolean(byte[] data, long count, IList destination)
       {
          int ibit = 0;
          int ibyte = 0;
@@ -126,6 +129,24 @@ namespace Parquet.File.Values
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      private static void ReadFixedLenByteArray(byte[] data, SchemaElement schema, IList destination)
+      {
+         // TODO: This is only used in Spark to store a decimal type we need to ensure we can use things 
+         // other than converted types for example, fixed length may be a SHA1
+         List<decimal?> destinationTyped = (List<decimal?>) destination;
+         for (int i = 0; i < data.Length; i += schema.Type_length)
+         {
+            if (schema.Converted_type != ConvertedType.DECIMAL) continue;
+            // go from data - decimal needs to be 16 bytes but not from Spark - variable fixed nonsense
+            byte[] dataNew = new byte[schema.Type_length];
+            Array.Copy(data, i, dataNew, 0, schema.Type_length);
+            long output = BitconverterExt.BinaryToUnscaledLong(dataNew);
+            decimal dc = BitconverterExt.ToDecimal(dataNew);
+            destinationTyped.Add(dc);
+         }
+      }
+
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       private static void ReadInt96(byte[] data, SchemaElement schema, IList destination)
       {
 #if !SPARK_TYPES
@@ -193,5 +214,62 @@ namespace Parquet.File.Values
          }
       }
 
+   }
+
+   public class BitconverterExt
+   {
+      public static byte[] GetBytes(decimal dec)
+      {
+         //Load four 32 bit integers from the Decimal.GetBits function 
+         Int32[] bits = decimal.GetBits(dec);
+         //Create a temporary list to hold the bytes 
+         List<byte> bytes = new List<byte>();
+         //iterate each 32 bit integer 
+         foreach (Int32 i in bits)
+         {
+            //add the bytes of the current 32bit integer 
+            //to the bytes list 
+            bytes.AddRange(BitConverter.GetBytes(i));
+         }
+         //return the bytes list as an array 
+         return bytes.ToArray();
+      }
+      public static decimal ToDecimal(byte[] bytes)
+      {
+         //make an array to convert back to int32's 
+         Int32[] bits = new Int32[4];
+         for (int i = 0; i <= 15; i += 4)
+         {
+            //convert every 4 bytes into an int32 
+            bits[i / 4] = BitConverter.ToInt32(bytes, i);
+         }
+         //Use the decimal's new constructor to 
+         //create an instance of decimal 
+         return new decimal(bits);
+      }
+
+      private static void PadToMultipleOf(ref byte[] src, int pad)
+      {
+         int len = (src.Length + pad - 1) / pad * pad;
+         Array.Resize(ref src, len);
+      }
+
+      public static long BinaryToUnscaledLong(byte[] input)
+      {
+         int start = 0;
+         int end = input.Length;
+
+         long unscaled = 0L;
+         int i = start;
+
+         while (i < end)
+         {
+            unscaled = (unscaled << 8) | (input[i] & 0xff);
+            i += 1;
+         }
+
+         int bits = 8 * (end - start);
+         return (unscaled << (64 - bits)) >> (64 - bits);
+      }
    }
 }
