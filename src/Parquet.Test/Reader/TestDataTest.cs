@@ -23,7 +23,7 @@ namespace Parquet.Test.Reader
       /// +---+--------+-----------+------------+-------+----------+---------+----------+-------------------------+----------+---------------------+
       /// </summary>
       [Fact]
-      public void Alltypes_plain()
+      public void Alltypes_plain_no_compression()
       {
          CompareFiles("alltypes_plain",
             typeof(int?),
@@ -35,6 +35,31 @@ namespace Parquet.Test.Reader
             typeof(float?),
             typeof(double?),
             typeof(string),
+            typeof(string),
+            typeof(DateTime?));
+      }
+
+      /// <summary>
+      /// +---+--------+-----------+------------+-------+----------+---------+----------+-------------------------+----------+---------------------+
+      /// |id |bool_col|tinyint_col|smallint_col|int_col|bigint_col|float_col|double_col|date_string_col          |string_col|timestamp_col        |
+      /// +---+--------+-----------+------------+-------+----------+---------+----------+-------------------------+----------+---------------------+
+      /// |0  |true    |0          |0           |0      |0         |0.0      |0.0       |[30 31 2F 30 31 2F 30 39]|[30]      |2009-01-01 00:00:00.0|
+      /// |1  |false   |1          |1           |1      |10        |1.1      |10.1      |[30 31 2F 30 31 2F 30 39]|[31]      |2009-01-01 00:01:00.0|
+      /// +---+--------+-----------+------------+-------+----------+---------+----------+-------------------------+----------+---------------------+
+      /// </summary>
+      [Fact]
+      public void Alltypes_dictionary_no_compression()
+      {
+         CompareFiles("alltypes_dictionary",
+            typeof(int?),
+            typeof(bool?),
+            typeof(int?),
+            typeof(int?),
+            typeof(int?),
+            typeof(int?),
+            typeof(float?),
+            typeof(double?),
+            typeof(DateTime?),
             typeof(string),
             typeof(DateTime?));
       }
