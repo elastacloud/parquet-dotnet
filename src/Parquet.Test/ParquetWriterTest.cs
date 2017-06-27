@@ -6,7 +6,7 @@ namespace Parquet.Test
 {
    public class ParquetWriterTest
    {
-      [Fact]
+      //[Fact]
       public void Write_simple_int32_and_int_reads_back()
       {
          const string path = "c:\\tmp\\first.parquet";

@@ -63,7 +63,7 @@ namespace Parquet
          Name = name ?? throw new ArgumentNullException(nameof(name));
          _schema = new SchemaElement(name)
          {
-            Repetition_type = FieldRepetitionType.OPTIONAL
+            Repetition_type = FieldRepetitionType.REQUIRED
          };
          ValuesInitial = CreateValuesList(systemType, _schema);
          Values = CreateValuesList(systemType, _schema);

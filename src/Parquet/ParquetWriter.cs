@@ -73,7 +73,10 @@ namespace Parquet
          long rgStartPos = _output.Position;
          _meta.Row_groups.Add(rg);
          rg.Columns = dataSet.Columns.Select(c => Write(c)).ToList();
-         rg.Total_byte_size = _output.Position - rgStartPos;
+
+         //row group's size is a sum of _uncompressed_ sizes of all columns in it
+         rg.Total_byte_size = rg.Columns.Sum(c => c.Meta_data.Total_uncompressed_size);
+         rg.Num_rows = dataSet.Count;
       }
 
       private ColumnChunk Write(ParquetColumn column)
@@ -96,6 +99,8 @@ namespace Parquet
          ph.Data_page_header = new DataPageHeader
          {
             Encoding = TEncoding.PLAIN,
+            Definition_level_encoding = TEncoding.RLE,
+            Repetition_level_encoding = TEncoding.BIT_PACKED,
             Num_values = column.Values.Count
          };
 
@@ -104,7 +109,7 @@ namespace Parquet
          {
             using (var columnWriter = new BinaryWriter(ms))
             {
-               columnWriter.Write((int)0);   //definition levels
+               //columnWriter.Write((int)0);   //definition levels, only for nullable columns
                _plainWriter.Write(columnWriter, column.Schema, column.Values);
 
                //
@@ -115,8 +120,6 @@ namespace Parquet
                _output.Write(data, 0, data.Length);
             }
          }
-
-         chunk.Meta_data.Total_compressed_size = chunk.Meta_data.Total_uncompressed_size = _output.Position - startPos;
 
          return chunk;
       }
