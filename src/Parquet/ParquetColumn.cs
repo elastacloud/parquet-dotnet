@@ -99,10 +99,6 @@ namespace Parquet
 
       internal IList ValuesInitial { get; private set; }
 
-      internal TType Type => _schema.Type;
-
-      internal IList ValuesInitial { get; private set; }
-
       /// <summary>
       /// List of values
       /// </summary>
