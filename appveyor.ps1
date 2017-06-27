@@ -55,6 +55,7 @@ function Update-ProjectVersion($File)
    $xml.Save($File.FullName)
 }
 
+Invoke-Expression "nuget restore src/Parquet.sln"
 
 # Update versioning information
 Get-ChildItem *.csproj -Recurse | Where-Object {-not(($_.Name -like "*test*") -or ($_.Name -like "*parq.csproj*")) } | % {
