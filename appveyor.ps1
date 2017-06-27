@@ -11,6 +11,10 @@ $PackageLicenseUrl = "https://github.com/elastacloud/parquet-dotnet/blob/master/
 $RepositoryType = "GitHub"
 
 $gv = $env:APPVEYOR_BUILD_VERSION
+if($gv -eq $null)
+{
+   $gv = "1.0.0"
+}
 
 function Update-ProjectVersion($File)
 {
