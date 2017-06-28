@@ -29,10 +29,10 @@ namespace Parquet.File.Values
          switch (schema.Type)
          {
             case TType.BOOLEAN:
-               ReadPlainBoolean(data, maxValues, destination);
+               ReadPlainBoolean(data, destination, maxValues);
                break;
             case TType.INT32:
-               ReadInt32(data, schema, destination);
+               ReadInt32(data, schema, destination, maxValues);
                break;
             case TType.FLOAT:
                ReadFloat(data, schema, destination);
@@ -58,14 +58,14 @@ namespace Parquet.File.Values
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      private static void ReadPlainBoolean(byte[] data, long count, IList destination)
+      private static void ReadPlainBoolean(byte[] data, IList destination, long maxValues)
       {
          int ibit = 0;
          int ibyte = 0;
          byte b = data[0];
          var destinationTyped = (List<bool?>)destination;
 
-         for (int ires = 0; ires < count; ires++)
+         for(long ires = 0; ires < maxValues; ires++)
          {
             if (ibit == 8)
             {
@@ -79,8 +79,9 @@ namespace Parquet.File.Values
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      private static void ReadInt32(byte[] data, SchemaElement schema, IList destination)
+      private static void ReadInt32(byte[] data, SchemaElement schema, IList destination, long maxValues)
       {
+         long added = 0;
          if(schema.Converted_type == ConvertedType.DATE)
          {
             List<DateTime?> destinationTyped = (List<DateTime?>)destination;
@@ -88,6 +89,7 @@ namespace Parquet.File.Values
             {
                int iv = BitConverter.ToInt32(data, i);
                destinationTyped.Add(iv.FromUnixTime());
+               if (++added >= maxValues) break;
             }
          }
          else
@@ -97,6 +99,7 @@ namespace Parquet.File.Values
             {
                int iv = BitConverter.ToInt32(data, i);
                destination.Add(iv);
+               if (++added >= maxValues) break;
             }
          }
       }

@@ -1,13 +1,13 @@
-﻿using System.IO;
+﻿using NetBox.FileFormats;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Text;
-using Path = System.IO.Path;
-using F = System.IO.File;
-using Type = System.Type;
-using NetBox.FileFormats;
-using System.Collections.Generic;
 using Xunit;
-using System;
+using F = System.IO.File;
+using Path = System.IO.Path;
+using Type = System.Type;
 
 namespace Parquet.Test.Reader
 {

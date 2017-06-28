@@ -76,11 +76,12 @@ namespace Parquet.File
 
                ph = _thrift.Read<PageHeader>(); //get next page
             }
-
+            
             int dataPageCount = 0;
             while (true)
             {
-               var page = ReadDataPage(ph, result.Values, maxValues);
+               int valuesSoFar = Math.Max(indexes == null ? 0 : indexes.Count, result.Values.Count);
+               var page = ReadDataPage(ph, result.Values, maxValues - valuesSoFar);
 
                //merge indexes
                if (page.indexes != null)
@@ -181,7 +182,7 @@ namespace Parquet.File
             {
                //todo: read repetition levels (only relevant for nested columns)
 
-               List<int> definitions = ReadDefinitionLevels(reader, ph.Data_page_header.Num_values);
+               List<int> definitions = ReadDefinitionLevels(reader, (int)maxValues);
 
                // these are pointers back to the Values table - lookup on values 
                List<int> indexes = ReadColumnValues(reader, ph.Data_page_header.Encoding, destination, maxValues);
