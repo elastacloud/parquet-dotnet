@@ -38,9 +38,8 @@ namespace Parquet.File
          _plainReader = new PlainValuesReader(options);
       }
 
-      public ParquetColumn Read(string columnName = null)
+      public ParquetColumn Read(string columnName)
       {
-         if(columnName == null) columnName = string.Join(".", _thriftChunk.Meta_data.Path_in_schema);
          var result = new ParquetColumn(columnName, _schemaElement);
 
          //get the minimum offset, we'll just read pages in sequence
