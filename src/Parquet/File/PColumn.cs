@@ -110,7 +110,9 @@ namespace Parquet.File
             }
          }
 
-         var definitionsMod = definitions != null
+         new ValueMerger(result).Apply(dictionaryPage, definitions, indexes, maxValues);
+
+         /*var definitionsMod = definitions != null
             ? definitions.Take((int)maxValues).ToList()
             : new List<int>(Enumerable.Repeat(1, (int)maxValues));
 
@@ -118,24 +120,9 @@ namespace Parquet.File
 
          var valuesList = new ParquetValueStructure(dictionaryPage, copyPage, indexes, definitionsMod);
 
-         result.Add(valuesList);
+         result.Add(valuesList);*/
 
          return result;
-      }
-
-      private static IList MergeDictionaryEncoding(IList dictionary, IList values)
-      {
-         //values will be ints if dictionary encoding is present
-         int[] indexes = new int[values.Count];
-         int i = 0;
-         foreach(var value in values)
-         {
-            indexes[i++] = (int)value;
-         }
-
-         return indexes
-            .Select(index => dictionary[index])
-            .ToList();
       }
 
       private (IList, IList) ReadDictionaryPage(PageHeader ph)

@@ -54,8 +54,13 @@ namespace Parquet
    /// </summary>
    public class ParquetColumn : IEquatable<ParquetColumn>
    {
-      private SchemaElement _schema;
+      private readonly SchemaElement _schema;
 
+      /// <summary>
+      /// Creates a column from name and type
+      /// </summary>
+      /// <param name="name">Column name</param>
+      /// <param name="systemType">Data type to be held in this column, can be nullable</param>
       public ParquetColumn(string name, Type systemType)
       {
          Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -71,7 +76,7 @@ namespace Parquet
       internal ParquetColumn(string name, SchemaElement schema)
       {
          Name = name ?? throw new ArgumentNullException(nameof(name));
-         ParquetRawType = schema.Type.ToString();
+         _schema = schema ?? throw new ArgumentNullException(nameof(schema));
          (IList a, IList b) = CreateValuesList(schema, out Type systemType);
          ValuesInitial = a;
          Values = b;
@@ -91,7 +96,7 @@ namespace Parquet
       /// <summary>
       /// Parquet type as read from schema
       /// </summary>
-      public string ParquetRawType { get; }
+      public string ParquetRawType => _schema.Type.ToString();
 
       internal TType Type => _schema.Type;
 
@@ -160,6 +165,18 @@ namespace Parquet
             parquetValues.ValuesList.Add(null);
          }
          Values = parquetValues.ValuesList;
+      }
+
+      internal void Assign(IList values)
+      {
+         Values.Clear();
+         if (values == null) return;
+
+         //todo: can we improve this unboxing somehow?
+         foreach(object value in values)
+         {
+            Values.Add(value);
+         }
       }
 
       /// <summary>
