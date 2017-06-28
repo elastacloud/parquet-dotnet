@@ -51,85 +51,80 @@ namespace Parquet.File
 
          PageHeader ph = _thrift.Read<PageHeader>();
 
-         bool finished = false;
          IList dictionaryPage = null, copyPage = null;
          List<int> indexes = null;
          List<int> definitions = null;
 
-         while (!finished)
+         //there can be only one dictionary page in column
+         if (ph.Type == PageType.DICTIONARY_PAGE)
          {
-            if (ph.Type == PageType.DICTIONARY_PAGE)
+            (IList dictionaryPagePage, IList copyPagePage) = ReadDictionaryPage(ph);
+            if (dictionaryPage == null)
             {
-               (IList dictionaryPagePage, IList copyPagePage) = ReadDictionaryPage(ph);
-               if(dictionaryPage == null)
+               dictionaryPage = dictionaryPagePage;
+            }
+            else
+            {
+               foreach (var item in dictionaryPagePage)
                {
-                  dictionaryPage = dictionaryPagePage;
+                  dictionaryPage.Add(item);
+               }
+            }
+            copyPage = copyPagePage;
+
+            ph = _thrift.Read<PageHeader>(); //get next page after dictionary
+         }
+
+         int dataPageCount = 0;
+         while (true)
+         {
+            int valuesSoFar = Math.Max(indexes == null ? 0 : indexes.Count, result.Values.Count);
+            var page = ReadDataPage(ph, result.Values, maxValues - valuesSoFar);
+
+            //merge indexes
+            if (page.indexes != null)
+            {
+               if (indexes == null)
+               {
+                  indexes = page.indexes;
                }
                else
                {
-                  foreach(var item in dictionaryPagePage)
-                  {
-                     dictionaryPage.Add(item);
-                  }
+                  indexes.AddRange(page.indexes);
                }
-               copyPage = copyPagePage;
-
-               ph = _thrift.Read<PageHeader>(); //get next page
             }
-            
-            int dataPageCount = 0;
-            while (true)
+
+            if (page.definitions != null)
             {
-               int valuesSoFar = Math.Max(indexes == null ? 0 : indexes.Count, result.Values.Count);
-               var page = ReadDataPage(ph, result.Values, maxValues - valuesSoFar);
-
-               //merge indexes
-               if (page.indexes != null)
+               if (definitions == null)
                {
-                  if (indexes == null)
-                  {
-                     indexes = page.indexes;
-                  }
-                  else
-                  {
-                     indexes.AddRange(page.indexes);
-                  }
+                  definitions = (List<int>) page.definitions;
                }
-
-               if (page.definitions != null)
+               else
                {
-                  if (definitions == null)
-                  {
-                     definitions = (List<int>) page.definitions;
-                  }
-                  else
-                  {
-                     definitions.AddRange((List<int>) page.definitions);
-                  }
+                  definitions.AddRange((List<int>) page.definitions);
                }
+            }
 
-               dataPageCount++;
+            dataPageCount++;
 
-               if (page.repetitions != null) throw new NotImplementedException();
+            if (page.repetitions != null) throw new NotImplementedException();
 
-               if (result.Values.Count >= maxValues || (indexes != null && indexes.Count >= maxValues))
-               {
-                  //all data pages read
-                  finished = true;
-                  break;
-               }
+            if((result.Values.Count >= maxValues) || (indexes != null && indexes.Count >= maxValues))
+            {
+               break;   //limit reached
+            }
 
-               ph = _thrift.Read<PageHeader>(); //get next page
-               if (ph.Type != PageType.DATA_PAGE)
-               {
-                  break;
-               }
+            ph = _thrift.Read<PageHeader>(); //get next page
+            if (ph.Type != PageType.DATA_PAGE)
+            {
+               break;
             }
          }
 
          var definitionsMod = definitions != null
-            ? definitions.Take(ph.Data_page_header.Num_values).ToList()
-            : new List<int>(Enumerable.Repeat(1, ph.Data_page_header.Num_values));
+            ? definitions.Take((int)maxValues).ToList()
+            : new List<int>(Enumerable.Repeat(1, (int)maxValues));
 
          if (copyPage == null) copyPage = result.Values;
 
