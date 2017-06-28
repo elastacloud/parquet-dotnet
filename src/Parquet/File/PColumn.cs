@@ -59,19 +59,8 @@ namespace Parquet.File
          if (ph.Type == PageType.DICTIONARY_PAGE)
          {
             (IList dictionaryPagePage, IList copyPagePage) = ReadDictionaryPage(ph);
-            if (dictionaryPage == null)
-            {
-               dictionaryPage = dictionaryPagePage;
-            }
-            else
-            {
-               foreach (var item in dictionaryPagePage)
-               {
-                  dictionaryPage.Add(item);
-               }
-            }
+            dictionaryPage = dictionaryPagePage;
             copyPage = copyPagePage;
-
             ph = _thrift.Read<PageHeader>(); //get next page after dictionary
          }
 
@@ -110,7 +99,7 @@ namespace Parquet.File
 
             if (page.repetitions != null) throw new NotImplementedException();
 
-            if((result.Values.Count >= maxValues) || (indexes != null && indexes.Count >= maxValues))
+            if((result.Values.Count >= maxValues) || (indexes != null && indexes.Count >= maxValues) || (definitions != null && definitions.Count >= maxValues))
             {
                break;   //limit reached
             }

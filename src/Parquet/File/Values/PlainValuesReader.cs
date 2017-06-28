@@ -11,6 +11,7 @@ using System.Numerics;
 
 namespace Parquet.File.Values
 {
+   //see https://github.com/Parquet/parquet-format/blob/master/Encodings.md#plain-plain--0
    class PlainValuesReader : IValuesReader
    {
       private static readonly System.Text.Encoding UTF8 = System.Text.Encoding.UTF8;
@@ -32,7 +33,7 @@ namespace Parquet.File.Values
                ReadPlainBoolean(data, destination, maxValues);
                break;
             case TType.INT32:
-               ReadInt32(data, schema, destination, maxValues);
+               ReadInt32(data, schema, destination);
                break;
             case TType.FLOAT:
                ReadFloat(data, schema, destination);
@@ -65,7 +66,7 @@ namespace Parquet.File.Values
          byte b = data[0];
          var destinationTyped = (List<bool?>)destination;
 
-         for(long ires = 0; ires < maxValues; ires++)
+         for(int ires = 0; ires < maxValues; ires++)
          {
             if (ibit == 8)
             {
@@ -79,9 +80,8 @@ namespace Parquet.File.Values
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      private static void ReadInt32(byte[] data, SchemaElement schema, IList destination, long maxValues)
+      private static void ReadInt32(byte[] data, SchemaElement schema, IList destination)
       {
-         long added = 0;
          if(schema.Converted_type == ConvertedType.DATE)
          {
             List<DateTime?> destinationTyped = (List<DateTime?>)destination;
@@ -89,7 +89,6 @@ namespace Parquet.File.Values
             {
                int iv = BitConverter.ToInt32(data, i);
                destinationTyped.Add(iv.FromUnixTime());
-               if (++added >= maxValues) break;
             }
          }
          else
@@ -99,7 +98,6 @@ namespace Parquet.File.Values
             {
                int iv = BitConverter.ToInt32(data, i);
                destination.Add(iv);
-               if (++added >= maxValues) break;
             }
          }
       }

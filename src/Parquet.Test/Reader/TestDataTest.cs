@@ -65,12 +65,13 @@ namespace Parquet.Test.Reader
       public void Postcodes_sample_no_compression()
       {
          CompareFiles("postcodes", "plain",
-            typeof(string),
-            typeof(string),
+            typeof(string),   //Postcode
+            typeof(string),   //
             typeof(double?),
             typeof(double?),
-            typeof(int?),
-            typeof(int?),
+            typeof(int?),     //Easting
+            typeof(int?),     //Northing
+            typeof(string),   
             typeof(string),
             typeof(string),
             typeof(string),
@@ -78,13 +79,12 @@ namespace Parquet.Test.Reader
             typeof(string),
             typeof(string),
             typeof(string),
-            typeof(string),
-            typeof(string),
+            typeof(string),   //Constituency
             typeof(DateTime?),
             typeof(DateTime?),
-            typeof(string),
-            typeof(string),
-            typeof(int?),
+            typeof(string),   //Parish
+            typeof(string),   //NationalPark
+            typeof(int?),     //Population
             typeof(int?),
             typeof(string),
             typeof(string),
