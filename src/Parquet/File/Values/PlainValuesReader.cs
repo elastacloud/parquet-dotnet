@@ -14,6 +14,12 @@ namespace Parquet.File.Values
    class PlainValuesReader : IValuesReader
    {
       private static readonly System.Text.Encoding UTF8 = System.Text.Encoding.UTF8;
+      private readonly ParquetOptions _options;
+
+      public PlainValuesReader(ParquetOptions options)
+      {
+         _options = options;
+      }
 
       public void Read(BinaryReader reader, SchemaElement schema, IList destination, long maxValues)
       {
@@ -187,9 +193,12 @@ namespace Parquet.File.Values
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      private static void ReadByteArray(byte[] data, SchemaElement schemaElement, IList destination)
+      private void ReadByteArray(byte[] data, SchemaElement schemaElement, IList destination)
       {
-         if (schemaElement.Converted_type == ConvertedType.UTF8)
+         if (
+               (schemaElement.__isset.converted_type && schemaElement.Converted_type == ConvertedType.UTF8) ||
+               (_options.TreatByteArrayAsString)
+            )
          {
             List<string> destinationTyped = (List<string>)destination;
             for (int i = 0; i < data.Length;)

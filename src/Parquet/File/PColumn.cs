@@ -3,13 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Numerics;
-using System.Reflection;
-using System.Text;
 using Parquet.Thrift;
 using Encoding = Parquet.Thrift.Encoding;
 using Type = System.Type;
-using TType = Parquet.Thrift.Type;
 using Parquet.File.Values;
 
 namespace Parquet.File
@@ -21,12 +17,13 @@ namespace Parquet.File
       private readonly ThriftStream _thrift;
       private readonly Schema _schema;
       private readonly SchemaElement _schemaElement;
+      private readonly ParquetOptions _options;
 
-      private static readonly IValuesReader _plainReader = new PlainValuesReader();
+      private readonly IValuesReader _plainReader;
       private static readonly IValuesReader _rleReader = new RunLengthBitPackingHybridValuesReader();
       private static readonly IValuesReader _dictionaryReader = new PlainDictionaryValuesReader();
 
-      public PColumn(ColumnChunk thriftChunk, Schema schema, Stream inputStream, ThriftStream thriftStream)
+      public PColumn(ColumnChunk thriftChunk, Schema schema, Stream inputStream, ThriftStream thriftStream, ParquetOptions options)
       {
          if (thriftChunk.Meta_data.Path_in_schema.Count != 1)
             throw new NotImplementedException("path in scheme is not flat");
@@ -36,11 +33,14 @@ namespace Parquet.File
          _schema = schema;
          _inputStream = inputStream;
          _schemaElement = _schema[_thriftChunk];
+         _options = options;
+
+         _plainReader = new PlainValuesReader(options);
       }
 
-      public ParquetColumn Read()
+      public ParquetColumn Read(string columnName = null)
       {
-         string columnName = string.Join(".", _thriftChunk.Meta_data.Path_in_schema);
+         if(columnName == null) columnName = string.Join(".", _thriftChunk.Meta_data.Path_in_schema);
          var result = new ParquetColumn(columnName, _schemaElement);
 
          //get the minimum offset, we'll just read pages in sequence
@@ -109,10 +109,7 @@ namespace Parquet.File
 
                dataPageCount++;
 
-               //if (page.definitions != null) throw new NotImplementedException();
-               //if (page.repetitions != null) throw new NotImplementedException();
-
-               //todo: combine tuple into real values
+               if (page.repetitions != null) throw new NotImplementedException();
 
                if (result.Values.Count >= maxValues || (indexes != null && indexes.Count >= maxValues))
                {
@@ -129,21 +126,13 @@ namespace Parquet.File
             }
          }
 
-         // add the definitions into the result and the merge afterwards
-         List<int> indexesMod = new List<int>();
-         indexesMod = indexes != null
-            ? indexes.Take(ph.Data_page_header.Num_values).ToList()
-            //: ((List<int?>)(result.Values)).Select(i => i.Value).ToList();
-            : result.Values.Cast<bool>().Select(item => item ? 1 : 0).ToList();
-
-
          var definitionsMod = definitions != null
             ? definitions.Take(ph.Data_page_header.Num_values).ToList()
             : new List<int>(Enumerable.Repeat(1, ph.Data_page_header.Num_values));
 
          if (copyPage == null) copyPage = result.Values;
 
-         var valuesList = new ParquetValueStructure(dictionaryPage, copyPage, indexesMod, definitionsMod);
+         var valuesList = new ParquetValueStructure(dictionaryPage, copyPage, indexes, definitionsMod);
 
          result.Add(valuesList);
 

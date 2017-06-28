@@ -94,6 +94,8 @@ namespace Parquet.Test.Reader
          {
             using (ParquetReader reader = new ParquetReader(fs))
             {
+               reader.Options.TreatByteArrayAsString = true;
+
                parquet = reader.Read();
             }
          }
