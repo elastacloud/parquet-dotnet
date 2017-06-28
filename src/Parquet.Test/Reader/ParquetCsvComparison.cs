@@ -13,10 +13,10 @@ namespace Parquet.Test.Reader
 {
    public class ParquetCsvComparison
    {
-      protected void CompareFiles(string baseName, params Type[] columnTypes)
+      protected void CompareFiles(string baseName, string encoding, params Type[] columnTypes)
       {
-         ParquetDataSet parquet = ReadParquet(baseName + ".parquet");
-         var csv = ReadCsv(baseName + ".csv");
+         ParquetDataSet parquet = ReadParquet($"{baseName}.{encoding}.parquet");
+         var csv = ReadCsv($"{baseName}.csv");
          Compare(parquet, csv, columnTypes);
       }
 
