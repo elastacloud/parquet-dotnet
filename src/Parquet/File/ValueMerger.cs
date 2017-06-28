@@ -54,7 +54,7 @@ namespace Parquet.File
          Trim(definitions, maxValues);
 
          int valueIdx = 0;
-         (IList values, IList garbage) = ParquetColumn.CreateValuesList(_column.Schema, out Type garbage1);
+         IList values = ParquetColumn.CreateValuesList(_column.Schema, out Type systemType);
 
          foreach (int isDefinedInt in definitions)
          {
