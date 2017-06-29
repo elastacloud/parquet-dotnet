@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Parquet.File.Values;
 using TEncoding = Parquet.Thrift.Encoding;
+using Parquet.File.Data;
 
 namespace Parquet
 {
@@ -45,7 +46,12 @@ namespace Parquet
       private static readonly byte[] Magic = System.Text.Encoding.ASCII.GetBytes("PAR1");
       private readonly FileMetaData _meta = new FileMetaData();
       private readonly IValuesWriter _plainWriter = new PlainValuesWriter();
+      private IDataWriter _dataWriter;
 
+      /// <summary>
+      /// Creates an instance of parquet writer on top of a stream
+      /// </summary>
+      /// <param name="output">Writeable, seekable stream</param>
       public ParquetWriter(Stream output)
       {
          _output = output ?? throw new ArgumentNullException(nameof(output));
@@ -61,8 +67,15 @@ namespace Parquet
          _meta.Row_groups = new List<RowGroup>();
       }
 
-      public void Write(ParquetDataSet dataSet)
+      /// <summary>
+      /// Write out dataset to the output stream
+      /// </summary>
+      /// <param name="dataSet">Dataset to write</param>
+      /// <param name="compression">Compression method</param>
+      public void Write(ParquetDataSet dataSet, CompressionMethod compression = CompressionMethod.None)
       {
+         _dataWriter = CreateDataWriter(compression);
+
          long totalCount = dataSet.Count;
 
          _meta.Schema = new List<SchemaElement> { new SchemaElement("schema") { Num_children = dataSet.Columns.Count } };
@@ -77,6 +90,18 @@ namespace Parquet
          //row group's size is a sum of _uncompressed_ sizes of all columns in it
          rg.Total_byte_size = rg.Columns.Sum(c => c.Meta_data.Total_uncompressed_size);
          rg.Num_rows = dataSet.Count;
+      }
+
+      private IDataWriter CreateDataWriter(CompressionMethod method)
+      {
+         switch(method)
+         {
+            case CompressionMethod.None:
+               return new UncompressedDataWriter(_output);
+
+            default:
+               throw new NotImplementedException($"method {method} is not supported");
+         }
       }
 
       private ColumnChunk Write(ParquetColumn column)
@@ -104,7 +129,13 @@ namespace Parquet
             Num_values = column.Values.Count
          };
 
+         WriteValues(column, ph);
 
+         return chunk;
+      }
+
+      private void WriteValues(ParquetColumn column, PageHeader ph)
+      {
          using (var ms = new MemoryStream())
          {
             using (var columnWriter = new BinaryWriter(ms))
@@ -117,11 +148,9 @@ namespace Parquet
                ph.Compressed_page_size = ph.Uncompressed_page_size = (int)ms.Length;
                byte[] data = ms.ToArray();
                _thrift.Write(ph);
-               _output.Write(data, 0, data.Length);
+               _dataWriter.Write(data);
             }
          }
-
-         return chunk;
       }
 
       private void WriteMagic()
@@ -129,6 +158,9 @@ namespace Parquet
          _output.Write(Magic, 0, Magic.Length);
       }
 
+      /// <summary>
+      /// Finalizes file, writes metadata and footer
+      /// </summary>
       public void Dispose()
       {
          //finalize file

@@ -15,6 +15,10 @@ namespace Parquet.File.Values
       {
          switch(schema.Type)
          {
+            case TType.BOOLEAN:
+               WriteBoolean(writer, schema, data);
+               break;
+
             case TType.INT32:
                WriteInt32(writer, schema, data);
                break;
@@ -22,6 +26,12 @@ namespace Parquet.File.Values
             default:
                throw new NotImplementedException($"type {schema.Type} not implemented");
          }
+      }
+
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      private static void WriteBoolean(BinaryWriter writer, SchemaElement schema, IList data)
+      {
+         throw new NotImplementedException();
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
