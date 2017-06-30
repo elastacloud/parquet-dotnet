@@ -12,7 +12,7 @@ This project is aimed to fix this problem.
 
 ## Roadmap
 
-We have just started to work on this library, contributors are welcome.
+We have just started to work on this library, [contributors are welcome](CONTRIBUTING.md).
 
 |Phase|Description|State|
 |-----|-----------|-----|
@@ -21,13 +21,15 @@ We have just started to work on this library, contributors are welcome.
 |3|Support GZIP and SNAPPY decompression/compression|planning|
 |4|Integrate with popular products like Azure Data Lakes|planning|
 
+You can track the amount of features we have [implemented so far](doc/features.md).
+
 ## Getting started
 
 **parquet-dotnet** is redistributed as a [NuGet package](https://www.nuget.org/packages/Parquet.Net) for `.NET 4.5.1` and `.NET Standard 1.6`. All code is managed and doesn't have any native dependencies, therefore you are ready to go after referencing the package.
 
 ### Reading files
 
-In order to read a parquet file you need to open a stream first. Due to the fact that Parquet utilises file seeking extensively, the input stream must be *readable and seekable*.
+In order to read a parquet file you need to open a stream first. Due to the fact that Parquet utilises file seeking extensively, the input stream must be *readable and seekable*. This somewhat limits the amount of streaming you can do, for instance you can't read a parquet file from a network stream as we need to jump around it, therefore you have to download it locally to disk and then open.
 
 For instance, to read a file `c:\test.parquet` you woudl normally write the following code
 
