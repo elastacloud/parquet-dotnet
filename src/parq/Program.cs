@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using LogMagic;
 
 namespace parq
@@ -35,6 +36,20 @@ namespace parq
                   foreach (var column in dataSet.Columns)
                   {
                      _log.I("{0} - {1}", column.Name, column.ParquetRawType);
+                  }
+               }
+
+               // After reading the column types give a printed list of the layout of the columns 
+               using (var reader = new Parquet.ParquetReader(fileInfo.Open(System.IO.FileMode.Open)))
+               {
+                  var dataSet = reader.Read();
+                  string columnNames =
+                     dataSet.ColumnNames.Aggregate("", (current, columnName) => current + (columnName + "\t"));
+                  _log.I(columnNames);
+                  for (int i = 0; i < dataSet.Count; i++)
+                  {
+                     string values = dataSet[i].Aggregate("", (current, value) => current + Convert.ToString(value) + "\t");
+                     _log.I(values);
                   }
                }
             }
