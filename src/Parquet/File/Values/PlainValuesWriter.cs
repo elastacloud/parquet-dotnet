@@ -52,12 +52,10 @@ namespace Parquet.File.Values
 
          foreach (bool flag in data)
          {
-            byte mask = (byte)(1 << n++);
-
-            if (flag)
-               b |= mask;
-            else
-               b &= mask;
+            if(flag)
+            {
+               b |= (byte)(1 << n);
+            }
 
             if (n == 8)
             {
@@ -65,6 +63,8 @@ namespace Parquet.File.Values
                n = 0;
                b = 0;
             }
+
+            n += 1;
          }
 
          if (n != 0) buffer[ib] = b;

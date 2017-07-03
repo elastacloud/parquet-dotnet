@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO.Compression;
 
 namespace Parquet.File.Data
 {
@@ -6,7 +7,6 @@ namespace Parquet.File.Data
    {
       public void Write(byte[] buffer)
       {
-         throw new NotImplementedException();
       }
    }
 }

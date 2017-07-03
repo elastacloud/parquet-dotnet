@@ -53,7 +53,6 @@ namespace Parquet
 
          _reader = new BinaryReader(input);
          ValidateFile();
-
          _thrift = new ThriftStream(input);
       }
 
