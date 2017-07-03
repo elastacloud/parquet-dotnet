@@ -44,8 +44,9 @@ namespace Parquet
       private readonly BinaryWriter _writer;
       private readonly ThriftStream _thrift;
       private static readonly byte[] Magic = System.Text.Encoding.ASCII.GetBytes("PAR1");
-      private readonly FileMetaData _meta = new FileMetaData();
-      private readonly IValuesWriter _plainWriter = new PlainValuesWriter();
+      private readonly MetaBuilder _meta = new MetaBuilder();
+      private readonly ParquetOptions _options = new ParquetOptions();
+      private readonly IValuesWriter _plainWriter;
       private IDataWriter _dataWriter;
 
       /// <summary>
@@ -59,12 +60,10 @@ namespace Parquet
          _thrift = new ThriftStream(output);
          _writer = new BinaryWriter(_output);
 
+         _plainWriter = new PlainValuesWriter(_options);
+
          //file starts with magic
          WriteMagic();
-
-         _meta.Created_by = "parquet-dotnet";
-         _meta.Version = 1;
-         _meta.Row_groups = new List<RowGroup>();
       }
 
       /// <summary>
@@ -76,15 +75,12 @@ namespace Parquet
       {
          _dataWriter = CreateDataWriter(compression);
 
+         _meta.AddSchema(dataSet);
+
          long totalCount = dataSet.Count;
 
-         _meta.Schema = new List<SchemaElement> { new SchemaElement("schema") { Num_children = dataSet.Columns.Count } };
-         _meta.Schema.AddRange(dataSet.Columns.Select(c => c.Schema));
-         _meta.Num_rows = totalCount;
-
-         var rg = new RowGroup();
+         RowGroup rg = _meta.AddRowGroup();
          long rgStartPos = _output.Position;
-         _meta.Row_groups.Add(rg);
          rg.Columns = dataSet.Columns.Select(c => Write(c)).ToList();
 
          //row group's size is a sum of _uncompressed_ sizes of all columns in it
@@ -164,7 +160,7 @@ namespace Parquet
       public void Dispose()
       {
          //finalize file
-         long size = _thrift.Write(_meta);
+         long size = _thrift.Write(_meta.ThriftMeta);
 
          //metadata size
          _writer.Write((int)size);  //4 bytes

@@ -16,17 +16,21 @@ namespace Parquet.File
 
          public Func<IList> Create;
 
-         public TypeTag(TType ptype, Func<IList> create)
+         public ConvertedType? ConvertedType;
+
+         public TypeTag(TType ptype, Func<IList> create, ConvertedType? convertedType)
          {
             PType = ptype;
             Create = create;
+            ConvertedType = convertedType;
          }
       }
 
       private static readonly Dictionary<Type, TypeTag> TypeToTag = new Dictionary<Type, TypeTag>
       {
-         { typeof(int), new TypeTag(TType.INT32, () => new List<int>()) },
-         { typeof(bool), new TypeTag(TType.BOOLEAN, () => new List<bool>()) }
+         { typeof(int), new TypeTag(TType.INT32, () => new List<int>(), null) },
+         { typeof(bool), new TypeTag(TType.BOOLEAN, () => new List<bool>(), null) },
+         { typeof(string), new TypeTag(TType.BYTE_ARRAY, () => new List<string>(), ConvertedType.UTF8) }
       };
 
       public static IList Create(Type systemType, SchemaElement schema)
@@ -35,6 +39,8 @@ namespace Parquet.File
             throw new NotSupportedException($"system type {systemType} is not supported");
 
          schema.Type = tag.PType;
+         if(tag.ConvertedType != null)
+            schema.Converted_type = tag.ConvertedType.Value;
          return tag.Create();
       }
    }

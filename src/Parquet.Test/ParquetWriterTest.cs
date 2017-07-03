@@ -23,7 +23,10 @@ namespace Parquet.Test
             var bool_col = new ParquetColumn<bool>("bool_col");
             bool_col.Add(true, false, true, false, true, false, true, false);
 
-            writer.Write(new ParquetDataSet(idCol, bool_col));
+            var string_col = new ParquetColumn<string>("string_col");
+            string_col.Add("0", "1", "0", "1", "0", "1", "0", "1");
+
+            writer.Write(new ParquetDataSet(idCol, bool_col, string_col));
          }
 
          ms.Position = 0;

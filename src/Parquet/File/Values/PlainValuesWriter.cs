@@ -6,12 +6,21 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using TType = Parquet.Thrift.Type;
+using SType = System.Type;
 
 namespace Parquet.File.Values
 {
    //see https://github.com/Parquet/parquet-format/blob/master/Encodings.md#plain-plain--0
    class PlainValuesWriter : IValuesWriter
    {
+      private ParquetOptions _options;
+      private static readonly System.Text.Encoding UTF8 = System.Text.Encoding.UTF8;
+
+      public PlainValuesWriter(ParquetOptions options)
+      {
+         _options = options;
+      }
+
       public void Write(BinaryWriter writer, SchemaElement schema, IList data)
       {
          switch (schema.Type)
@@ -36,6 +45,14 @@ namespace Parquet.File.Values
                WriteDouble(writer, schema, data);
                break;
 
+            //case TType.INT96:
+            //   break;
+
+            case TType.BYTE_ARRAY:
+               WriteByteArray(writer, schema, data);
+               break;
+
+
             default:
                throw new NotImplementedException($"type {schema.Type} not implemented");
          }
@@ -52,7 +69,7 @@ namespace Parquet.File.Values
 
          foreach (bool flag in data)
          {
-            if(flag)
+            if (flag)
             {
                b |= (byte)(1 << n);
             }
@@ -111,7 +128,56 @@ namespace Parquet.File.Values
             writer.Write(d);
          }
       }
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      private void WriteByteArray(BinaryWriter writer, SchemaElement schema, IList data)
+      {
+         if (data.Count == 0) return;
 
+         SType elementType = data[0].GetType();
+         if(elementType == typeof(string))
+         {
+            var src = (List<string>)data;
+            foreach(string s in src)
+            {
+               Write(writer, s);
+            }
+         }
+         else if(elementType == typeof(byte[]))
+         {
+            var src = (List<byte[]>)data;
 
+            if (_options.TreatByteArrayAsString)
+            {
+               foreach(byte[] b in src)
+               {
+                  string s = UTF8.GetString(b);
+                  Write(writer, s);
+               }
+            }
+            else
+            {
+               foreach (byte[] b in src)
+               {
+                  writer.Write(b.Length);
+                  writer.Write(b);
+               }
+            }
+         }
+         else
+         {
+            throw new ParquetException($"byte array type can be either byte or string but {elementType} found");
+         }
+      }
+
+      [MethodImpl(MethodImplOptions.AggressiveInlining)]
+      private static void Write(BinaryWriter writer, string s)
+      {
+         int length = s == null ? 0 : s.Length;
+         writer.Write(length);
+
+         if (length == 0) return;
+         byte[] data = UTF8.GetBytes(s);
+         writer.Write(data);
+      }
    }
 }
