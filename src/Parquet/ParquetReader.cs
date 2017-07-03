@@ -119,7 +119,6 @@ namespace Parquet
 
       public void Dispose()
       {
-         _input.Dispose();
       }
    }
 }
