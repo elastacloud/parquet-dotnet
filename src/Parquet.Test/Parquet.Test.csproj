@@ -107,7 +107,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="File\Values\" />
     <Folder Include="Writer\" />
   </ItemGroup>
 
