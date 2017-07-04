@@ -56,6 +56,9 @@ namespace Parquet
          _thrift = new ThriftStream(input);
       }
 
+      /// <summary>
+      /// Options
+      /// </summary>
       public ParquetOptions Options => _options;
 
       /// <summary>
@@ -116,6 +119,9 @@ namespace Parquet
          return _thrift.Read<FileMetaData>();
       }
 
+      /// <summary>
+      /// Disposes 
+      /// </summary>
       public void Dispose()
       {
       }

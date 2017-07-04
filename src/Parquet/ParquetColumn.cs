@@ -39,11 +39,19 @@ namespace Parquet
    /// <typeparam name="T"></typeparam>
    public class ParquetColumn<T> : ParquetColumn
    {
+      /// <summary>
+      /// Creates an instance of the column by name
+      /// </summary>
+      /// <param name="name">Column name</param>
       public ParquetColumn(string name) : base(name, typeof(T))
       {
 
       }
 
+      /// <summary>
+      /// Adds values to this column
+      /// </summary>
+      /// <param name="values"></param>
       public void Add(params T[] values)
       {
          base.Add(values);
