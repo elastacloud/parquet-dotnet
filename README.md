@@ -48,6 +48,33 @@ using(Stream fs = File.OpenRead("c:\\test.parquet"))
 
 this will read entire file in memory as a set of columns inside `ParquetDataSet` class.
 
+### Writing files
+
+Parquet.Net operates on streams, therefore you need to create it first. The following example shows how to create a file on disk with two columns - `id` and `city`.
+
+```csharp
+using System.IO;
+using Parquet;
+
+var idColumn = new ParquetColumn<int>("id");
+idColumn.Add(1, 2);
+
+var cityColumn = new ParquetColumn<string>("city");
+cityColumn.Add("London", "Derby");
+
+var dataSet = new ParquetDataSet(idColumn, cityColumn);
+
+using(Stream fileStream = File.OpenWrite("c:\\test.parquet"))
+{
+	using(var writer = new ParquetWriter(fileStream))
+	{
+		writer.Write(dataSet);
+	}
+}
+
+```
+
+
 ## Tools
 
 ### parq
