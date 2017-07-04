@@ -26,6 +26,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Parquet.Thrift;
+using Parquet.Data;
+using System.Collections;
+using FSchema = Parquet.File.Schema;
+using DSchema = Parquet.Data.Schema;
+using DSchemaElement = Parquet.Data.SchemaElement;
+using System.Linq;
 
 namespace Parquet
 {
@@ -38,7 +44,7 @@ namespace Parquet
       private readonly BinaryReader _reader;
       private readonly ThriftStream _thrift;
       private FileMetaData _meta;
-      private Schema _schema;
+      private FSchema _schema;
       private readonly ParquetOptions _options = new ParquetOptions();
 
       /// <summary>
@@ -67,9 +73,11 @@ namespace Parquet
       public ParquetDataSet Read()
       {
          _meta = ReadMetadata();
-         _schema = new Schema(_meta);
+         _schema = new FSchema(_meta);
 
          var result = new List<ParquetColumn>();
+         var result2 = new DataSet();
+         var cols2 = new List<IList>();
 
          foreach(RowGroup rg in _meta.Row_groups)
          {
@@ -82,6 +90,7 @@ namespace Parquet
                {
                   ParquetColumn column = p.Read(columnName);
                   result.Add(column);
+                  cols2.Add(column.Values);
                }
                catch(Exception ex)
                {
@@ -89,6 +98,8 @@ namespace Parquet
                }
             }
          }
+
+         result2.AddColumnar(new DSchema(_meta), cols2);
 
          return new ParquetDataSet(result);
       }
