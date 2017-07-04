@@ -91,7 +91,7 @@ To use, run ```dotnet parq.dll InputFilePath=path/to/file.parquet DisplayMinWidt
 
 ## License
 
-Parquet.Net is licensed under the [MIT license](https://github.com/elastacloud/Parquet.Net/blob/master/LICENSE).
+Parquet.Net is licensed under the [MIT license](https://github.com/elastacloud/parquet-dotnet/blob/master/LICENSE).
 
 ## Contributing
 
