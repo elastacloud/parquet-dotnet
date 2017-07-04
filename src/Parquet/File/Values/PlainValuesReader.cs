@@ -106,7 +106,9 @@ namespace Parquet.File.Values
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       private static void ReadFloat(byte[] data, SchemaElement schema, IList destination)
       {
-         List<float?> destinationTyped = (List<float?>)destination;
+         
+         var destinationTyped = schema.Repetition_type != FieldRepetitionType.REQUIRED ?
+            (List<float?>) destination : destination;
          for (int i = 0; i < data.Length; i += 4)
          {
             float iv = BitConverter.ToSingle(data, i);
@@ -162,8 +164,6 @@ namespace Parquet.File.Values
          List<DateTimeOffset?> destinationTyped = (List<DateTimeOffset?>)destination;
 #endif
 
-         //todo: this is a sample how to read int96, not tested this yet
-         // todo: need to work this out because Spark is not encoding per spec - working with the Spark encoding instead
 #if !SPARK_TYPES
          //var r96 = new List<BigInteger>(data.Length / 12);
 #else
