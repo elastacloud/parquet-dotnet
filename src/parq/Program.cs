@@ -69,7 +69,7 @@ namespace parq
        private static void WriteHelp()
       { 
          _log.I("dotnet parq.dll\t-\tParquet File Inspector for .net");
-         _log.I("Usage\t-\tparq.exe InputFilePath=[relativeStringPath]");
+         _log.I("Usage\t-\tparq.exe InputFilePath=[relativeStringPath] DisplayMinWidth=[10]");
       }
    }
 }
