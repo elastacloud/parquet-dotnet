@@ -68,6 +68,11 @@ namespace Parquet
       public ParquetOptions Options => _options;
 
       /// <summary>
+      /// Total number of rows in this file
+      /// </summary>
+      public long RowCount => _meta.Num_rows;
+
+      /// <summary>
       /// Test read, to be defined
       /// </summary>
       public ParquetDataSet Read()
