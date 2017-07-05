@@ -37,7 +37,7 @@ namespace Parquet.Test
          }
       }
 
-      [Fact]
+      //[Fact]
       public void Delete_me_manual_test()
       {
          var ds = ParquetReader.ReadFile("C:\\tmp\\postcodes.plain.parquet");

@@ -15,12 +15,16 @@ namespace Parquet.Runner
          DataSet ds;
          using (var time = new TimeMeasure())
          {
-            ds = ParquetReader.ReadFile("C:\\dev\\parquet-dotnet\\src\\Parquet.Test\\data\\postcodes.plain.parquet");
+            ds = ParquetReader.ReadFile("C:\\tmp\\postcodes.plain.parquet");
 
             Console.WriteLine("read in {0}", time.Elapsed);
          }
 
          Console.WriteLine("has {0} rows", ds.RowCount);
+
+         //postcodes.plain.parquet - 137Mb
+         //debug: 26 seconds.
+         //release: 25 seconds.
       }
    }
 }
