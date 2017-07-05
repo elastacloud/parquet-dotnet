@@ -38,9 +38,9 @@ namespace Parquet.File
          _plainReader = new PlainValuesReader(options);
       }
 
-      public ParquetColumn Read(string columnName)
+      public IList Read(string columnName)
       {
-         var result = new ParquetColumn(columnName, _schemaElement);
+         IList values = ListFactory.Create(_schemaElement);
 
          //get the minimum offset, we'll just read pages in sequence
          long offset = new[] { _thriftChunk.Meta_data.Dictionary_page_offset, _thriftChunk.Meta_data.Data_page_offset }.Where(e => e != 0).Min();
@@ -64,8 +64,8 @@ namespace Parquet.File
          int dataPageCount = 0;
          while (true)
          {
-            int valuesSoFar = Math.Max(indexes == null ? 0 : indexes.Count, result.Values.Count);
-            var page = ReadDataPage(ph, result.Values, maxValues - valuesSoFar);
+            int valuesSoFar = Math.Max(indexes == null ? 0 : indexes.Count, values.Count);
+            var page = ReadDataPage(ph, values, maxValues - valuesSoFar);
 
             //merge indexes
             if (page.indexes != null)
@@ -96,7 +96,7 @@ namespace Parquet.File
 
             if (page.repetitions != null) throw new NotImplementedException();
 
-            if((result.Values.Count >= maxValues) || (indexes != null && indexes.Count >= maxValues) || (definitions != null && definitions.Count >= maxValues))
+            if((values.Count >= maxValues) || (indexes != null && indexes.Count >= maxValues) || (definitions != null && definitions.Count >= maxValues))
             {
                break;   //limit reached
             }
@@ -108,9 +108,9 @@ namespace Parquet.File
             }
          }
 
-         new ValueMerger(result).Apply(dictionaryPage, definitions, indexes, maxValues);
+         IList mergedValues = new ValueMerger(_schemaElement, values).Apply(dictionaryPage, definitions, indexes, maxValues);
 
-         return result;
+         return mergedValues;
       }
 
       private IList ReadDictionaryPage(PageHeader ph)

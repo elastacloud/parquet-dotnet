@@ -80,9 +80,8 @@ namespace Parquet
          _meta = ReadMetadata();
          _schema = new FSchema(_meta);
 
-         var result = new List<ParquetColumn>();
-         var result2 = new DataSet();
-         var cols2 = new List<IList>();
+         var ds = new DataSet(new DSchema(_meta));
+         var cols = new List<IList>();
 
          foreach(RowGroup rg in _meta.Row_groups)
          {
@@ -93,9 +92,8 @@ namespace Parquet
 
                try
                {
-                  ParquetColumn column = p.Read(columnName);
-                  result.Add(column);
-                  cols2.Add(column.Values);
+                  IList column = p.Read(columnName);
+                  cols.Add(column);
                }
                catch(Exception ex)
                {
@@ -104,9 +102,9 @@ namespace Parquet
             }
          }
 
-         result2.AddColumnar(new DSchema(_meta), cols2);
+         ds.AddColumnar(cols);
 
-         return new ParquetDataSet(result);
+         return new ParquetDataSet();
       }
 
       private void ValidateFile()

@@ -5,6 +5,7 @@ using Type = System.Type;
 using TType = Parquet.Thrift.Type;
 using System.Collections;
 using Parquet.Thrift;
+using System.Reflection;
 
 namespace Parquet.File
 {
@@ -14,45 +15,53 @@ namespace Parquet.File
       {
          public TType PType;
 
-         public Func<IList> Create;
-
          public ConvertedType? ConvertedType;
 
-         public TypeTag(TType ptype, Func<IList> create, ConvertedType? convertedType)
+         public TypeTag(TType ptype, ConvertedType? convertedType)
          {
             PType = ptype;
-            Create = create;
             ConvertedType = convertedType;
          }
       }
 
       private static readonly Dictionary<Type, TypeTag> TypeToTag = new Dictionary<Type, TypeTag>
       {
-         { typeof(int), new TypeTag(TType.INT32, () => new List<int>(), null) },
-         { typeof(bool), new TypeTag(TType.BOOLEAN, () => new List<bool>(), null) },
-         { typeof(string), new TypeTag(TType.BYTE_ARRAY, () => new List<string>(), ConvertedType.UTF8) }
+         { typeof(int), new TypeTag(TType.INT32, null) },
+         { typeof(bool), new TypeTag(TType.BOOLEAN, null) },
+         { typeof(string), new TypeTag(TType.BYTE_ARRAY, ConvertedType.UTF8) }
       };
 
-      public static IList Create(Type systemType, SchemaElement schema = null)
+      public static IList Create(Type systemType, SchemaElement schemaToSet = null, bool nullable = false)
       {
-         if (!TypeToTag.TryGetValue(systemType, out TypeTag tag))
-            throw new NotSupportedException($"system type {systemType} is not supported");
-
-         if (schema != null)
+         if (schemaToSet != null)
          {
-            schema.Type = tag.PType;
+            if (!TypeToTag.TryGetValue(systemType, out TypeTag tag))
+               throw new NotSupportedException($"system type {systemType} is not supported");
+
+            schemaToSet.Type = tag.PType;
             if (tag.ConvertedType != null)
-               schema.Converted_type = tag.ConvertedType.Value;
+               schemaToSet.Converted_type = tag.ConvertedType.Value;
          }
 
+         //make the type nullable if it's not a class
+         if(nullable)
+         {
+            if(!systemType.GetTypeInfo().IsClass)
+            {
+               systemType = typeof(Nullable<>).MakeGenericType(systemType);
+            }
+         }
 
-         return tag.Create();
+         //create generic list instance
+         Type listType = typeof(List<>);
+         Type listGType = listType.MakeGenericType(systemType);
+         return (IList)Activator.CreateInstance(listGType);
       }
 
-      public static IList Create(SchemaElement schema)
+      public static IList Create(SchemaElement schema, bool nullable = false)
       {
          Type t = ToSystemType(schema);
-         return Create(t);
+         return Create(t, null, nullable);
       }
 
       public static Type ToSystemType(SchemaElement schema)
