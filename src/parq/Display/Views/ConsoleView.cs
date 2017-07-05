@@ -206,7 +206,7 @@ namespace parq.Display.Views
 
       private void WriteSummary(ViewModel viewModel, ConsoleSheet currentSheet, ConsoleFold currentFold)
       {
-         Console.WriteLine("Showing {0} to {1} of {2} Columns. Press <- or -> to navigate.", currentSheet.IndexStart, currentSheet.IndexEnd, viewModel.Columns.Count());
+         Console.WriteLine("Showing {0} to {1} of {2} Columns. Use Arrow Keys to Navigate.", currentSheet.IndexStart, currentSheet.IndexEnd, viewModel.Columns.Count());
          Console.WriteLine("Showing {0} to {1} of {2} Rows Total. Press ENTER to quit;", currentFold.IndexStart, currentFold.IndexEnd, viewModel.RowCount);
       }
       private void WriteHeaderLine(ConsoleSheet columnDetails)
