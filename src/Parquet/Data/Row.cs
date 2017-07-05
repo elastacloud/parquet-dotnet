@@ -21,6 +21,10 @@ namespace Parquet.Data
          _values = values.ToArray();
       }
 
+      /// <summary>
+      /// Initializes a new instance of the <see cref="Row"/> class.
+      /// </summary>
+      /// <param name="values">The values.</param>
       public Row(params object[] values)
       {
          _values = values;

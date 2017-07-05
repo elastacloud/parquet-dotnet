@@ -79,7 +79,7 @@ namespace Parquet.File
          _values = values;
       }
 
-      private static void Trim(IList list, long maxValues)
+      public static void Trim(IList list, long maxValues)
       {
          if (list.Count > maxValues)
          {

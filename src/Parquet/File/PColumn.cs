@@ -147,6 +147,11 @@ namespace Parquet.File
                // these are pointers back to the Values table - lookup on values 
                List<int> indexes = ReadColumnValues(reader, ph.Data_page_header.Encoding, destination, maxValues);
 
+               //trim output if it exceeds max number of values
+               int numValues = ph.Data_page_header.Num_values;
+               if(definitions != null) ValueMerger.Trim(definitions, numValues);
+               if(indexes != null) ValueMerger.Trim(indexes, numValues);
+
                return (definitions, null, indexes);
             }
          }
