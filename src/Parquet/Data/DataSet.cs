@@ -107,7 +107,7 @@ namespace Parquet.Data
       /// <summary>
       /// Gets the number of columns contained in this dataset
       /// </summary>
-      public int Count => Schema.Elements.Count;
+      public int Count => _rows.Count;
 
       /// <summary>
       /// Gets the number of columns contained in this dataset
