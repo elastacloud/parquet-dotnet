@@ -39,7 +39,7 @@ namespace Parquet.File
 
       public IList Read(string columnName)
       {
-         IList values = ListFactory.Create(_schemaElement);
+         IList values = TypeFactory.Create(_schemaElement);
 
          //get the minimum offset, we'll just read pages in sequence
          long offset = new[] { _thriftChunk.Meta_data.Dictionary_page_offset, _thriftChunk.Meta_data.Data_page_offset }.Where(e => e != 0).Min();
@@ -122,7 +122,7 @@ namespace Parquet.File
          {
             using (var dataReader = new BinaryReader(dataStream))
             {
-               IList result = ListFactory.Create(_schemaElement);
+               IList result = TypeFactory.Create(_schemaElement);
                _plainReader.Read(dataReader, _schemaElement, result, int.MaxValue);
                return result;
             }

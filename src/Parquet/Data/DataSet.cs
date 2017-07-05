@@ -46,7 +46,7 @@ namespace Parquet.Data
       public IList GetColumn(int i)
       {
          SchemaElement schema = Schema.Elements[i];
-         IList result = ListFactory.Create(schema.ElementType, schema.IsNullable);
+         IList result = TypeFactory.Create(schema.ElementType, schema.IsNullable);
 
          foreach(Row row in _rows)
          {

@@ -44,14 +44,14 @@ namespace Parquet.Data
                ? Thrift.FieldRepetitionType.OPTIONAL
                : Thrift.FieldRepetitionType.REQUIRED,
          };
-         ListFactory.AdjustSchema(ThriftSchema, elementType);
+         TypeFactory.AdjustSchema(ThriftSchema, elementType);
       }
 
       internal SchemaElement(PSE thriftSchema)
       {
          Name = thriftSchema.Name;
          ThriftSchema = thriftSchema;
-         ElementType = ListFactory.ToSystemType(thriftSchema);
+         ElementType = TypeFactory.ToSystemType(thriftSchema);
          IsNullable = thriftSchema.Repetition_type != Thrift.FieldRepetitionType.REQUIRED;
       }
 

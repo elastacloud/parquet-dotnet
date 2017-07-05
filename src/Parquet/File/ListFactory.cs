@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace Parquet.File
 {
-   static class ListFactory
+   static class TypeFactory
    {
       struct TypeTag
       {

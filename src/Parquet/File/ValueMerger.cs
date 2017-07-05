@@ -59,7 +59,7 @@ namespace Parquet.File
          Trim(definitions, maxValues);
 
          int valueIdx = 0;
-         IList values = ListFactory.Create(_schema, true);
+         IList values = TypeFactory.Create(_schema, true);
 
          foreach (int isDefinedInt in definitions)
          {
