@@ -38,21 +38,21 @@ namespace Parquet.Data
          Name = name;
          ElementType = elementType;
          IsNullable = isNullable;
-         ThriftSchema = new PSE(name)
+         Thrift = new PSE(name)
          {
             Repetition_type = isNullable
-               ? Thrift.FieldRepetitionType.OPTIONAL
-               : Thrift.FieldRepetitionType.REQUIRED,
+               ? Parquet.Thrift.FieldRepetitionType.OPTIONAL
+               : Parquet.Thrift.FieldRepetitionType.REQUIRED,
          };
-         TypeFactory.AdjustSchema(ThriftSchema, elementType);
+         TypeFactory.AdjustSchema(Thrift, elementType);
       }
 
       internal SchemaElement(PSE thriftSchema)
       {
          Name = thriftSchema.Name;
-         ThriftSchema = thriftSchema;
+         Thrift = thriftSchema;
          ElementType = TypeFactory.ToSystemType(thriftSchema);
-         IsNullable = thriftSchema.Repetition_type != Thrift.FieldRepetitionType.REQUIRED;
+         IsNullable = thriftSchema.Repetition_type != Parquet.Thrift.FieldRepetitionType.REQUIRED;
       }
 
       /// <summary>
@@ -70,7 +70,7 @@ namespace Parquet.Data
       /// </summary>
       public bool IsNullable { get; }
 
-      internal PSE ThriftSchema { get; set; }
+      internal PSE Thrift { get; set; }
 
       /// <summary>
       /// Pretty prints

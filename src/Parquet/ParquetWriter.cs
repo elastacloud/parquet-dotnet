@@ -23,15 +23,11 @@
 
 using System;
 using System.IO;
-using Parquet.Thrift;
 using Parquet.File;
 using System.Collections.Generic;
 using System.Linq;
 using Parquet.File.Values;
-using TEncoding = Parquet.Thrift.Encoding;
 using Parquet.File.Data;
-using DSchemaElement = Parquet.Data.SchemaElement;
-using TSE = Parquet.Thrift.SchemaElement;
 using System.Collections;
 using Parquet.Data;
 
@@ -81,7 +77,7 @@ namespace Parquet
 
          long totalCount = dataSet.Count;
 
-         RowGroup rg = _meta.AddRowGroup();
+         Thrift.RowGroup rg = _meta.AddRowGroup();
          long rgStartPos = _output.Position;
          rg.Columns = dataSet.Schema.Elements.Select(c => Write(c, dataSet.GetColumn(c.Name))).ToList();
 
@@ -102,28 +98,28 @@ namespace Parquet
          }
       }
 
-      private ColumnChunk Write(DSchemaElement schema, IList values)
+      private Thrift.ColumnChunk Write(SchemaElement schema, IList values)
       {
-         var chunk = new ColumnChunk();
+         var chunk = new Thrift.ColumnChunk();
          long startPos = _output.Position;
          chunk.File_offset = startPos;
-         chunk.Meta_data = new ColumnMetaData();
+         chunk.Meta_data = new Thrift.ColumnMetaData();
          chunk.Meta_data.Num_values = values.Count;
-         chunk.Meta_data.Type = schema.ThriftSchema.Type;
-         chunk.Meta_data.Codec = CompressionCodec.UNCOMPRESSED;   //todo: compression should be passed as parameter
+         chunk.Meta_data.Type = schema.Thrift.Type;
+         chunk.Meta_data.Codec = Thrift.CompressionCodec.UNCOMPRESSED;   //todo: compression should be passed as parameter
          chunk.Meta_data.Data_page_offset = startPos;
-         chunk.Meta_data.Encodings = new List<TEncoding>
+         chunk.Meta_data.Encodings = new List<Thrift.Encoding>
          {
-            TEncoding.PLAIN
+            Thrift.Encoding.PLAIN
          };
          chunk.Meta_data.Path_in_schema = new List<string> { schema.Name };
 
-         var ph = new PageHeader(PageType.DATA_PAGE, 0, 0);
-         ph.Data_page_header = new DataPageHeader
+         var ph = new Thrift.PageHeader(Thrift.PageType.DATA_PAGE, 0, 0);
+         ph.Data_page_header = new Thrift.DataPageHeader
          {
-            Encoding = TEncoding.PLAIN,
-            Definition_level_encoding = TEncoding.RLE,
-            Repetition_level_encoding = TEncoding.BIT_PACKED,
+            Encoding = Thrift.Encoding.PLAIN,
+            Definition_level_encoding = Thrift.Encoding.RLE,
+            Repetition_level_encoding = Thrift.Encoding.BIT_PACKED,
             Num_values = values.Count
          };
 
@@ -132,14 +128,14 @@ namespace Parquet
          return chunk;
       }
 
-      private void WriteValues(DSchemaElement schema, IList values, PageHeader ph)
+      private void WriteValues(SchemaElement schema, IList values, Thrift.PageHeader ph)
       {
          using (var ms = new MemoryStream())
          {
             using (var columnWriter = new BinaryWriter(ms))
             {
                //columnWriter.Write((int)0);   //definition levels, only for nullable columns
-               _plainWriter.Write(columnWriter, schema.ThriftSchema, values);
+               _plainWriter.Write(columnWriter, schema, values);
 
                //
 

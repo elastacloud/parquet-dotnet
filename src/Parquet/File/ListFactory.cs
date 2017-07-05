@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using Type = System.Type;
-using TType = Parquet.Thrift.Type;
 using System.Collections;
-using Parquet.Thrift;
 using System.Reflection;
+using Parquet.Data;
 
 namespace Parquet.File
 {
@@ -13,11 +10,11 @@ namespace Parquet.File
    {
       struct TypeTag
       {
-         public TType PType;
+         public Thrift.Type PType;
 
-         public ConvertedType? ConvertedType;
+         public Thrift.ConvertedType? ConvertedType;
 
-         public TypeTag(TType ptype, ConvertedType? convertedType)
+         public TypeTag(Thrift.Type ptype, Thrift.ConvertedType? convertedType)
          {
             PType = ptype;
             ConvertedType = convertedType;
@@ -26,12 +23,12 @@ namespace Parquet.File
 
       private static readonly Dictionary<Type, TypeTag> TypeToTag = new Dictionary<Type, TypeTag>
       {
-         { typeof(int), new TypeTag(TType.INT32, null) },
-         { typeof(bool), new TypeTag(TType.BOOLEAN, null) },
-         { typeof(string), new TypeTag(TType.BYTE_ARRAY, ConvertedType.UTF8) }
+         { typeof(int), new TypeTag(Thrift.Type.INT32, null) },
+         { typeof(bool), new TypeTag(Thrift.Type.BOOLEAN, null) },
+         { typeof(string), new TypeTag(Thrift.Type.BYTE_ARRAY, Thrift.ConvertedType.UTF8) }
       };
 
-      public static void AdjustSchema(SchemaElement schema, Type systemType)
+      public static void AdjustSchema(Thrift.SchemaElement schema, Type systemType)
       {
          if (!TypeToTag.TryGetValue(systemType, out TypeTag tag))
             throw new NotSupportedException($"system type {systemType} is not supported");
@@ -63,18 +60,18 @@ namespace Parquet.File
 
       public static IList Create(SchemaElement schema, bool nullable = false)
       {
-         Type t = ToSystemType(schema);
+         Type t = ToSystemType(schema.Thrift);
          return Create(t, nullable);
       }
 
-      public static Type ToSystemType(SchemaElement schema)
+      public static Type ToSystemType(Thrift.SchemaElement schema)
       {
          switch (schema.Type)
          {
-            case TType.BOOLEAN:
+            case Thrift.Type.BOOLEAN:
                return typeof(bool);
-            case TType.INT32:
-               if (schema.Converted_type == ConvertedType.DATE)
+            case Thrift.Type.INT32:
+               if (schema.Converted_type == Thrift.ConvertedType.DATE)
                {
                   return typeof(DateTimeOffset);
                }
@@ -82,16 +79,16 @@ namespace Parquet.File
                {
                   return typeof(int);
                }
-            case TType.FLOAT:
+            case Thrift.Type.FLOAT:
                return typeof(float);
-            case TType.INT64:
+            case Thrift.Type.INT64:
                return typeof(long);
-            case TType.DOUBLE:
+            case Thrift.Type.DOUBLE:
                return typeof(double);
-            case TType.INT96:
+            case Thrift.Type.INT96:
                return typeof(DateTimeOffset);
-            case TType.BYTE_ARRAY:
-               if (schema.Converted_type == ConvertedType.UTF8)
+            case Thrift.Type.BYTE_ARRAY:
+               if (schema.Converted_type == Thrift.ConvertedType.UTF8)
                {
                   return typeof(string);
                }
@@ -99,8 +96,8 @@ namespace Parquet.File
                {
                   return typeof(byte[]);
                }
-            case TType.FIXED_LEN_BYTE_ARRAY:
-               if (schema.Converted_type == ConvertedType.DECIMAL)
+            case Thrift.Type.FIXED_LEN_BYTE_ARRAY:
+               if (schema.Converted_type == Thrift.ConvertedType.DECIMAL)
                {
                   return typeof(decimal);
                }

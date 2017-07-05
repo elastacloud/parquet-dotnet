@@ -1,5 +1,4 @@
-﻿using Parquet.Thrift;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Parquet.Data
@@ -10,6 +9,26 @@ namespace Parquet.Data
    public class Schema
    {
       private List<SchemaElement> _elements;
+      private readonly Dictionary<string, SchemaElement> _pathToElement = new Dictionary<string, SchemaElement>();
+
+
+      /// <summary>
+      /// Initializes a new instance of the <see cref="Schema"/> class from schema elements.
+      /// </summary>
+      /// <param name="elements">The elements.</param>
+      public Schema(IEnumerable<SchemaElement> elements)
+      {
+         _elements = elements.ToList();
+      }
+
+      internal Schema(Thrift.FileMetaData fm)
+      {
+         _elements = fm.Schema.Skip(1).Select(se => new SchemaElement(se)).ToList();
+         foreach (Thrift.SchemaElement se in fm.Schema)
+         {
+            _pathToElement[se.Name] = new SchemaElement(se);
+         }
+      }
 
       /// <summary>
       /// Gets the schema elements
@@ -21,18 +40,25 @@ namespace Parquet.Data
       /// </summary>
       public string[] ColumnNames => _elements.Select(e => e.Name).ToArray();
 
-      /// <summary>
-      /// Initializes a new instance of the <see cref="Schema"/> class from schema elements.
-      /// </summary>
-      /// <param name="elements">The elements.</param>
-      public Schema(IEnumerable<SchemaElement> elements)
+      internal int GetMaxDefinitionLevel(Thrift.ColumnChunk cc)
       {
-         _elements = elements.ToList();
+         int max = 0;
+
+         foreach (string part in cc.Meta_data.Path_in_schema)
+         {
+            SchemaElement element = _pathToElement[part];
+            if (element.Thrift.Repetition_type != Thrift.FieldRepetitionType.REQUIRED) max += 1;
+         }
+
+         return max;
       }
 
-      internal Schema(FileMetaData fm)
+      internal SchemaElement this[Thrift.ColumnChunk value]
       {
-         _elements = fm.Schema.Skip(1).Select(se => new SchemaElement(se)).ToList();
+         get
+         {
+            return _pathToElement[value.Meta_data.Path_in_schema[0]];
+         }
       }
    }
 }

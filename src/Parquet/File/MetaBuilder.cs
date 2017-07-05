@@ -27,7 +27,7 @@ namespace Parquet.File
       public void AddSchema(DataSet ds)
       {
          _meta.Schema = new List<TSchemaElement> { new TSchemaElement("schema") { Num_children = ds.Schema.Elements.Count } };
-         _meta.Schema.AddRange(ds.Schema.Elements.Select(c => c.ThriftSchema));
+         _meta.Schema.AddRange(ds.Schema.Elements.Select(c => c.Thrift));
          _meta.Num_rows = ds.Count;
       }
 
