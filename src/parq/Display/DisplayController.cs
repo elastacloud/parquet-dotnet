@@ -1,4 +1,5 @@
-﻿using Parquet;
+﻿using parq.Display.Models;
+using Parquet;
 using Parquet.Data;
 using System;
 using System.Collections.Generic;
