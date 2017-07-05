@@ -47,8 +47,6 @@ namespace parq
                var viewModel = display.Get(dataSet);
                new ConsoleView().Draw(viewModel);
 
-               Console.ReadLine();
-
             }
           }
        }
