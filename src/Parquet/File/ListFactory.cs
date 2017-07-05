@@ -31,18 +31,21 @@ namespace Parquet.File
          { typeof(string), new TypeTag(TType.BYTE_ARRAY, ConvertedType.UTF8) }
       };
 
-      public static IList Create(Type systemType, SchemaElement schemaToSet = null, bool nullable = false)
+      public static void AdjustSchema(SchemaElement schema, Type systemType)
       {
-         if (schemaToSet != null)
+         if (!TypeToTag.TryGetValue(systemType, out TypeTag tag))
+            throw new NotSupportedException($"system type {systemType} is not supported");
+
+         schema.Type = tag.PType;
+
+         if (tag.ConvertedType != null)
          {
-            if (!TypeToTag.TryGetValue(systemType, out TypeTag tag))
-               throw new NotSupportedException($"system type {systemType} is not supported");
-
-            schemaToSet.Type = tag.PType;
-            if (tag.ConvertedType != null)
-               schemaToSet.Converted_type = tag.ConvertedType.Value;
+            schema.Converted_type = tag.ConvertedType.Value;
          }
+      }
 
+      public static IList Create(Type systemType, bool nullable = false)
+      {
          //make the type nullable if it's not a class
          if(nullable)
          {
@@ -61,7 +64,7 @@ namespace Parquet.File
       public static IList Create(SchemaElement schema, bool nullable = false)
       {
          Type t = ToSystemType(schema);
-         return Create(t, null, nullable);
+         return Create(t, nullable);
       }
 
       public static Type ToSystemType(SchemaElement schema)

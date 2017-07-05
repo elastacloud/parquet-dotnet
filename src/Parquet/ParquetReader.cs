@@ -60,6 +60,17 @@ namespace Parquet
          _thrift = new ThriftStream(input);
       }
 
+      public static DataSet ReadFile(string fullPath)
+      {
+         using (Stream fs = System.IO.File.OpenRead(fullPath))
+         {
+            using (var reader = new ParquetReader(fs))
+            {
+               return reader.Read();
+            }
+         }
+      }
+
       /// <summary>
       /// Options
       /// </summary>

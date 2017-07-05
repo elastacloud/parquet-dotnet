@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using Parquet.Data;
+using System.IO;
 using Xunit;
 using F = System.IO.File;
 
@@ -13,26 +14,30 @@ namespace Parquet.Test
 
          using (var writer = new ParquetWriter(ms))
          {
-            var ds = new ParquetDataSet();
+            var ds = new DataSet(
+               new SchemaElement<int>("id", false),
+               new SchemaElement<bool>("bool_col", false),
+               new SchemaElement<string>("string_col", false)
+            );
 
             //8 values for each column
 
-            var idCol = new ParquetColumn<int>("id");
-            idCol.Add(4, 5, 6, 7, 2, 3, 0, 1);
+            ds.Add(4, true, "0");
+            ds.Add(5, false, "1");
+            ds.Add(6, true, "0");
+            ds.Add(7, false, "1");
+            ds.Add(2, true, "0");
+            ds.Add(3, false, "1");
+            ds.Add(0, true, "0");
+            ds.Add(1, false, "0");
 
-            var bool_col = new ParquetColumn<bool>("bool_col");
-            bool_col.Add(true, false, true, false, true, false, true, false);
-
-            var string_col = new ParquetColumn<string>("string_col");
-            string_col.Add("0", "1", "0", "1", "0", "1", "0", "1");
-
-            writer.Write(new ParquetDataSet(idCol, bool_col, string_col));
+            writer.Write(ds);
          }
 
          ms.Position = 0;
          using (var reader = new ParquetReader(ms))
          {
-            ParquetDataSet ds = reader.Read();
+            DataSet ds = reader.Read();
          }
 
 #if DEBUG

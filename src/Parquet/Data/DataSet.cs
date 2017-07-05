@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Parquet.File;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Generics;
@@ -28,6 +29,57 @@ namespace Parquet.Data
          _schema = schema ?? throw new ArgumentNullException(nameof(schema));
       }
 
+      /// <summary>
+      /// Initializes a new instance of the <see cref="DataSet"/> class.
+      /// </summary>
+      /// <param name="schema">The schema.</param>
+      public DataSet(params SchemaElement[] schema)
+      {
+         _schema = new Schema(schema);
+      }
+
+      /// <summary>
+      /// Slices rows and returns list of all values in a particular column.
+      /// </summary>
+      /// <param name="i">Column index</param>
+      /// <returns>Column values</returns>
+      public IList GetColumn(int i)
+      {
+         SchemaElement schema = Schema.Elements[i];
+         IList result = ListFactory.Create(schema.ElementType, schema.IsNullable);
+
+         foreach(Row row in _rows)
+         {
+            result.Add(row[i]);
+         }
+
+         return result;
+      }
+
+      /// <summary>
+      /// Slices rows and returns list of all values in a particular column.
+      /// </summary>
+      /// <param name="name">Column name</param>
+      /// <returns>Column values</returns>
+      public IList GetColumn(string name)
+      {
+         for(int i = 0; i < _schema.Elements.Count; i++)
+         {
+            if (_schema.Elements[i].Name == name) return GetColumn(i);
+         }
+
+         throw new ArgumentException($"cannot find column {name}");
+      }
+
+      /// <summary>
+      /// Adds the specified values.
+      /// </summary>
+      /// <param name="values">The values.</param>
+      public void Add(params object[] values)
+      {
+         Add(new Row(values));
+      }
+
       internal void AddColumnar(List<IList> columnsList)
       {
          IEnumerator[] iear = columnsList.Select(c => c.GetEnumerator()).ToArray();
@@ -48,9 +100,19 @@ namespace Parquet.Data
       public Row this[int index] { get => _rows[index]; set => _rows[index] = value; }
 
       /// <summary>
-      /// Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.
+      /// Gets the number of rows contained in this dataset.
       /// </summary>
-      public int Count => _rows.Count;
+      public int RowCount => _rows.Count;
+
+      /// <summary>
+      /// Gets the number of columns contained in this dataset
+      /// </summary>
+      public int Count => Schema.Elements.Count;
+
+      /// <summary>
+      /// Gets the number of columns contained in this dataset
+      /// </summary>
+      public int ColumnCount => Schema.Elements.Count;
 
       /// <summary>
       /// Gets a value indicating whether the <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.

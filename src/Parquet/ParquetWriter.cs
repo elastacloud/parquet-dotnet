@@ -30,6 +30,10 @@ using System.Linq;
 using Parquet.File.Values;
 using TEncoding = Parquet.Thrift.Encoding;
 using Parquet.File.Data;
+using DSchemaElement = Parquet.Data.SchemaElement;
+using TSE = Parquet.Thrift.SchemaElement;
+using System.Collections;
+using Parquet.Data;
 
 namespace Parquet
 {
@@ -69,7 +73,7 @@ namespace Parquet
       /// </summary>
       /// <param name="dataSet">Dataset to write</param>
       /// <param name="compression">Compression method</param>
-      public void Write(ParquetDataSet dataSet, CompressionMethod compression = CompressionMethod.None)
+      public void Write(DataSet dataSet, CompressionMethod compression = CompressionMethod.None)
       {
          _dataWriter = CreateDataWriter(compression);
 
@@ -79,7 +83,7 @@ namespace Parquet
 
          RowGroup rg = _meta.AddRowGroup();
          long rgStartPos = _output.Position;
-         rg.Columns = dataSet.Columns.Select(c => Write(c)).ToList();
+         rg.Columns = dataSet.Schema.Elements.Select(c => Write(c, dataSet.GetColumn(c.Name))).ToList();
 
          //row group's size is a sum of _uncompressed_ sizes of all columns in it
          rg.Total_byte_size = rg.Columns.Sum(c => c.Meta_data.Total_uncompressed_size);
@@ -98,21 +102,21 @@ namespace Parquet
          }
       }
 
-      private ColumnChunk Write(ParquetColumn column)
+      private ColumnChunk Write(DSchemaElement schema, IList values)
       {
          var chunk = new ColumnChunk();
          long startPos = _output.Position;
          chunk.File_offset = startPos;
          chunk.Meta_data = new ColumnMetaData();
-         chunk.Meta_data.Num_values = column.Values.Count;
-         chunk.Meta_data.Type = column.Type;
+         chunk.Meta_data.Num_values = values.Count;
+         chunk.Meta_data.Type = schema.ThriftSchema.Type;
          chunk.Meta_data.Codec = CompressionCodec.UNCOMPRESSED;   //todo: compression should be passed as parameter
          chunk.Meta_data.Data_page_offset = startPos;
          chunk.Meta_data.Encodings = new List<TEncoding>
          {
             TEncoding.PLAIN
          };
-         chunk.Meta_data.Path_in_schema = new List<string> { column.Name };
+         chunk.Meta_data.Path_in_schema = new List<string> { schema.Name };
 
          var ph = new PageHeader(PageType.DATA_PAGE, 0, 0);
          ph.Data_page_header = new DataPageHeader
@@ -120,22 +124,22 @@ namespace Parquet
             Encoding = TEncoding.PLAIN,
             Definition_level_encoding = TEncoding.RLE,
             Repetition_level_encoding = TEncoding.BIT_PACKED,
-            Num_values = column.Values.Count
+            Num_values = values.Count
          };
 
-         WriteValues(column, ph);
+         WriteValues(schema, values, ph);
 
          return chunk;
       }
 
-      private void WriteValues(ParquetColumn column, PageHeader ph)
+      private void WriteValues(DSchemaElement schema, IList values, PageHeader ph)
       {
          using (var ms = new MemoryStream())
          {
             using (var columnWriter = new BinaryWriter(ms))
             {
                //columnWriter.Write((int)0);   //definition levels, only for nullable columns
-               _plainWriter.Write(columnWriter, column.Schema, column.Values);
+               _plainWriter.Write(columnWriter, schema.ThriftSchema, values);
 
                //
 

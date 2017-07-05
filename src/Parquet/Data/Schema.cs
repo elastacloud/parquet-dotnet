@@ -11,6 +11,10 @@ namespace Parquet.Data
    {
       private List<SchemaElement> _elements;
 
+      public IList<SchemaElement> Elements => _elements;
+
+      public string[] ColumnNames => _elements.Select(e => e.Name).ToArray();
+
       /// <summary>
       /// Initializes a new instance of the <see cref="Schema"/> class from schema elements.
       /// </summary>

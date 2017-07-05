@@ -21,6 +21,11 @@ namespace Parquet.Data
          _values = values.ToArray();
       }
 
+      public Row(params object[] values)
+      {
+         _values = values;
+      }
+
       /// <summary>
       /// Gets the number of values in this row
       /// </summary>
@@ -143,6 +148,8 @@ namespace Parquet.Data
 
          return (T)v;
       }
+
+      public object[] RawValues => _values;
 
       /// <summary>
       /// Returns a <see cref="System.String" /> that represents this instance.
