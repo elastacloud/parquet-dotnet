@@ -11,8 +11,14 @@ namespace Parquet.Data
    {
       private List<SchemaElement> _elements;
 
+      /// <summary>
+      /// Gets the schema elements
+      /// </summary>
       public IList<SchemaElement> Elements => _elements;
 
+      /// <summary>
+      /// Gets the column names as string array
+      /// </summary>
       public string[] ColumnNames => _elements.Select(e => e.Name).ToArray();
 
       /// <summary>

@@ -149,13 +149,16 @@ namespace Parquet.Data
          return (T)v;
       }
 
+      /// <summary>
+      /// Gets the raw values.
+      /// </summary>
       public object[] RawValues => _values;
 
       /// <summary>
-      /// Returns a <see cref="System.String" /> that represents this instance.
+      /// Returns a <see cref="string" /> that represents this instance.
       /// </summary>
       /// <returns>
-      /// A <see cref="System.String" /> that represents this instance.
+      /// A <see cref="string" /> that represents this instance.
       /// </returns>
       public override string ToString()
       {
