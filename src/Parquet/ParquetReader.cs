@@ -30,8 +30,6 @@ using Parquet.Data;
 using System.Collections;
 using FSchema = Parquet.File.Schema;
 using DSchema = Parquet.Data.Schema;
-using DSchemaElement = Parquet.Data.SchemaElement;
-using System.Linq;
 
 namespace Parquet
 {
@@ -75,7 +73,7 @@ namespace Parquet
       /// <summary>
       /// Test read, to be defined
       /// </summary>
-      public ParquetDataSet Read()
+      public DataSet Read()
       {
          _meta = ReadMetadata();
          _schema = new FSchema(_meta);
@@ -104,7 +102,7 @@ namespace Parquet
 
          ds.AddColumnar(cols);
 
-         return new ParquetDataSet();
+         return ds;
       }
 
       private void ValidateFile()
