@@ -99,6 +99,13 @@ namespace Parquet.File
                break;   //limit reached
             }
 
+            /*IList acc1 = new ValueMerger(_schemaElement, values).Apply(dictionaryPage, definitions, indexes, maxValues);
+            dictionaryPage = null;
+            definitions = null;
+            indexes = null;
+            values.Clear();
+            foreach (var el in acc1) acc.Add(el);*/
+
             ph = _thrift.Read<Thrift.PageHeader>(); //get next page
             if (ph.Type != Thrift.PageType.DATA_PAGE)
             {

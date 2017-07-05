@@ -49,7 +49,7 @@ namespace Parquet.File
 
          Trim(values, maxValues);
 
-         _values = values;
+         foreach (var el in values) _values.Add(el);
       }
 
       private void ApplyDefinitions(List<int> definitions, long maxValues)
