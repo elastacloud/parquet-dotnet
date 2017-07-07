@@ -23,14 +23,13 @@
 
 using System;
 using System.IO;
-using System.Text;
-using Parquet.Thrift;
 using Parquet.File;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Parquet.File.Values;
-using TEncoding = Parquet.Thrift.Encoding;
+using Parquet.File.Data;
+using System.Collections;
+using Parquet.Data;
 
 namespace Parquet
 {
@@ -43,9 +42,24 @@ namespace Parquet
       private readonly BinaryWriter _writer;
       private readonly ThriftStream _thrift;
       private static readonly byte[] Magic = System.Text.Encoding.ASCII.GetBytes("PAR1");
-      private readonly FileMetaData _meta = new FileMetaData();
-      private readonly IValuesWriter _plainWriter = new PlainValuesWriter();
+      private readonly MetaBuilder _meta = new MetaBuilder();
+      private readonly ParquetOptions _options = new ParquetOptions();
+      private readonly IValuesWriter _plainWriter;
+      private static readonly Dictionary<CompressionMethod, IDataWriter> CompressionMethodToWriter = new Dictionary<CompressionMethod, IDataWriter>()
+      {
+         { CompressionMethod.None, new UncompressedDataWriter() },
+         { CompressionMethod.Gzip, new GzipDataWriter() }
+      };
+      private static readonly Dictionary<CompressionMethod, Thrift.CompressionCodec> CompressionMethodToCodec = new Dictionary<CompressionMethod, Thrift.CompressionCodec>
+      {
+         { CompressionMethod.None, Thrift.CompressionCodec.UNCOMPRESSED },
+         { CompressionMethod.Gzip, Thrift.CompressionCodec.GZIP }
+      };
 
+      /// <summary>
+      /// Creates an instance of parquet writer on top of a stream
+      /// </summary>
+      /// <param name="output">Writeable, seekable stream</param>
       public ParquetWriter(Stream output)
       {
          _output = output ?? throw new ArgumentNullException(nameof(output));
@@ -53,75 +67,98 @@ namespace Parquet
          _thrift = new ThriftStream(output);
          _writer = new BinaryWriter(_output);
 
+         _plainWriter = new PlainValuesWriter(_options);
+
          //file starts with magic
          WriteMagic();
-
-         _meta.Created_by = "parquet-dotnet";
-         _meta.Version = 1;
-         _meta.Row_groups = new List<RowGroup>();
       }
 
-      public void Write(ParquetDataSet dataSet)
+      /// <summary>
+      /// Write out dataset to the output stream
+      /// </summary>
+      /// <param name="dataSet">Dataset to write</param>
+      /// <param name="compression">Compression method</param>
+      public void Write(DataSet dataSet, CompressionMethod compression = CompressionMethod.Gzip)
       {
+         _meta.AddSchema(dataSet);
+
          long totalCount = dataSet.Count;
 
-         _meta.Schema = new List<SchemaElement> { new SchemaElement("schema") { Num_children = dataSet.Columns.Count } };
-         _meta.Schema.AddRange(dataSet.Columns.Select(c => c.Schema));
-         _meta.Num_rows = totalCount;
-
-         var rg = new RowGroup();
+         Thrift.RowGroup rg = _meta.AddRowGroup();
          long rgStartPos = _output.Position;
-         _meta.Row_groups.Add(rg);
-         rg.Columns = dataSet.Columns.Select(c => Write(c)).ToList();
+         rg.Columns = dataSet.Schema.Elements.Select(c => Write(c, dataSet.GetColumn(c.Name), compression)).ToList();
 
          //row group's size is a sum of _uncompressed_ sizes of all columns in it
          rg.Total_byte_size = rg.Columns.Sum(c => c.Meta_data.Total_uncompressed_size);
          rg.Num_rows = dataSet.Count;
       }
 
-      private ColumnChunk Write(ParquetColumn column)
+      private Thrift.ColumnChunk Write(SchemaElement schema, IList values, CompressionMethod compression)
       {
-         var chunk = new ColumnChunk();
+         Thrift.CompressionCodec codec = CompressionMethodToCodec[compression];
+
+         var chunk = new Thrift.ColumnChunk();
          long startPos = _output.Position;
          chunk.File_offset = startPos;
-         chunk.Meta_data = new ColumnMetaData();
-         chunk.Meta_data.Num_values = column.Values.Count;
-         chunk.Meta_data.Type = column.Type;
-         chunk.Meta_data.Codec = CompressionCodec.UNCOMPRESSED;   //todo: compression should be passed as parameter
+         chunk.Meta_data = new Thrift.ColumnMetaData();
+         chunk.Meta_data.Num_values = values.Count;
+         chunk.Meta_data.Type = schema.Thrift.Type;
+         chunk.Meta_data.Codec = codec;
          chunk.Meta_data.Data_page_offset = startPos;
-         chunk.Meta_data.Encodings = new List<TEncoding>
+         chunk.Meta_data.Encodings = new List<Thrift.Encoding>
          {
-            TEncoding.PLAIN
+            Thrift.Encoding.PLAIN
          };
-         chunk.Meta_data.Path_in_schema = new List<string> { column.Name };
+         chunk.Meta_data.Path_in_schema = new List<string> { schema.Name };
 
-         var ph = new PageHeader(PageType.DATA_PAGE, 0, 0);
-         ph.Data_page_header = new DataPageHeader
+         var ph = new Thrift.PageHeader(Thrift.PageType.DATA_PAGE, 0, 0);
+         ph.Data_page_header = new Thrift.DataPageHeader
          {
-            Encoding = TEncoding.PLAIN,
-            Definition_level_encoding = TEncoding.RLE,
-            Repetition_level_encoding = TEncoding.BIT_PACKED,
-            Num_values = column.Values.Count
+            Encoding = Thrift.Encoding.PLAIN,
+            Definition_level_encoding = Thrift.Encoding.RLE,
+            Repetition_level_encoding = Thrift.Encoding.BIT_PACKED,
+            Num_values = values.Count
          };
 
+         WriteValues(schema, values, ph, compression);
+
+         return chunk;
+      }
+
+      private void WriteValues(SchemaElement schema, IList values, Thrift.PageHeader ph, CompressionMethod compression)
+      {
+         byte[] data;
 
          using (var ms = new MemoryStream())
          {
-            using (var columnWriter = new BinaryWriter(ms))
+            using (var writer = new BinaryWriter(ms))
             {
                //columnWriter.Write((int)0);   //definition levels, only for nullable columns
-               _plainWriter.Write(columnWriter, column.Schema, column.Values);
+               _plainWriter.Write(writer, schema, values);
 
-               //
-
-               ph.Compressed_page_size = ph.Uncompressed_page_size = (int)ms.Length;
-               byte[] data = ms.ToArray();
-               _thrift.Write(ph);
-               _output.Write(data, 0, data.Length);
+               data = ms.ToArray();
             }
          }
 
-         return chunk;
+         ph.Uncompressed_page_size = data.Length;
+
+         if(compression != CompressionMethod.None)
+         {
+            IDataWriter writer = CompressionMethodToWriter[compression];
+            using (var ms = new MemoryStream())
+            {
+               writer.Write(data, ms);
+               data = ms.ToArray();
+            }
+            ph.Compressed_page_size = data.Length;
+         }
+         else
+         {
+            ph.Compressed_page_size = ph.Uncompressed_page_size;
+         }
+
+         _thrift.Write(ph);
+         _output.Write(data, 0, data.Length);
       }
 
       private void WriteMagic()
@@ -129,10 +166,13 @@ namespace Parquet
          _output.Write(Magic, 0, Magic.Length);
       }
 
+      /// <summary>
+      /// Finalizes file, writes metadata and footer
+      /// </summary>
       public void Dispose()
       {
          //finalize file
-         long size = _thrift.Write(_meta);
+         long size = _thrift.Write(_meta.ThriftMeta);
 
          //metadata size
          _writer.Write((int)size);  //4 bytes
