@@ -9,7 +9,7 @@ namespace Parquet.File.Data
    {
       private static readonly Dictionary<CompressionMethod, (IDataWriter, IDataReader)> CompressionMethodToWorker = new Dictionary<CompressionMethod, (IDataWriter, IDataReader)>()
       {
-         { CompressionMethod.None, (new UncompressedDataWriter(), null) },
+         { CompressionMethod.None, (new UncompressedDataWriter(), new UncompressedDataReader()) },
          { CompressionMethod.Gzip, (new GzipDataWriter(), new GzipDataReader()) }
       };
 
