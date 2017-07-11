@@ -8,12 +8,12 @@ namespace Parquet.File.Data
 {
     class SnappyDataWriter : IDataWriter
     {
+       private readonly SnappyCompressor _snappyCompressor = new SnappyCompressor();
        public void Write(byte[] buffer, Stream destination)
        {
           var uncompressedLength = buffer.Length;
-          var snappy = new SnappyCompressor();
-          var compressed = new byte[snappy.MaxCompressedLength(uncompressedLength)];
-          snappy.Compress(buffer, 0, uncompressedLength, compressed);
+          var compressed = new byte[_snappyCompressor.MaxCompressedLength(uncompressedLength)];
+          _snappyCompressor.Compress(buffer, 0, uncompressedLength, compressed);
           destination.Write(compressed, 0, compressed.Length);
        }
     }
