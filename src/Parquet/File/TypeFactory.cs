@@ -46,6 +46,11 @@ namespace Parquet.File
 
       public static void AdjustSchema(Thrift.SchemaElement schema, Type systemType)
       {
+         if(IsPrimitiveNullable(systemType))
+         {
+            throw new ArgumentException($"Type '{systemType}' in column '{schema.Name}' is a nullable type. Please pass either a class or a primitive type.", nameof(systemType));
+         }
+
          bool flag = false;
          TypeTag tag = DefaultTypeTag;
          foreach (var type in AllTags)
@@ -73,6 +78,15 @@ namespace Parquet.File
          {
             schema.Converted_type = tag.ConvertedType.Value;
          }
+      }
+
+      private static bool IsPrimitiveNullable(Type t)
+      {
+         TypeInfo ti = t.GetTypeInfo();
+
+         if (ti.IsClass) return false;
+
+         return ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(Nullable<>);
       }
 
       public static IList Create(Type systemType, bool nullable = false)

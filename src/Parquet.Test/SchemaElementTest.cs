@@ -11,5 +11,11 @@ namespace Parquet.Test
       {
          Assert.Throws<NotSupportedException>(() => new SchemaElement<Enum>("e"));
       }
+
+      [Fact]
+      public void Creating_schema_with_nullable_primitive_fails()
+      {
+         Assert.Throws<ArgumentException>(() => new SchemaElement<int?>("fail!"));
+      }
    }
 }
