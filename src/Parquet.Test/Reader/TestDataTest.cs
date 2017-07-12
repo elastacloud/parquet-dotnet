@@ -132,7 +132,7 @@ namespace Parquet.Test.Reader
       [Fact]
       public void Alltypes_dictionary_no_compression_by_spark()
       {
-         CompareFiles("alltypes_dictionary", "plain2",
+         CompareFiles("alltypes_dictionary", "plain-spark21",
             typeof(int?),
             typeof(bool?),
             typeof(int?),
