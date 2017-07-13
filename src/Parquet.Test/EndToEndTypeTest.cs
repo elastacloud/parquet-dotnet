@@ -42,6 +42,8 @@ namespace Parquet.Test
          var ms = new MemoryStream();
          ParquetWriter.Write(ds, ms);
 
+         new DataSet(new Schema())
+
          ms.Position = 0;
          DataSet ds1 = ParquetReader.Read(ms);
 
