@@ -1,5 +1,4 @@
 ﻿using System;
-using LogMagic;
 using Parquet;
 using parq.Display;
 using parq.Display.Views;
