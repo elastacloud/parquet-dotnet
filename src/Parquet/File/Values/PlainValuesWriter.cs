@@ -158,7 +158,7 @@ namespace Parquet.File.Values
             // written as a long across 8 bytes
             double nanos = dto.TimeOfDay.TotalMilliseconds * 1000000D;
             writer.Write((long) nanos);
-            writer.Write(unixTime + 1);
+            writer.Write(unixTime);
 
 #if DEBUG 
             // this is the writer to spit out byte arrays of what Spark would see 

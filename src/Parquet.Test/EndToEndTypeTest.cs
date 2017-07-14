@@ -25,7 +25,7 @@ namespace Parquet.Test
 
          new object[] {  new DateTimeSchemaElement("d", DateTimeFormat.DateAndTime), new DateTimeOffset(DateTime.UtcNow.RoundToSecond()) },
          // don't want any excess info in the offset INT32 doesn't contain or care about this data 
-         new object[] {  new DateTimeSchemaElement("d", DateTimeFormat.Date), new DateTimeOffset(DateTime.Now.RoundToDay(), TimeSpan.Zero) }
+         new object[] {  new DateTimeSchemaElement("d", DateTimeFormat.Date), new DateTimeOffset(DateTime.UtcNow.RoundToDay(), TimeSpan.Zero) }
       };
 
       [Theory]
