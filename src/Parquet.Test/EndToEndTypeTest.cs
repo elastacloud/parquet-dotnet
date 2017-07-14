@@ -10,29 +10,23 @@ namespace Parquet.Test
 {
    public class EndToEndTypeTest
    {
-      public static IEnumerable<object[]> TypeData
+      public static IEnumerable<object[]> TypeData => new[]
       {
-         get
-         {
-            return new[]
-            {
-               new object[] {  new SchemaElement<string>("s"), "plain string" },
-               new object[] {  new SchemaElement<string>("s"), "L'Oréal Paris" },
-               new object[] {  new SchemaElement<float>("f"), (float)1.23 },
-               new object[] {  new SchemaElement<double>("d"), (double)10.44 },
+         new object[] {  new SchemaElement<string>("s"), "plain string" },
+         new object[] {  new SchemaElement<string>("s"), "L'Oréal Paris" },
+         new object[] {  new SchemaElement<float>("f"), (float)1.23 },
+         new object[] {  new SchemaElement<double>("d"), (double)10.44 },
 
-               //loses precision slightly, i.e.
-               //Expected: 2017-07-13T10:58:44.3767154+00:00
-               //Actual:   2017-07-12T10:58:44.3770000+00:00
-               new object[] {  new SchemaElement<DateTimeOffset>("d"), new DateTimeOffset(DateTime.UtcNow.RoundToSecond()) },
-               new object[] {  new DateTimeSchemaElement("d", DateTimeFormat.Impala), new DateTimeOffset(DateTime.UtcNow.RoundToSecond()) },
+         //loses precision slightly, i.e.
+         //Expected: 2017-07-13T10:58:44.3767154+00:00
+         //Actual:   2017-07-12T10:58:44.3770000+00:00
+         new object[] {  new SchemaElement<DateTimeOffset>("d"), new DateTimeOffset(DateTime.UtcNow.RoundToSecond()) },
+         new object[] {  new DateTimeSchemaElement("d", DateTimeFormat.Impala), new DateTimeOffset(DateTime.UtcNow.RoundToSecond()) },
 
-               new object[] {  new DateTimeSchemaElement("d", DateTimeFormat.DateAndTime), new DateTimeOffset(DateTime.UtcNow.RoundToSecond()) },
-
-               new object[] {  new DateTimeSchemaElement("d", DateTimeFormat.Date), new DateTimeOffset(DateTime.UtcNow.RoundToDay()) }
-            };
-         }
-      }
+         new object[] {  new DateTimeSchemaElement("d", DateTimeFormat.DateAndTime), new DateTimeOffset(DateTime.UtcNow.RoundToSecond()) },
+         // don't want any excess info in the offset INT32 doesn't contain or care about this data 
+         new object[] {  new DateTimeSchemaElement("d", DateTimeFormat.Date), new DateTimeOffset(DateTime.Now.RoundToDay(), TimeSpan.Zero) }
+      };
 
       [Theory]
       [MemberData(nameof(TypeData))]

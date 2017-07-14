@@ -102,7 +102,7 @@ namespace Parquet.File.Values
             foreach(DateTimeOffset el in dataTyped)
             {
                int days = (int)el.ToUnixDays();
-               writer.Write(days);
+               writer.Write(days + 1);
             }
          }
          else
@@ -158,7 +158,7 @@ namespace Parquet.File.Values
             // written as a long across 8 bytes
             double nanos = dto.TimeOfDay.TotalMilliseconds * 1000000D;
             writer.Write((long) nanos);
-            writer.Write(unixTime);
+            writer.Write(unixTime + 1);
 
 #if DEBUG 
             // this is the writer to spit out byte arrays of what Spark would see 
