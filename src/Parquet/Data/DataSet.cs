@@ -246,7 +246,16 @@ namespace Parquet.Data
       {
          return _rows.GetEnumerator();
       }
-
+      /// <summary>
+      /// Gets the column stats given a column index
+      /// </summary>
+      /// <param name="index">The index of the column</param>
+      /// <returns>The ColumnStats type</returns>
+      public ColumnStats GetColumnStats(int index)
+      {
+         var stats = new DataSetStats(this);
+         return stats.GetColumnStats(index);
+      }
       #endregion
    }
 }
