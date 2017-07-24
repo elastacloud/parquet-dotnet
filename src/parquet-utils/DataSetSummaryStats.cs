@@ -28,6 +28,7 @@ namespace Parquet.Data
          var stats = new ColumnSummaryStats(_ds.Schema.ColumnNames[index]);
          var columns = _ds.GetColumn(index);
          
+
          foreach (var handler in _handlers)
          {
             // This should be responsible for it's own types
