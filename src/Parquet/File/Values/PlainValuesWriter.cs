@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using TType = Parquet.Thrift.Type;
 using SType = System.Type;
@@ -102,7 +103,7 @@ namespace Parquet.File.Values
             foreach(DateTimeOffset el in dataTyped)
             {
                int days = (int)el.ToUnixDays();
-               writer.Write(days);
+               writer.Write(days + 1);
             }
          }
          else
@@ -150,30 +151,25 @@ namespace Parquet.File.Values
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       private void WriteInt96(BinaryWriter writer, SchemaElement schema, IList data)
       {
-         foreach (DateTimeOffset dto in data)
+         if (_options.TreatBigIntegersAsDates)
          {
-            int unixTime = (int) dto.DateTime.DateTimeToJulian();
-            // need to fill in the blanks here at the moment there is no day precision 
-            // need to get the offset from midday from the date and add these as nanos
-            // written as a long across 8 bytes
-            double nanos = dto.TimeOfDay.TotalMilliseconds * 1000000D;
-            writer.Write((long) nanos);
-            writer.Write(unixTime);
-
-#if DEBUG 
-            // this is the writer to spit out byte arrays of what Spark would see 
-            var bytes = new byte[12];
-            using (var memoryStream = new MemoryStream(bytes))
+            foreach (DateTimeOffset dto in data)
             {
-               using (var bWriter = new BinaryWriter(memoryStream))
-               {
-                  bWriter.Write(0L);
-                  bWriter.Write(unixTime);
-               }
+               int unixTime = (int) dto.DateTime.DateTimeToJulian() + 1;
+               // need to fill in the blanks here at the moment there is no day precision 
+               // need to get the offset from midday from the date and add these as nanos
+               // written as a long across 8 bytes
+               double nanos = dto.TimeOfDay.TotalMilliseconds * 1000000D;
+               writer.Write((long) nanos);
+               writer.Write(unixTime);
             }
-#endif
          }
-         
+         else
+         {
+            // assume that this is an a 12 byte decimal form
+            foreach (byte[] dto in data)
+               writer.Write(dto);
+         }
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -198,6 +194,16 @@ namespace Parquet.File.Values
             foreach(string s in src)
             {
                Write(writer, s);
+            }
+         }
+         else if (elementType == typeof(Interval))
+         {
+            var src = (List<Interval>) data;
+            foreach (var interval in src)
+            {
+               writer.Write(BitConverter.GetBytes(interval.Months));
+               writer.Write(BitConverter.GetBytes(interval.Days));
+               writer.Write(BitConverter.GetBytes(interval.Millis));
             }
          }
          else if(elementType == typeof(byte[]))

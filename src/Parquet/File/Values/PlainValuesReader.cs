@@ -148,48 +148,59 @@ namespace Parquet.File.Values
       {
          for (int i = 0; i < data.Length; i += schema.Thrift.Type_length)
          {
-            if (!schema.IsAnnotatedWith(Thrift.ConvertedType.DECIMAL)) continue;
-            // go from data - decimal needs to be 16 bytes but not from Spark - variable fixed nonsense
-            byte[] dataNew = new byte[schema.Thrift.Type_length];
-            Array.Copy(data, i, dataNew, 0, schema.Thrift.Type_length);
-            var bigInt = new BigDecimal(new BigInteger(dataNew.Reverse().ToArray()), schema.Thrift.Scale, schema.Thrift.Precision);
+            if (schema.IsAnnotatedWith(Thrift.ConvertedType.DECIMAL))
+            {
+               // go from data - decimal needs to be 16 bytes but not from Spark - variable fixed nonsense
+               byte[] dataNew = new byte[schema.Thrift.Type_length];
+               Array.Copy(data, i, dataNew, 0, schema.Thrift.Type_length);
+               var bigInt = new BigDecimal(new BigInteger(dataNew.Reverse().ToArray()), schema.Thrift.Scale,
+                  schema.Thrift.Precision);
 
-            decimal dc = (decimal) bigInt;
-            destination.Add(dc);
+               decimal dc = (decimal) bigInt;
+               destination.Add(dc);
+            }
+            else if (schema.IsAnnotatedWith(Thrift.ConvertedType.INTERVAL))
+            {
+               // assume this is the number of months / days / millis offset from the Julian calendar
+               byte[] months = new byte[4];
+               byte[] days = new byte[4];
+               byte[] millis = new byte[4];
+               Array.Copy(data, i, months, 0, 4);
+               Array.Copy(data, i + 4, days, 0, 4);
+               Array.Copy(data, i + 8, millis, 0, 4);
+               destination.Add(new Interval(
+                  BitConverter.ToInt32(months, 0),
+                  BitConverter.ToInt32(days, 0),
+                  BitConverter.ToInt32(millis, 0)));
+            }
          }
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      private static void ReadInt96(byte[] data, SchemaElement schema, IList destination)
+      private void ReadInt96(byte[] data, SchemaElement schema, IList destination)
       {
-
-
-#if !SPARK_TYPES
-         //var r96 = new List<BigInteger>(data.Length / 12);
-#else
-         //var r96 = new List<DateTimeOffset?>(data.Length / 12);
-#endif
-
          for (int i = 0; i < data.Length; i += 12)
          {
 
-#if !SPARK_TYPES
-            byte[] v96 = new byte[12];
-            Array.Copy(data, i, v96, 0, 12);
-            var bi = new BigInteger(v96);
-#else
-            // for the time being we can discard the nanos 
-            byte[] v96 = new byte[4];
-            byte[] nanos = new byte[8];
-            Array.Copy(data, i + 8, v96, 0, 4);
-            Array.Copy(data, i, nanos, 0, 8);
-            DateTime bi = BitConverter.ToInt32(v96, 0).JulianToDateTime();
-            long nanosToInt64 = BitConverter.ToInt64(nanos, 0);
-            double millis = (double) nanosToInt64 / 1000000D;
-            bi = bi.AddMilliseconds(millis);
-#endif
-            destination.Add(new DateTimeOffset(bi));
-
+            if (!_options.TreatBigIntegersAsDates)
+            {
+               byte[] v96 = new byte[12];
+               Array.Copy(data, i, v96, 0, 12);;
+               destination.Add(new BigInteger(v96));
+            }
+            else
+            {
+               // for the time being we can discard the nanos 
+               byte[] v96 = new byte[4];
+               byte[] nanos = new byte[8];
+               Array.Copy(data, i + 8, v96, 0, 4);
+               Array.Copy(data, i, nanos, 0, 8);
+               DateTime bi = (BitConverter.ToInt32(v96, 0) - 1).JulianToDateTime();
+               long nanosToInt64 = BitConverter.ToInt64(nanos, 0);
+               double millis = (double) nanosToInt64 / 1000000D;
+               bi = bi.AddMilliseconds(millis);
+               destination.Add(new DateTimeOffset(bi));
+            }
          } 
       }
 
