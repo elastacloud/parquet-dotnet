@@ -18,6 +18,8 @@ namespace Parquet.Test.Formats
          {
             var ds = new DataSet();
             ds.ReadCsv(csvs, new CsvOptions { InferSchema = true, HasHeaders = true });
+
+
          }
       }
 

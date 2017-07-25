@@ -14,6 +14,11 @@ namespace Parquet.Formats
    /// </summary>
    public static class CsvFormat
    {
+      private static readonly Dictionary<Type, Type> InferredTypeToParquetType = new Dictionary<Type, Type>
+      {
+         { typeof(byte), typeof(int) }
+      };
+      
       public static void ReadCsv(this DataSet ds, Stream csvStream, CsvOptions options = null)
       {
          if (options == null) options = new CsvOptions();
@@ -57,29 +62,29 @@ namespace Parquet.Formats
             }
          }
 
-         //put back in DS
-         Type[] columnTypes = new Type[headers.Length];
+         //set schema
+         if (options.InferSchema) InferSchema(ds, headers, columnValues);
 
-         if (options.InferSchema)
+         //assign values
+         ds.AddColumnar(columnValues.Values);
+      }
+
+      private static void InferSchema(DataSet ds, string[] headers, Dictionary<int, IList> columnValues)
+      {
+         var elements = new List<SchemaElement>();
+         for (int i = 0; i < headers.Length; i++)
          {
-            for(int i = 0; i < headers.Length; i++)
-            {
-               IList cv = columnValues[i];
-               Type columnType = cv.Cast<string>().ToArray().InferType(out IList typedValues);
-               columnTypes[i] = columnType;
-               columnValues[i] = typedValues;
-            }
-         }
-         else
-         {
-            for(int i = 0; i < headers.Length; i++)
-            {
-               columnTypes[i] = typeof(string);
-            }
-         }
+            IList cv = columnValues[i];
+            Type columnType = cv.Cast<string>().ToArray().InferType(out IList typedValues);
 
-         //todo: continue, collect all together
+            Type ct;
+            if (!InferredTypeToParquetType.TryGetValue(columnType, out ct)) ct = columnType;
+            elements.Add(new SchemaElement(headers[i], ct));
 
+            columnValues[i] = typedValues;
+         }
+         ds.Schema.Elements.Clear();
+         ds.Schema.Elements.AddRange(elements);
       }
    }
 }

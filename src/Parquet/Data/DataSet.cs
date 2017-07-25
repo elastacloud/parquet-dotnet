@@ -79,7 +79,7 @@ namespace Parquet.Data
          Add(new Row(values));
       }
 
-      internal void AddColumnar(List<IList> columnsList)
+      internal void AddColumnar(IEnumerable<IList> columnsList)
       {
          IEnumerator[] iear = columnsList.Select(c => c.GetEnumerator()).ToArray();
          iear.ForEach(ie => ie.Reset());
