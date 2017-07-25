@@ -1,4 +1,6 @@
-﻿namespace Parquet
+﻿using System;
+
+namespace Parquet
 {
    /// <summary>
    /// Reader options
@@ -29,5 +31,10 @@
       /// The count.
       /// </value>
       public int Count { get; set; }
+
+      internal void Validate()
+      {
+         if (Offset < 0) throw new ParquetException($"cannot read from negative offset {Offset}");
+      }
    }
 }

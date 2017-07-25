@@ -107,23 +107,27 @@ namespace Parquet
       /// </summary>
       public DataSet Read()
       {
+         _readerOptions.Validate();
+
          _meta = ReadMetadata();
          var ds = new DataSet(new Schema(_meta));
          ds.TotalRowCount = _meta.Num_rows;
          var cols = new List<IList>();
-         int read = 0;
+         long pos = 0;
+         long rowsRead = 0;
 
          foreach(Thrift.RowGroup rg in _meta.Row_groups)
          {
             //check whether to skip RG completely
-            if ((_readerOptions.Count != -1 && read >= _readerOptions.Count) ||
-               (_readerOptions.Offset > read + rg.Num_rows))
+            if ((_readerOptions.Count != -1 && rowsRead >= _readerOptions.Count) ||
+               (_readerOptions.Offset > pos + rg.Num_rows - 1))
             {
+               pos += rg.Num_rows;
                continue;
             }
 
-            long offset = _readerOptions.Offset - read;
-            long count = _readerOptions.Count == -1 ? rg.Num_rows : Math.Min(_readerOptions.Count, rg.Num_rows);
+            long offset = Math.Max(0, _readerOptions.Offset - pos);
+            long count = _readerOptions.Count == -1 ? rg.Num_rows : Math.Min(_readerOptions.Count - rowsRead, rg.Num_rows);
 
             for(int icol = 0; icol < rg.Columns.Count; icol++)
             {
@@ -145,13 +149,18 @@ namespace Parquet
                      col.AddRange(column);
                   }
 
-                  if(icol == 0) read += column.Count;
+                  if(icol == 0)
+                  {
+                     rowsRead += column.Count;
+                  }
                }
                catch(Exception ex)
                {
                   throw new ParquetException($"fatal error reading column '{columnName}'", ex);
                }
             }
+
+            pos += rg.Num_rows;
          }
 
          ds.AddColumnar(cols);

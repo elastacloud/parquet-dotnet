@@ -87,8 +87,8 @@ namespace Parquet.Test
 
          Assert.Equal(ds1.TotalRowCount, 15);
          Assert.Equal(2, ds1.RowCount);
-         Assert.Equal(5, ds[0][0]);
-         Assert.Equal(6, ds[1][0]);
+         Assert.Equal(5, ds1[0][0]);
+         Assert.Equal(6, ds1[1][0]);
       }
 
       [Fact]
@@ -106,8 +106,22 @@ namespace Parquet.Test
 
          Assert.Equal(ds1.TotalRowCount, 15);
          Assert.Equal(2, ds1.RowCount);
-         Assert.Equal(4, ds[0][0]);
-         Assert.Equal(5, ds[1][0]);
+         Assert.Equal(4, ds1[0][0]);
+         Assert.Equal(5, ds1[1][0]);
+      }
+
+      [Fact]
+      public void Read_from_negative_offset_fails()
+      {
+         DataSet ds = DataSetGenerator.Generate(15);
+         var wo = new WriterOptions { RowGroupsSize = 5 };
+         var ro = new ReaderOptions { Offset = -4, Count = 2 };
+
+         var ms = new MemoryStream();
+         ParquetWriter.Write(ds, ms, CompressionMethod.None, null, wo);
+
+         ms.Position = 0;
+         Assert.Throws<ParquetException>(() => ParquetReader.Read(ms, null, ro));
       }
 
       class ReadableNonSeekableStream : DelegatedStream
