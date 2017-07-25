@@ -104,15 +104,25 @@ namespace Parquet
 
          foreach(Thrift.RowGroup rg in _meta.Row_groups)
          {
-            foreach(Thrift.ColumnChunk cc in rg.Columns)
+            for(int icol = 0; icol < rg.Columns.Count; icol++)
             {
+               Thrift.ColumnChunk cc = rg.Columns[icol];
+
                var p = new PColumn(cc, ds.Schema, _input, _thrift, _options);
                string columnName = string.Join(".", cc.Meta_data.Path_in_schema);
 
                try
                {
                   IList column = p.Read(columnName);
-                  cols.Add(column);
+                  if (icol == cols.Count)
+                  {
+                     cols.Add(column);
+                  }
+                  else
+                  {
+                     IList col = cols[icol];
+                     col.AddRange(column);
+                  }
                }
                catch(Exception ex)
                {
