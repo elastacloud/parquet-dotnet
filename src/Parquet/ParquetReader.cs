@@ -122,6 +122,9 @@ namespace Parquet
                continue;
             }
 
+            long offset = _readerOptions.Offset - read;
+            long count = _readerOptions.Count == -1 ? rg.Num_rows : Math.Min(_readerOptions.Count, rg.Num_rows);
+
             for(int icol = 0; icol < rg.Columns.Count; icol++)
             {
                Thrift.ColumnChunk cc = rg.Columns[icol];
@@ -131,7 +134,7 @@ namespace Parquet
 
                try
                {
-                  IList column = p.Read(columnName);
+                  IList column = p.Read(columnName, offset, count);
                   if (icol == cols.Count)
                   {
                      cols.Add(column);
