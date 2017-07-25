@@ -35,8 +35,22 @@ using(Stream fs = File.OpenRead("c:\\data\\input.parquet"))
 
 ## Reading parts of file
 
-todo
+Parquet.Net supports reading portions of files using offset and count properties. In order to do that you need to pass `ReaderOptions` and specify the desired parameters. Every `Read` method supports those as optional parameters. 
+
+For example, to read `input.parquet` from rows 10 to 15 use the following code:
+
+```csharp
+var options = new ReaderOptions { Offset = 10, Count = 5};
+DataSet ds = ParquetReader.ReadFile("c:\\data\\input.parquet", null, options);
+```
 
 ## Using format options
 
-todo
+When reading, Parquet.Net uses some defaults specified in [ParquetOptions.cs](../src/Parquet/ParquetOptions.cs), however you can override them by passing to a `Read` method.
+
+For example, to force the reader to treat byte arrays as strings use the following code:
+
+```csharp
+var options = new ParquetOptions { TreatByteArrayAsString = true };
+DataSet ds = ParquetReader.ReadFile("c:\\data\\input.parquet", options, null);
+```
