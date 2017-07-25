@@ -39,14 +39,19 @@ namespace Parquet
       private readonly BinaryReader _reader;
       private readonly ThriftStream _thrift;
       private Thrift.FileMetaData _meta;
-      private readonly ParquetOptions _options;
+      private readonly ParquetOptions _formatOptions;
+      private readonly ReaderOptions _readerOptions;
 
       /// <summary>
       /// Creates an instance from input stream
       /// </summary>
       /// <param name="input">Input stream, must be readable and seekable</param>
-      /// <param name="options">Optional reader options</param>
-      public ParquetReader(Stream input, ParquetOptions options = null)
+      /// <param name="formatOptions">Optional reader options</param>
+      /// <param name="readerOptions">The reader options.</param>
+      /// <exception cref="ArgumentNullException">input</exception>
+      /// <exception cref="ArgumentException">stream must be readable and seekable - input</exception>
+      /// <exception cref="IOException">not a Parquet file (size too small)</exception>
+      public ParquetReader(Stream input, ParquetOptions formatOptions = null, ReaderOptions readerOptions = null)
       {
          _input = input ?? throw new ArgumentNullException(nameof(input));
          if (!input.CanRead || !input.CanSeek) throw new ArgumentException("stream must be readable and seekable", nameof(input));
@@ -55,29 +60,33 @@ namespace Parquet
          _reader = new BinaryReader(input);
          ValidateFile();
          _thrift = new ThriftStream(input);
-         _options = options ?? new ParquetOptions();
+         _formatOptions = formatOptions ?? new ParquetOptions();
+         _readerOptions = readerOptions ?? new ReaderOptions();
       }
 
       /// <summary>
       /// Reads the file
       /// </summary>
       /// <param name="fullPath">The full path.</param>
-      /// <param name="options">Optional reader options.</param>
-      /// <returns>DataSet</returns>
-      public static DataSet ReadFile(string fullPath, ParquetOptions options = null)
+      /// <param name="formatOptions">Optional reader options.</param>
+      /// <param name="readerOptions">The reader options.</param>
+      /// <returns>
+      /// DataSet
+      /// </returns>
+      public static DataSet ReadFile(string fullPath, ParquetOptions formatOptions = null, ReaderOptions readerOptions = null)
       {
          using (Stream fs = System.IO.File.OpenRead(fullPath))
          {
-            using (var reader = new ParquetReader(fs, options))
+            using (var reader = new ParquetReader(fs, formatOptions, readerOptions))
             {
                return reader.Read();
             }
          }
       }
 
-      public static DataSet Read(Stream source, ParquetOptions options = null)
+      public static DataSet Read(Stream source, ParquetOptions formatOptions = null, ReaderOptions readerOptions = null)
       {
-         using (var reader = new ParquetReader(source, options))
+         using (var reader = new ParquetReader(source, formatOptions, readerOptions))
          {
             return reader.Read();
          }
@@ -86,7 +95,7 @@ namespace Parquet
       /// <summary>
       /// Options
       /// </summary>
-      public ParquetOptions Options => _options;
+      public ParquetOptions Options => _formatOptions;
 
       /// <summary>
       /// Total number of rows in this file
@@ -100,15 +109,24 @@ namespace Parquet
       {
          _meta = ReadMetadata();
          var ds = new DataSet(new Schema(_meta));
+         ds.TotalRowCount = _meta.Num_rows;
          var cols = new List<IList>();
+         int read = 0;
 
          foreach(Thrift.RowGroup rg in _meta.Row_groups)
          {
+            //check whether to skip RG completely
+            if ((_readerOptions.Count != -1 && read >= _readerOptions.Count) ||
+               (_readerOptions.Offset > read + rg.Num_rows))
+            {
+               continue;
+            }
+
             for(int icol = 0; icol < rg.Columns.Count; icol++)
             {
                Thrift.ColumnChunk cc = rg.Columns[icol];
 
-               var p = new PColumn(cc, ds.Schema, _input, _thrift, _options);
+               var p = new PColumn(cc, ds.Schema, _input, _thrift, _formatOptions);
                string columnName = string.Join(".", cc.Meta_data.Path_in_schema);
 
                try
@@ -123,6 +141,8 @@ namespace Parquet
                      IList col = cols[icol];
                      col.AddRange(column);
                   }
+
+                  if(icol == 0) read += column.Count;
                }
                catch(Exception ex)
                {

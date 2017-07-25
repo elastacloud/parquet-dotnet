@@ -141,6 +141,11 @@ namespace Parquet.Data
       public int RowCount => _rows.Count;
 
       /// <summary>
+      /// Gets the total row count in the source file this dataset was read from
+      /// </summary>
+      public long TotalRowCount { get; internal set; }
+
+      /// <summary>
       /// Gets the number of columns contained in this dataset
       /// </summary>
       public int Count => _rows.Count;

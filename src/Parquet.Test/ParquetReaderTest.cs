@@ -1,5 +1,6 @@
 ﻿using NetBox;
 using NetBox.IO;
+using Parquet.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -50,6 +51,23 @@ namespace Parquet.Test
       public void Opening_readable_and_seekable_stream_succeeds()
       {
          new ParquetReader(new ReadableAndSeekableStream(new NonReadableSeekableStream("PAR1DATAPAR1".ToMemoryStream())));
+      }
+
+      [Fact]
+      public void Read_from_offset()
+      {
+         DataSet ds = DataSetGenerator.Generate(30);
+         var wo = new WriterOptions { RowGroupsSize = 5 };
+         var ro = new ReaderOptions { Offset = 0, Count = 2 };
+
+         var ms = new MemoryStream();
+         ParquetWriter.Write(ds, ms, CompressionMethod.None, null, wo);
+
+         ms.Position = 0;
+         DataSet ds1 = ParquetReader.Read(ms, null, ro);
+
+         Assert.Equal(ds1.TotalRowCount, 30);
+         Assert.Equal(2, ds1.RowCount);
       }
 
       class ReadableNonSeekableStream : DelegatedStream
