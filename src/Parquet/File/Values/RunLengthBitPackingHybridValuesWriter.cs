@@ -9,7 +9,7 @@ namespace Parquet.File.Values
 {
    class RunLengthBitPackingHybridValuesWriter : IValuesWriter
    {
-      public void Write(BinaryWriter writer, SchemaElement schema, IList data)
+      public bool Write(BinaryWriter writer, SchemaElement schema, IList data)
       {
          //int32 - length of data (we'll come back here so let's just write a zero)
          long dataLengthOffset = writer.BaseStream.Position;
@@ -25,6 +25,8 @@ namespace Parquet.File.Values
 
          //and jump back to the end again
          writer.BaseStream.Seek(0, SeekOrigin.End);
+
+         return true;
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]

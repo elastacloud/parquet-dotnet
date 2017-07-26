@@ -22,7 +22,7 @@ namespace Parquet.File.Values
          _options = options;
       }
 
-      public void Write(BinaryWriter writer, SchemaElement schema, IList data)
+      public bool Write(BinaryWriter writer, SchemaElement schema, IList data)
       {
          switch (schema.Thrift.Type)
          {
@@ -62,6 +62,8 @@ namespace Parquet.File.Values
             default:
                throw new NotImplementedException($"type {schema.Thrift.Type} not implemented");
          }
+
+         return true;
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
