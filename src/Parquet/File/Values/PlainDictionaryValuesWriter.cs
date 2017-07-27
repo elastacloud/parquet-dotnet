@@ -9,15 +9,26 @@ namespace Parquet.File.Values
 {
    class PlainDictionaryValuesWriter : IValuesWriter
    {
-      public bool Write(BinaryWriter writer, SchemaElement schema, IList data)
+      private static readonly IValuesWriter _rleWriter = new RunLengthBitPackingHybridValuesWriter();
+
+      public bool Write(BinaryWriter writer, SchemaElement schema, IList data, out IList extraValues)
       {
          IList dictionary;
          List<int> indexes;
+         extraValues = null;
 
+         //split data into dictionary and indexes
          if (!GetData(data, schema, out dictionary, out indexes)) return false;
 
+         //write bit width, let's have it as int always for now
+         //todo: detect optimal bit width
+         writer.Write((byte)32);
 
-         throw new NotImplementedException();
+         //write indexes in RLE encoding
+         RunLengthBitPackingHybridValuesWriter.Write(writer, indexes, 32);
+
+         extraValues = dictionary;
+         return true;
       }
 
       private bool GetData(IList data, SchemaElement schema, out IList dictionary, out List<int> indexes)

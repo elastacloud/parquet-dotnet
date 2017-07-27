@@ -12,7 +12,11 @@ namespace Parquet.File.Values
       /// <param name="writer">The writer.</param>
       /// <param name="schema">The schema.</param>
       /// <param name="data">The data.</param>
-      /// <returns>False if this encoding cannot write specified data</returns>
-      bool Write(BinaryWriter writer, SchemaElement schema, IList data);
+      /// <param name="extraValues">The extra values which could not be written by this encoding and should be partially
+      /// picked up by another encoding.</param>
+      /// <returns>
+      /// False if this encoding cannot write specified data i.e. data type is not supported
+      /// </returns>
+      bool Write(BinaryWriter writer, SchemaElement schema, IList data, out IList extraValues);
    }
 }

@@ -22,7 +22,7 @@ namespace Parquet.File.Values
          _options = options;
       }
 
-      public bool Write(BinaryWriter writer, SchemaElement schema, IList data)
+      public bool Write(BinaryWriter writer, SchemaElement schema, IList data, out IList extraValues)
       {
          switch (schema.Thrift.Type)
          {
@@ -63,6 +63,7 @@ namespace Parquet.File.Values
                throw new NotImplementedException($"type {schema.Thrift.Type} not implemented");
          }
 
+         extraValues = null;
          return true;
       }
 

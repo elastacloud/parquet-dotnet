@@ -5,6 +5,7 @@ using Xunit;
 using Parquet.File.Values;
 using Parquet.Data;
 using System.IO;
+using System.Collections;
 
 namespace Parquet.Test.File.Values
 {
@@ -28,7 +29,8 @@ namespace Parquet.Test.File.Values
                "two",
                "one",
                "one"
-            });
+            },
+            out IList dictionary);
       }
    }
 }
