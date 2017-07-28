@@ -132,8 +132,6 @@ namespace Parquet.Test
 
       }
 
-      //[Fact]
-      public void delete_me()
       [Fact]
       public void Aws_athena_generate()
       {
