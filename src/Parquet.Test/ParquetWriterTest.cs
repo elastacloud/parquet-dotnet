@@ -115,13 +115,20 @@ namespace Parquet.Test
          Assert.Equal(103, ds1.RowCount);
       }
 
-      //[Fact]
-      public void delete_me()
+      [Fact]
+      public void Aws_athena_generate()
       {
-         var ds = new DataSet(new SchemaElement<int>("id"), new SchemaElement<DateTimeOffset>("date"));
-         ds.Add(1, new DateTimeOffset(DateTime.UtcNow));
+         var ds = new DataSet(new SchemaElement<int>("id"), new SchemaElement<string>("city"));
+         ds.Add(1, "London");
 
-         ParquetWriter.WriteFile(ds, "c:\\tmp\\richdates.parquet");
+         ParquetWriter.WriteFile(ds, "c:\\tmp\\athena-pnet.parquet");
+      }
+
+      [Fact]
+      public void Aws_athena_compare()
+      {
+         DataSet pqnet = ParquetReader.ReadFile("c:\\tmp\\athena-pnet.parquet");
+         DataSet spark = ParquetReader.ReadFile("c:\\tmp\\athena-spark.parquet");
       }
    }
 }
