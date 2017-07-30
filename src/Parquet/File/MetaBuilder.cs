@@ -20,7 +20,7 @@ namespace Parquet.File
       static MetaBuilder()
       {
          //get file version
-         Assembly asm = Assembly.Load(new AssemblyName("Parquet"));
+         Assembly asm = typeof(MetaBuilder).GetTypeInfo().Assembly;
          var fva = asm.CustomAttributes.First(a => a.AttributeType == typeof(AssemblyFileVersionAttribute));
          CustomAttributeTypedArgument varg = fva.ConstructorArguments[0];
          string fileVersion = varg.Value.ToString();
@@ -41,6 +41,7 @@ namespace Parquet.File
 
       public void AddSchema(DataSet ds)
       {
+         ds.Metadata.CreatedBy = CreatedBy;
          _meta.Schema = new List<TSchemaElement> { new TSchemaElement("schema") { Num_children = ds.Schema.Elements.Count } };
          _meta.Schema.AddRange(ds.Schema.Elements.Select(c => c.Thrift));
          _meta.Num_rows = ds.Count;
@@ -72,6 +73,32 @@ namespace Parquet.File
          chunk.Meta_data.Path_in_schema = new List<string> { schema.Name };
 
          return chunk;
+      }
+
+      public Thrift.PageHeader CreateDataPage(int valueCount)
+      {
+         var ph = new Thrift.PageHeader(Thrift.PageType.DATA_PAGE, 0, 0);
+         ph.Data_page_header = new Thrift.DataPageHeader
+         {
+            Encoding = Thrift.Encoding.PLAIN,
+            Definition_level_encoding = Thrift.Encoding.RLE,
+            Repetition_level_encoding = Thrift.Encoding.BIT_PACKED,
+            Num_values = valueCount
+         };
+
+         return ph;
+      }
+
+      public Thrift.PageHeader CreateDictionaryPage(int valueCount)
+      {
+         var ph = new Thrift.PageHeader(Thrift.PageType.DICTIONARY_PAGE, 0, 0);
+         ph.Dictionary_page_header = new Thrift.DictionaryPageHeader
+         {
+            Encoding = Thrift.Encoding.PLAIN,
+            Is_sorted = false,
+            Num_values = valueCount
+         };
+         return ph;
       }
    }
 }

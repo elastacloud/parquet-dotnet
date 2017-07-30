@@ -1,4 +1,4 @@
-# Parquet.Net [![Build status](https://ci.appveyor.com/api/projects/status/w3o50mweytm85uxb?svg=true)](https://ci.appveyor.com/project/aloneguid/Parquet.Net) [![NuGet](https://img.shields.io/nuget/v/Parquet.Net.svg)](https://www.nuget.org/packages/Parquet.Net)
+# Parquet.Net [![Build status](https://ci.appveyor.com/api/projects/status/w3o50mweytm85uxb/branch/master?svg=true)](https://ci.appveyor.com/project/aloneguid/parquet-dotnet/branch/master) [![NuGet](https://img.shields.io/nuget/v/Parquet.Net.svg)](https://www.nuget.org/packages/Parquet.Net)
 
 ![Icon](doc/img/dotnetlovesparquet.png)
 
@@ -14,6 +14,8 @@ This project is aimed to fix this problem.
 
 - [Supported features](doc/features.md)
 - Programming guide
+  - [Reading Data](doc/reading.md) 
+  - [Writing Data](doc/writing.md)
   - [Working with DataSets](doc/dataset.md) 
 
 ## Roadmap
@@ -90,7 +92,9 @@ using(Stream fileStream = File.OpenWrite("c:\\test.parquet"))
 
 ### parq
 
-Parq is a .NET runtime (written for Windows but will run elsewhere) that brings tooling for inspecting Parquet files to developers. It is a command line utility, for which you can find out more by [reading this guide](doc/parq.md).
+Parq is a .NET runtime (written for Windows but will run elsewhere) that brings tooling for inspecting Parquet files to developers. 
+
+It is a command line utility held in a different repository, for which you can find out more by [reading this guide](https://github.com/elastacloud/parq).
 
 ## License
 
