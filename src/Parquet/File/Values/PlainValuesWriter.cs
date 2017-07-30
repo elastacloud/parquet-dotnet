@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using TType = Parquet.Thrift.Type;
 using SType = System.Type;
 using Parquet.Data;
+using Parquet.File.Values.Primitives;
 
 namespace Parquet.File.Values
 {
@@ -21,7 +22,7 @@ namespace Parquet.File.Values
          _options = options;
       }
 
-      public void Write(BinaryWriter writer, SchemaElement schema, IList data)
+      public bool Write(BinaryWriter writer, SchemaElement schema, IList data, out IList extraValues)
       {
          switch (schema.Thrift.Type)
          {
@@ -61,6 +62,9 @@ namespace Parquet.File.Values
             default:
                throw new NotImplementedException($"type {schema.Thrift.Type} not implemented");
          }
+
+         extraValues = null;
+         return true;
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -155,20 +159,17 @@ namespace Parquet.File.Values
          {
             foreach (DateTimeOffset dto in data)
             {
-               int unixTime = (int) dto.DateTime.DateTimeToJulian();
-               // need to fill in the blanks here at the moment there is no day precision 
-               // need to get the offset from midday from the date and add these as nanos
-               // written as a long across 8 bytes
-               double nanos = dto.TimeOfDay.TotalMilliseconds * 1000000D;
-               writer.Write((long) nanos);
-               writer.Write(unixTime);
+               var nano = new NanoTime(dto);
+               nano.Write(writer);
             }
          }
          else
          {
             // assume that this is an a 12 byte decimal form
             foreach (byte[] dto in data)
+            {
                writer.Write(dto);
+            }
          }
       }
 
