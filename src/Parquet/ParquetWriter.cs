@@ -51,6 +51,12 @@ namespace Parquet
       private readonly IValuesWriter _dicWriter;
       private bool _dataWritten;
 
+      private struct PageTag
+      {
+         public int HeaderSize;
+         public Thrift.PageHeader HeaderMeta;
+      }
+
       /// <summary>
       /// Creates an instance of parquet writer on top of a stream
       /// </summary>
@@ -101,8 +107,9 @@ namespace Parquet
                   Write(c, dataSet.GetColumn(c.Name, offset, count), compression, stats.GetColumnStats(c)))
                .ToList();
 
-            //row group's size is a sum of _uncompressed_ sizes of all columns in it
-            rg.Total_byte_size = rg.Columns.Sum(c => c.Meta_data.Total_uncompressed_size);
+            //row group's size is a sum of _uncompressed_ sizes of all columns in it, including the headers
+            //luckily ColumnChunk already contains sizes of page+header in it's meta
+            rg.Total_byte_size = rg.Columns.Sum(c => c.Meta_data.Total_compressed_size);
             rg.Num_rows = count;
 
             offset += _writerOptions.RowGroupsSize;
@@ -138,13 +145,18 @@ namespace Parquet
          Thrift.ColumnChunk chunk = _meta.AddColumnChunk(compression, _output, schema, values.Count);
          Thrift.PageHeader ph = _meta.CreateDataPage(values.Count);
 
-         WriteValues(schema, values, ph, compression, stats);
+         List<PageTag> pages = WriteValues(schema, values, ph, compression, stats);
+
+         //the following counters must include both data size and header size
+         chunk.Meta_data.Total_compressed_size = pages.Sum(p => p.HeaderMeta.Compressed_page_size + p.HeaderSize);
+         chunk.Meta_data.Total_uncompressed_size = pages.Sum(p => p.HeaderMeta.Uncompressed_page_size + p.HeaderSize);
 
          return chunk;
       }
 
-      private void WriteValues(SchemaElement schema, IList values, Thrift.PageHeader ph, CompressionMethod compression, ColumnStats stats)
+      private List<PageTag> WriteValues(SchemaElement schema, IList values, Thrift.PageHeader ph, CompressionMethod compression, ColumnStats stats)
       {
+         var result = new List<PageTag>();
          byte[] dictionaryPageBytes = null;
          byte[] dataPageBytes;
 
@@ -185,11 +197,15 @@ namespace Parquet
          {
             Thrift.PageHeader dph = _meta.CreateDictionaryPage(values.Count);
             dictionaryPageBytes = Compress(dph, dictionaryPageBytes, compression);
-            Write(dph, dictionaryPageBytes);
+            int dictionaryHeaderSize = Write(dph, dictionaryPageBytes);
+            result.Add(new PageTag { HeaderSize = dictionaryHeaderSize, HeaderMeta = dph });
          }
 
          dataPageBytes = Compress(ph, dataPageBytes, compression);
-         Write(ph, dataPageBytes);
+         int dataHeaderSize = Write(ph, dataPageBytes);
+         result.Add(new PageTag { HeaderSize = dataHeaderSize, HeaderMeta = ph });
+
+         return result;
       }
 
       private static void CreateDefinitions(IList values, SchemaElement schema, out IList nonNullableValues, out List<int> definitions)
@@ -211,14 +227,18 @@ namespace Parquet
          }
       }
 
-      private void Write(Thrift.PageHeader ph, byte[] data)
+      private int Write(Thrift.PageHeader ph, byte[] data)
       {
+         int headerSize = _thrift.Write(ph);
          _thrift.Write(ph);
          _output.Write(data, 0, data.Length);
+         return headerSize;
       }
 
       private byte[] Compress(Thrift.PageHeader ph, byte[] data, CompressionMethod compression)
       {
+         //note that page size numbers do not include header size by spec
+
          ph.Uncompressed_page_size = data.Length;
          byte[] result;
 

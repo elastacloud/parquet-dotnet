@@ -138,7 +138,7 @@ namespace Parquet.Test
          var ds = new DataSet(new SchemaElement<int>("id"), new SchemaElement<string>("city"));
          ds.Add(1, "London");
 
-         ParquetWriter.WriteFile(ds, "c:\\tmp\\athena-pnet.parquet");
+         ParquetWriter.WriteFile(ds, "c:\\tmp\\athena-pnet.parquet", CompressionMethod.None);
       }
 
       [Fact]
