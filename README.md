@@ -1,6 +1,13 @@
-# Parquet.Net [![Build status](https://ci.appveyor.com/api/projects/status/w3o50mweytm85uxb/branch/master?svg=true)](https://ci.appveyor.com/project/aloneguid/parquet-dotnet/branch/master) [![NuGet](https://img.shields.io/nuget/v/Parquet.Net.svg)](https://www.nuget.org/packages/Parquet.Net)
+# Parquet.Net 
 
 ![Icon](doc/img/dotnetlovesparquet.png)
+
+## Status
+
+|Stable|Pre-release|
+|------|----------|
+|[![NuGet](https://img.shields.io/nuget/v/Parquet.Net.svg)](https://www.nuget.org/packages/Parquet.Net)|[![NuGet Pre Release](https://img.shields.io/nuget/vpre/Parquet.Net.svg)](https://www.nuget.org/packages/Parquet.Net)|
+|![Build status](https://ci.appveyor.com/api/projects/status/w3o50mweytm85uxb/branch/stable/1.0.0?svg=true)|![Build status](https://ci.appveyor.com/api/projects/status/w3o50mweytm85uxb/branch/master?svg=true)|
 
 A .NET library to read and write [Apache Parquet](https://github.com/Parquet) files. Supports `.NET 4.5.1`, `.NET Standard 1.4` and `.NET Standard 1.6`.
 
