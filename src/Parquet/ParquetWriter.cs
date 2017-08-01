@@ -230,7 +230,6 @@ namespace Parquet
       private int Write(Thrift.PageHeader ph, byte[] data)
       {
          int headerSize = _thrift.Write(ph);
-         _thrift.Write(ph);
          _output.Write(data, 0, data.Length);
          return headerSize;
       }

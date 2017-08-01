@@ -137,8 +137,12 @@ namespace Parquet.Test
       {
          var ds = new DataSet(new SchemaElement<int>("id"), new SchemaElement<string>("city"));
          ds.Add(1, "London");
+         ds.Add(2, "Derby");
+         ds.Add(3, "New York");
 
          ParquetWriter.WriteFile(ds, "c:\\tmp\\athena-pnet.parquet", CompressionMethod.None);
+
+         DataSet ds1 = ParquetReader.ReadFile("c:\\tmp\\athena-pnet.parquet");
       }
 
       [Fact]
