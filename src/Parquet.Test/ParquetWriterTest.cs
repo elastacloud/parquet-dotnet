@@ -132,6 +132,26 @@ namespace Parquet.Test
 
       }
 
+      [Fact]
+      public void Append_to_file_reads_all_dataset()
+      {
+         var ms = new MemoryStream();
+
+         var ds1 = new DataSet(new SchemaElement<int>("id"));
+         ds1.Add(1);
+         ds1.Add(2);
+         ParquetWriter.Write(ds1, ms);
+
+         //append to file
+         var ds2 = new DataSet(new SchemaElement<int>("id"));
+         ds1.Add(3);
+         ds1.Add(4);
+         ParquetWriter.Write(ds2, ms, CompressionMethod.Gzip, null, null, true);
+
+         ms.Position = 0;
+         DataSet dsAll = ParquetReader.Read(ms);
+      }
+
       //[Fact]
       public void delete_me()
       {

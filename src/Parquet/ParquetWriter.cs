@@ -36,11 +36,9 @@ namespace Parquet
    /// <summary>
    /// Implements Apache Parquet format writer
    /// </summary>
-   public class ParquetWriter : IDisposable
+   public class ParquetWriter : ParquetActor, IDisposable
    {
       private readonly Stream _output;
-      private readonly BinaryWriter _writer;
-      private readonly ThriftStream _thrift;
       private static readonly byte[] Magic = System.Text.Encoding.ASCII.GetBytes("PAR1");
       private readonly MetaBuilder _meta = new MetaBuilder();
       private readonly ParquetOptions _formatOptions;
@@ -59,12 +57,10 @@ namespace Parquet
       /// <param name="writerOptions">The writer options.</param>
       /// <exception cref="ArgumentNullException">Output is null.</exception>
       /// <exception cref="ArgumentException">Output stream is not writeable</exception>
-      public ParquetWriter(Stream output, ParquetOptions formatOptions = null, WriterOptions writerOptions = null)
+      public ParquetWriter(Stream output, ParquetOptions formatOptions = null, WriterOptions writerOptions = null) : base(output)
       {
          _output = output ?? throw new ArgumentNullException(nameof(output));
          if (!output.CanWrite) throw new ArgumentException("stream is not writeable", nameof(output));
-         _thrift = new ThriftStream(output);
-         _writer = new BinaryWriter(_output);
          _formatOptions = formatOptions ?? new ParquetOptions();
          _writerOptions = writerOptions ?? new WriterOptions();
 
@@ -81,8 +77,11 @@ namespace Parquet
       /// </summary>
       /// <param name="dataSet">Dataset to write</param>
       /// <param name="compression">Compression method</param>
-      public void Write(DataSet dataSet, CompressionMethod compression = CompressionMethod.Gzip)
+      /// <param name="append">When true, appends to the file, otherwise creates a new file.</param>
+      public void Write(DataSet dataSet, CompressionMethod compression = CompressionMethod.Gzip, bool append = false)
       {
+         if (append) ValidateFile();
+
          _meta.AddSchema(dataSet);
 
          var stats = new DataSetStats(dataSet);
@@ -112,11 +111,11 @@ namespace Parquet
          _dataWritten = true;
       }
 
-      public static void Write(DataSet dataSet, Stream destination, CompressionMethod compression = CompressionMethod.Gzip, ParquetOptions formatOptions = null, WriterOptions writerOptions = null)
+      public static void Write(DataSet dataSet, Stream destination, CompressionMethod compression = CompressionMethod.Gzip, ParquetOptions formatOptions = null, WriterOptions writerOptions = null, bool append = false)
       {
          using (var writer = new ParquetWriter(destination, formatOptions, writerOptions))
          {
-            writer.Write(dataSet, compression);
+            writer.Write(dataSet, compression, append);
          }
       }
 
@@ -213,7 +212,7 @@ namespace Parquet
 
       private void Write(Thrift.PageHeader ph, byte[] data)
       {
-         _thrift.Write(ph);
+         ThriftStream.Write(ph);
          _output.Write(data, 0, data.Length);
       }
 
@@ -254,15 +253,15 @@ namespace Parquet
          if (!_dataWritten) return;
 
          //finalize file
-         long size = _thrift.Write(_meta.ThriftMeta);
+         long size = ThriftStream.Write(_meta.ThriftMeta);
 
          //metadata size
-         _writer.Write((int)size);  //4 bytes
+         Writer.Write((int)size);  //4 bytes
 
          //end magic
          WriteMagic();              //4 bytes
 
-         _writer.Flush();
+         Writer.Flush();
          _output.Flush();
       }
    }

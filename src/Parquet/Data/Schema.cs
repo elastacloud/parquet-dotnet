@@ -8,9 +8,8 @@ namespace Parquet.Data
    /// </summary>
    public class Schema
    {
-      private List<SchemaElement> _elements;
+      private readonly List<SchemaElement> _elements;
       private readonly Dictionary<string, SchemaElement> _pathToElement = new Dictionary<string, SchemaElement>();
-
 
       /// <summary>
       /// Initializes a new instance of the <see cref="Schema"/> class from schema elements.
