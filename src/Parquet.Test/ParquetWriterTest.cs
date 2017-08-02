@@ -144,12 +144,15 @@ namespace Parquet.Test
 
          //append to file
          var ds2 = new DataSet(new SchemaElement<int>("id"));
-         ds1.Add(3);
-         ds1.Add(4);
+         ds2.Add(3);
+         ds2.Add(4);
          ParquetWriter.Write(ds2, ms, CompressionMethod.Gzip, null, null, true);
 
          ms.Position = 0;
          DataSet dsAll = ParquetReader.Read(ms);
+
+         Assert.Equal(4, dsAll.RowCount);
+         Assert.Equal(new[] {1, 2, 3, 4}, dsAll.GetColumn(0));
       }
 
       //[Fact]

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Parquet.File;
@@ -11,6 +10,9 @@ namespace Parquet
    /// </summary>
    public class ParquetActor
    {
+      internal const string MagicString = "PAR1";
+      internal static readonly byte[] MagicBytes = Encoding.ASCII.GetBytes(MagicString);
+
       private readonly Stream _fileStream;
       private BinaryReader _binaryReader;
       private BinaryWriter _binaryWriter;
@@ -37,10 +39,37 @@ namespace Parquet
          _fileStream.Seek(-4, SeekOrigin.End);
          char[] tail = Reader.ReadChars(4);
          string stail = new string(tail);
-         if (shead != "PAR1")
+         if (shead != MagicString)
             throw new IOException($"not a Parquet file(head is '{shead}')");
-         if (stail != "PAR1")
+         if (stail != MagicString)
             throw new IOException($"not a Parquet file(head is '{stail}')");
+      }
+
+      internal Thrift.FileMetaData ReadMetadata()
+      {
+         GoBeforeFooter();
+
+         return ThriftStream.Read<Thrift.FileMetaData>();
+      }
+
+      internal void GoToBeginning()
+      {
+         _fileStream.Seek(0, SeekOrigin.Begin);
+      }
+
+      internal void GoToEnd()
+      {
+         _fileStream.Seek(0, SeekOrigin.End);
+      }
+
+      internal void GoBeforeFooter()
+      {
+         //go to -4 bytes (PAR1) -4 bytes (footer length number)
+         _fileStream.Seek(-8, SeekOrigin.End);
+         int footerLength = Reader.ReadInt32();
+
+         //set just before footer starts
+         _fileStream.Seek(-8 - footerLength, SeekOrigin.End);
       }
    }
 }

@@ -6,15 +6,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using DSchema = Parquet.Data.Schema;
 using TSchemaElement = Parquet.Thrift.SchemaElement;
 
 namespace Parquet.File
 {
    class MetaBuilder
    {
-      private readonly Thrift.FileMetaData _meta;
+      private Thrift.FileMetaData _meta;
       private static readonly string CreatedBy;
 
       static MetaBuilder()
@@ -45,6 +43,11 @@ namespace Parquet.File
          _meta.Schema = new List<TSchemaElement> { new TSchemaElement("schema") { Num_children = ds.Schema.Elements.Count } };
          _meta.Schema.AddRange(ds.Schema.Elements.Select(c => c.Thrift));
          _meta.Num_rows = ds.Count;
+      }
+
+      public void SetMeta(Thrift.FileMetaData meta)
+      {
+         _meta = meta;
       }
 
       public Thrift.RowGroup AddRowGroup()

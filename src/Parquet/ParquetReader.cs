@@ -106,6 +106,7 @@ namespace Parquet
          _readerOptions.Validate();
 
          _meta = ReadMetadata();
+
          var ds = new DataSet(new Schema(_meta));
          ds.TotalRowCount = _meta.Num_rows;
          ds.Metadata.CreatedBy = _meta.Created_by;
@@ -163,18 +164,6 @@ namespace Parquet
          ds.AddColumnar(cols);
 
          return ds;
-      }
-
-      private Thrift.FileMetaData ReadMetadata()
-      {
-         //go to -4 bytes (PAR1) -4 bytes (footer length number)
-         _input.Seek(-8, SeekOrigin.End);
-         int footerLength = Reader.ReadInt32();
-         char[] magic = Reader.ReadChars(4);
-
-         //go to footer data and deserialize it
-         _input.Seek(-8 - footerLength, SeekOrigin.End);
-         return ThriftStream.Read<Thrift.FileMetaData>();
       }
 
       /// <summary>

@@ -39,7 +39,6 @@ namespace Parquet
    public class ParquetWriter : ParquetActor, IDisposable
    {
       private readonly Stream _output;
-      private static readonly byte[] Magic = System.Text.Encoding.ASCII.GetBytes("PAR1");
       private readonly MetaBuilder _meta = new MetaBuilder();
       private readonly ParquetOptions _formatOptions;
       private readonly WriterOptions _writerOptions;
@@ -68,8 +67,7 @@ namespace Parquet
          _rleWriter = new RunLengthBitPackingHybridValuesWriter();
          _dicWriter = new PlainDictionaryValuesWriter();
 
-         //file starts with magic
-         WriteMagic();
+         GoToBeginning();
       }
 
       /// <summary>
@@ -80,13 +78,9 @@ namespace Parquet
       /// <param name="append">When true, appends to the file, otherwise creates a new file.</param>
       public void Write(DataSet dataSet, CompressionMethod compression = CompressionMethod.Gzip, bool append = false)
       {
-         if (append) ValidateFile();
-
-         _meta.AddSchema(dataSet);
+         PrepareFile(dataSet, append);
 
          var stats = new DataSetStats(dataSet);
-
-         //long totalCount = dataSet.Count;
 
          int offset = 0;
          int count;
@@ -109,6 +103,28 @@ namespace Parquet
          while (offset < dataSet.Count);
 
          _dataWritten = true;
+      }
+
+      private void PrepareFile(DataSet ds, bool append)
+      {
+         if (append)
+         {
+            //todo: validate schemas match
+
+            ValidateFile();
+
+            Thrift.FileMetaData fileMeta = ReadMetadata();
+            _meta.SetMeta(fileMeta);
+
+            GoBeforeFooter();
+         }
+         else
+         {
+            //file starts with magic
+            WriteMagic();
+
+            _meta.AddSchema(ds);
+         }
       }
 
       public static void Write(DataSet dataSet, Stream destination, CompressionMethod compression = CompressionMethod.Gzip, ParquetOptions formatOptions = null, WriterOptions writerOptions = null, bool append = false)
@@ -242,7 +258,7 @@ namespace Parquet
 
       private void WriteMagic()
       {
-         _output.Write(Magic, 0, Magic.Length);
+         _output.Write(MagicBytes, 0, MagicBytes.Length);
       }
 
       /// <summary>
@@ -253,6 +269,7 @@ namespace Parquet
          if (!_dataWritten) return;
 
          //finalize file
+         _output.Seek(0, SeekOrigin.End);
          long size = ThriftStream.Write(_meta.ThriftMeta);
 
          //metadata size
