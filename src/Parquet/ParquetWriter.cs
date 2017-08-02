@@ -109,12 +109,15 @@ namespace Parquet
       {
          if (append)
          {
-            //todo: validate schemas match
-
             ValidateFile();
 
             Thrift.FileMetaData fileMeta = ReadMetadata();
             _meta.SetMeta(fileMeta);
+
+            if (!ds.Schema.Equals(_meta.CreateSchema()))
+            {
+               throw new ParquetException($"{nameof(DataSet)} schema does not match existing file schema");
+            }
 
             GoBeforeFooter();
          }

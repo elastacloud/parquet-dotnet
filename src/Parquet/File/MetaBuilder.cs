@@ -37,6 +37,11 @@ namespace Parquet.File
 
       public Thrift.FileMetaData ThriftMeta => _meta;
 
+      public Schema CreateSchema()
+      {
+         return new Schema(_meta);
+      }
+
       public void AddSchema(DataSet ds)
       {
          ds.Metadata.CreatedBy = CreatedBy;
