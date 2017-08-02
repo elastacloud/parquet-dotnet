@@ -132,7 +132,7 @@ namespace Parquet.Test
 
       }
 
-      [Fact]
+      /*[Fact]
       public void Aws_athena_generate()
       {
          var ds = new DataSet(new SchemaElement<int>("id"), new SchemaElement<string>("city"));
@@ -150,6 +150,6 @@ namespace Parquet.Test
       {
          DataSet pqnet = ParquetReader.ReadFile("c:\\tmp\\athena-pnet.parquet");
          DataSet spark = ParquetReader.ReadFile("c:\\tmp\\athena-spark.parquet");
-      }
+      }*/
    }
 }
