@@ -171,25 +171,5 @@ namespace Parquet.Test
          ds2.Add(4d);
          Assert.Throws<ParquetException>(() => ParquetWriter.Write(ds2, ms, CompressionMethod.Gzip, null, null, true));
       }
-
-      //[Fact]
-      public void delete_me()
-      {
-         var ds = new DataSet(new SchemaElement<int>("id"), new SchemaElement<string>("city"));
-         ds.Add(1, "London");
-         ds.Add(2, "Derby");
-         ds.Add(3, "New York");
-
-         ParquetWriter.WriteFile(ds, "c:\\tmp\\athena-pnet.parquet", CompressionMethod.None);
-
-         DataSet ds1 = ParquetReader.ReadFile("c:\\tmp\\athena-pnet.parquet");
-      }
-
-      [Fact]
-      public void Aws_athena_compare()
-      {
-         DataSet pqnet = ParquetReader.ReadFile("c:\\tmp\\athena-pnet.parquet");
-         DataSet spark = ParquetReader.ReadFile("c:\\tmp\\athena-spark.parquet");
-      }*/
    }
 }

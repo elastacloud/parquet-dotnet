@@ -121,7 +121,7 @@ namespace Parquet
             Thrift.FileMetaData fileMeta = ReadMetadata();
             _meta.SetMeta(fileMeta);
 
-            if (!ds.Schema.Equals(_meta.CreateSchema()))
+            if (!ds.Schema.Equals(_meta.CreateSchema(_formatOptions)))
             {
                throw new ParquetException($"{nameof(DataSet)} schema does not match existing file schema");
             }
@@ -247,7 +247,7 @@ namespace Parquet
 
       private int Write(Thrift.PageHeader ph, byte[] data)
       {
-         int headerSize = _thrift.Write(ph);
+         int headerSize = ThriftStream.Write(ph);
          _output.Write(data, 0, data.Length);
          return headerSize;
       }
