@@ -14,18 +14,30 @@ namespace Parquet.Test.Formats
       [Fact]
       public void Reads_simple_csv()
       {
+         var ds = new DataSet();
+
          using (var csvs = System.IO.File.OpenRead(GetDataFilePath("alltypes.csv")))
          {
-            var ds = new DataSet();
             ds.ReadCsv(csvs, new CsvOptions { InferSchema = true, HasHeaders = true });
-
-
          }
+
+         Assert.Equal(8, ds.RowCount);
+         Assert.Equal(typeof(int), ds.Schema[0].ElementType);
+         Assert.Equal(typeof(bool), ds.Schema[1].ElementType);
+         Assert.Equal(typeof(int), ds.Schema[2].ElementType);
+         Assert.Equal(typeof(int), ds.Schema[3].ElementType);
+         Assert.Equal(typeof(int), ds.Schema[4].ElementType);
+         Assert.Equal(typeof(int), ds.Schema[5].ElementType);
+         Assert.Equal(typeof(float), ds.Schema[6].ElementType);
+         Assert.Equal(typeof(float), ds.Schema[7].ElementType);
+         Assert.Equal(typeof(DateTimeOffset), ds.Schema[8].ElementType);
+         Assert.Equal(typeof(int), ds.Schema[9].ElementType);
+         Assert.Equal(typeof(DateTimeOffset), ds.Schema[10].ElementType);
       }
 
       private string GetDataFilePath(string name)
       {
-         string thisPath = Assembly.Load(new AssemblyName("Parquet.Test")).Location;
+         string thisPath = typeof(CsvFormatTest).GetTypeInfo().Assembly.Location;
          return Path.Combine(Path.GetDirectoryName(thisPath), "data", name);
       }
    }
