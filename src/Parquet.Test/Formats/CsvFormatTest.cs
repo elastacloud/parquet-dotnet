@@ -12,13 +12,13 @@ namespace Parquet.Test.Formats
    public class CsvFormatTest
    {
       [Fact]
-      public void Reads_simple_csv()
+      public void Reads_alltypes_inferred()
       {
-         var ds = new DataSet();
+         DataSet ds;
 
          using (var csvs = System.IO.File.OpenRead(GetDataFilePath("alltypes.csv")))
          {
-            ds.ReadCsv(csvs, new CsvOptions { InferSchema = true, HasHeaders = true });
+            ds = CsvFormat.ReadToDataSet(csvs, new CsvOptions { InferSchema = true, HasHeaders = true });
          }
 
          Assert.Equal(8, ds.RowCount);
@@ -33,6 +33,19 @@ namespace Parquet.Test.Formats
          Assert.Equal(typeof(DateTimeOffset), ds.Schema[8].ElementType);
          Assert.Equal(typeof(int), ds.Schema[9].ElementType);
          Assert.Equal(typeof(DateTimeOffset), ds.Schema[10].ElementType);
+      }
+
+      [Fact]
+      public void Reads_csv_with_no_headers()
+      {
+         DataSet ds;
+
+         using (var csvs = System.IO.File.OpenRead(GetDataFilePath("alltypes_no_headers.csv")))
+         {
+            ds = CsvFormat.ReadToDataSet(csvs, new CsvOptions { InferSchema = true, HasHeaders = false });
+         }
+
+         Assert.Equal(8, ds.RowCount);
       }
 
       private string GetDataFilePath(string name)

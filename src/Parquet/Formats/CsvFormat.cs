@@ -19,7 +19,7 @@ namespace Parquet.Formats
          { typeof(byte), typeof(int) }
       };
       
-      public static void ReadCsv(this DataSet ds, Stream csvStream, CsvOptions options = null)
+      public static DataSet ReadToDataSet(Stream csvStream, CsvOptions options = null)
       {
          if (options == null) options = new CsvOptions();
 
@@ -62,14 +62,24 @@ namespace Parquet.Formats
             }
          }
 
+         DataSet result;
+
          //set schema
-         if (options.InferSchema) InferSchema(ds, headers, columnValues);
+         if (options.InferSchema)
+         {
+            result = InferSchema(headers, columnValues);
+         }
+         else
+         {
+            throw new NotImplementedException("infer schema must be set to true");
+         }
 
          //assign values
-         ds.AddColumnar(columnValues.Values);
+         result.AddColumnar(columnValues.Values);
+         return result;
       }
 
-      private static void InferSchema(DataSet ds, string[] headers, Dictionary<int, IList> columnValues)
+      private static DataSet InferSchema(string[] headers, Dictionary<int, IList> columnValues)
       {
          var elements = new List<SchemaElement>();
          for (int i = 0; i < headers.Length; i++)
@@ -83,8 +93,8 @@ namespace Parquet.Formats
 
             columnValues[i] = typedValues;
          }
-         ds.Schema.Elements.Clear();
-         ds.Schema.Elements.AddRange(elements);
+
+         return new DataSet(elements);
       }
    }
 }
