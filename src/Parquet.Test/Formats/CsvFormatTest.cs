@@ -3,6 +3,7 @@ using Parquet.Formats;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Xunit;
@@ -46,6 +47,24 @@ namespace Parquet.Test.Formats
          }
 
          Assert.Equal(8, ds.RowCount);
+      }
+
+      [Fact]
+      public void Reads_csv_with_heads_no_type_inferring()
+      {
+         DataSet ds = CsvFormat.ReadToDataSet(GetDataFilePath("alltypes.csv"), new CsvOptions { InferSchema = false, HasHeaders = true });
+
+         Assert.Equal(8, ds.RowCount);
+         Assert.True(ds.Schema.Elements.All(se => se.ElementType == typeof(string)));
+      }
+
+      [Fact]
+      public void Reads_csv_without_heads_no_type_inferring()
+      {
+         DataSet ds = CsvFormat.ReadToDataSet(GetDataFilePath("alltypes_no_headers.csv"), new CsvOptions { InferSchema = false, HasHeaders = false });
+
+         Assert.Equal(8, ds.RowCount);
+         Assert.True(ds.Schema.Elements.All(se => se.ElementType == typeof(string)));
       }
 
       private string GetDataFilePath(string name)

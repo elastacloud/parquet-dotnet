@@ -19,8 +19,16 @@ namespace Parquet.Formats
          { typeof(byte), typeof(int) }
       };
       
+      /// <summary>
+      /// Reads csv stream into dataset
+      /// </summary>
+      /// <param name="csvStream">CSV stream</param>
+      /// <param name="options">Options for reader, optional</param>
+      /// <returns>Correct dataset</returns>
       public static DataSet ReadToDataSet(Stream csvStream, CsvOptions options = null)
       {
+         if (csvStream == null) throw new ArgumentNullException(nameof(csvStream));
+
          if (options == null) options = new CsvOptions();
 
          var reader = new CsvReader(csvStream, Encoding.UTF8);
@@ -71,12 +79,28 @@ namespace Parquet.Formats
          }
          else
          {
-            throw new NotImplementedException("infer schema must be set to true");
+            result = new DataSet(headers.Select(h => new SchemaElement<string>(h)));
          }
 
          //assign values
          result.AddColumnar(columnValues.Values);
          return result;
+      }
+
+      /// <summary>
+      /// Reads csv stream into dataset
+      /// </summary>
+      /// <param name="fileName">File on disk to read from/param>
+      /// <param name="options">Options for reader, optional</param>
+      /// <returns>Correct dataset</returns>
+      public static DataSet ReadToDataSet(string fileName, CsvOptions options = null)
+      {
+         if (fileName == null) throw new ArgumentNullException(nameof(fileName));
+
+         using (Stream fs = System.IO.File.OpenRead(fileName))
+         {
+            return ReadToDataSet(fs, options);
+         }
       }
 
       private static DataSet InferSchema(string[] headers, Dictionary<int, IList> columnValues)
