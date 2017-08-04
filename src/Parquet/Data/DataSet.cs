@@ -25,6 +25,8 @@ namespace Parquet.Data
       /// </summary>
       public DataSetMetadata Metadata => _metadata;
 
+      internal Thrift.FileMetaData TM { get; set; }
+
       /// <summary>
       /// Initializes a new instance of the <see cref="DataSet"/> class.
       /// </summary>
