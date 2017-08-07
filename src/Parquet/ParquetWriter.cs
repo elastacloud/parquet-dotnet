@@ -160,28 +160,8 @@ namespace Parquet
          CompressionMethod compression,
          ColumnStats stats)
       {
-         schema.IsNullable = true;
          Thrift.ColumnChunk chunk = _meta.AddColumnChunk(compression, _output, schema, values.Count);
-
-
-         Thrift.Statistics st = new Thrift.Statistics();
-         chunk.Meta_data.Statistics = st;
-         st.Null_count = 0;
-
-         if (schema.ElementType == typeof(int))
-         {
-            st.Min = BitConverter.GetBytes(1);
-            st.Max = BitConverter.GetBytes(3);
-         }
-         else if (schema.ElementType == typeof(string))
-         {
-            st.Min = System.Text.Encoding.UTF8.GetBytes("Derby");
-            st.Max = System.Text.Encoding.UTF8.GetBytes("New York");
-         }
-
          Thrift.PageHeader ph = _meta.CreateDataPage(values.Count);
-
-         ph.Data_page_header.Statistics= st;
 
          List<PageTag> pages = WriteValues(schema, values, ph, compression, stats);
 
@@ -203,7 +183,7 @@ namespace Parquet
             using (var writer = new BinaryWriter(ms))
             {
                //write definitions
-               if(schema.IsNullable)
+               if(stats.NullCount > 0)
                {
                   CreateDefinitions(values, schema, out IList newValues, out List<int> definitions);
                   values = newValues;
@@ -309,15 +289,6 @@ namespace Parquet
       public void Dispose()
       {
          if (!_dataWritten) return;
-
-         _meta.ThriftMeta.Created_by = "parquet-mr version 1.8.1 (build 4aba4dae7bb0d4edbcf7923ae1339f28fd3f7fcf)";
-         _meta.ThriftMeta.Key_value_metadata = new List<Thrift.KeyValue>
-         {
-            new Thrift.KeyValue("org.apache.spark.sql.parquet.row.metadata")
-            {
-               Value = "{\"type\":\"struct\",\"fields\":[{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}},{\"name\":\"city\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}}]}"
-            }
-         };
 
          //finalize file
          _output.Seek(0, SeekOrigin.End);

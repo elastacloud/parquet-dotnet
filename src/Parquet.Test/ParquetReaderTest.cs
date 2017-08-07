@@ -137,19 +137,6 @@ namespace Parquet.Test
          Assert.True(ds1.Metadata.CreatedBy.StartsWith("parquet-dotnet"));
       }
 
-      [Fact]
-      public void Athena_delete_me()
-      {
-         var ds = new DataSet(new SchemaElement<int>("id"), new SchemaElement<string>("city"));
-         ds.Add(1, "London");
-         ds.Add(2, "Derby");
-         ds.Add(3, "New York");
-         ParquetWriter.WriteFile(ds, "c:\\tmp\\athena-pnet.parquet", CompressionMethod.None);
-
-         DataSet pq = ParquetReader.ReadFile("c:\\tmp\\athena-pnet.parquet");
-         DataSet sp = ParquetReader.ReadFile("c:\\tmp\\athena-spark.parquet");
-      }
-
       class ReadableNonSeekableStream : DelegatedStream
       {
          public ReadableNonSeekableStream(Stream master) : base(master)
