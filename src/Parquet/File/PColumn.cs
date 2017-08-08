@@ -24,9 +24,6 @@ namespace Parquet.File
 
       public PColumn(Thrift.ColumnChunk thriftChunk, Schema schema, Stream inputStream, ThriftStream thriftStream, ParquetOptions options)
       {
-         if (thriftChunk.Meta_data.Path_in_schema.Count != 1)
-            throw new NotImplementedException("path in scheme is not flat");
-
          _thriftChunk = thriftChunk;
          _thrift = thriftStream;
          _schema = schema;

@@ -81,7 +81,12 @@ namespace Parquet.Data
    {
       private readonly List<SchemaElement> _children = new List<SchemaElement>();
 
+      /// <summary>
+      /// Gets the children schemas
+      /// </summary>
       public ICollection<SchemaElement> Children => _children;
+
+      public SchemaElement Parent { get; private set; }
 
       /// <summary>
       /// Used by derived classes to invoke 
@@ -121,10 +126,11 @@ namespace Parquet.Data
          };
       }
 
-      internal SchemaElement(Thrift.SchemaElement thriftSchema, ParquetOptions formatOptions)
+      internal SchemaElement(Thrift.SchemaElement thriftSchema, SchemaElement parent, ParquetOptions formatOptions)
       {
          Name = thriftSchema.Name;
          Thrift = thriftSchema;
+         Parent = parent;
          ElementType = TypeFactory.ToSystemType(this, formatOptions);
       }
 
@@ -137,6 +143,24 @@ namespace Parquet.Data
       /// Element type
       /// </summary>
       public Type ElementType { get; internal set; }
+
+      public string Path
+      {
+         get
+         {
+            var parts = new List<string>();
+            SchemaElement current = this;
+
+            while (current != null)
+            {
+               parts.Add(current.Name);
+               current = current.Parent;
+            }
+
+            parts.Reverse();
+            return string.Join(".", parts);
+         }
+      }
 
       /// <summary>
       /// Returns true if element can have null values

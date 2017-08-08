@@ -33,17 +33,18 @@ namespace Parquet.Data
 
       internal Schema(Thrift.FileMetaData fm, ParquetOptions formatOptions)
       {
-         void Build(SchemaElement node, int i, int count)
+         void Build(SchemaElement node, int i, int count, bool isRoot)
          {
             while (node.Children.Count < count)
             {
                Thrift.SchemaElement tse = fm.Schema[i];
-               var mse = new SchemaElement(tse, formatOptions);
+               var mse = new SchemaElement(tse, isRoot ? null : node, formatOptions);
+               _pathToElement[mse.Path] = mse;
                node.Children.Add(mse);
 
                if (tse.Num_children > 0)
                {
-                  Build(mse, i + 1, tse.Num_children);
+                  Build(mse, i + 1, tse.Num_children, false);
                }
 
                i += tse.Num_children;
@@ -53,13 +54,9 @@ namespace Parquet.Data
 
          //extract schema tree
          var root = new SchemaElement<int>("root");
-         Build(root, 1, fm.Schema[0].Num_children);
+         Build(root, 1, fm.Schema[0].Num_children, true);
 
          _elements = root.Children.ToList();
-         foreach (SchemaElement se in _elements)
-         {
-            _pathToElement[se.Name] = se;
-         }
       }
 
       /// <summary>
@@ -112,7 +109,15 @@ namespace Parquet.Data
          return max;
       }
 
-      internal SchemaElement this[Thrift.ColumnChunk value] => _pathToElement[value.Meta_data.Path_in_schema[0]];
+      internal SchemaElement this[Thrift.ColumnChunk value]
+      {
+         get
+         {
+            string path = string.Join(".", value.Meta_data.Path_in_schema);
+
+            return _pathToElement[path];
+         }
+      }
 
       /// <summary>
       /// Indicates whether the current object is equal to another object of the same type.
