@@ -96,19 +96,6 @@ namespace Parquet.Data
          return -1;
       }
 
-      internal int GetMaxDefinitionLevel(Thrift.ColumnChunk cc)
-      {
-         int max = 0;
-
-         foreach (string part in cc.Meta_data.Path_in_schema)
-         {
-            SchemaElement element = _pathToElement[part];
-            if (element.Thrift.Repetition_type != Thrift.FieldRepetitionType.REQUIRED) max += 1;
-         }
-
-         return max;
-      }
-
       internal SchemaElement this[Thrift.ColumnChunk value]
       {
          get

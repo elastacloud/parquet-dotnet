@@ -182,12 +182,56 @@ namespace Parquet.Data
       /// <summary>
       /// Detect if data page has definition levels written.
       /// </summary>
-      internal bool HasDefinitionLevelsPage(Thrift.PageHeader ph)
+      internal bool HasDefinitionLevelsPage
       {
-         if (!Thrift.__isset.repetition_type)
-            throw new ParquetException("repetiton type is missing");
+         get
+         {
+            if (!Thrift.__isset.repetition_type)
+               throw new ParquetException("repetiton type is missing");
 
-         return Thrift.Repetition_type != Parquet.Thrift.FieldRepetitionType.REQUIRED;
+            return Thrift.Repetition_type != Parquet.Thrift.FieldRepetitionType.REQUIRED;
+         }
+      }
+
+      internal int MaxDefinitionLevel
+      {
+         get
+         {
+            int maxLevel = 0;
+
+            //detect max repetition level for the given path
+            SchemaElement se = this;
+            while (se != null)
+            {
+               if (se.Thrift.Repetition_type != Parquet.Thrift.FieldRepetitionType.REQUIRED) maxLevel += 1;
+
+               se = se.Parent;
+            }
+
+            return maxLevel;
+         }
+      }
+
+
+      internal bool HasRepetitionLevelsPage => MaxRepetitionLevel > 0;
+
+      internal int MaxRepetitionLevel
+      {
+         get
+         {
+            int maxLevel = 0;
+
+            //detect max repetition level for the given path
+            SchemaElement se = this;
+            while (se != null)
+            {
+               if (se.Thrift.Repetition_type == Parquet.Thrift.FieldRepetitionType.REPEATED) maxLevel += 1;
+
+               se = se.Parent;
+            }
+
+            return maxLevel;
+         }
       }
 
       /// <summary>
