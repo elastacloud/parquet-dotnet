@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Parquet.Test
 {
-   public class ParquetReaderTest
+   public class ParquetReaderTest : TestBase
    {
       [Fact]
       public void Opening_null_stream_fails()
@@ -135,6 +135,12 @@ namespace Parquet.Test
          ms.Position = 0;
          DataSet ds1 = ParquetReader.Read(ms);
          Assert.True(ds1.Metadata.CreatedBy.StartsWith("parquet-dotnet"));
+      }
+
+      [Fact]
+      public void Reads_nested_struct()
+      {
+         DataSet ds = ParquetReader.ReadFile(GetDataFilePath("nested-struct.parquet"));
       }
 
       class ReadableNonSeekableStream : DelegatedStream

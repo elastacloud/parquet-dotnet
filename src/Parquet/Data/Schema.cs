@@ -33,10 +33,32 @@ namespace Parquet.Data
 
       internal Schema(Thrift.FileMetaData fm, ParquetOptions formatOptions)
       {
-         _elements = fm.Schema.Skip(1).Select(se => new SchemaElement(se, formatOptions)).ToList();
-         foreach (Thrift.SchemaElement se in fm.Schema)
+         void Build(SchemaElement node, int i, int count)
          {
-            _pathToElement[se.Name] = new SchemaElement(se, formatOptions);
+            while (node.Children.Count < count)
+            {
+               Thrift.SchemaElement tse = fm.Schema[i];
+               var mse = new SchemaElement(tse, formatOptions);
+               node.Children.Add(mse);
+
+               if (tse.Num_children > 0)
+               {
+                  Build(mse, i + 1, tse.Num_children);
+               }
+
+               i += tse.Num_children;
+               i += 1;
+            }
+         }
+
+         //extract schema tree
+         var root = new SchemaElement<int>("root");
+         Build(root, 1, fm.Schema[0].Num_children);
+
+         _elements = root.Children.ToList();
+         foreach (SchemaElement se in _elements)
+         {
+            _pathToElement[se.Name] = se;
          }
       }
 

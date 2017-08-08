@@ -1,6 +1,7 @@
 ﻿using Parquet.File;
 using System;
 using Parquet.File.Values;
+using System.Collections.Generic;
 
 namespace Parquet.Data
 {
@@ -78,6 +79,10 @@ namespace Parquet.Data
    /// </summary>
    public class SchemaElement : IEquatable<SchemaElement>
    {
+      private readonly List<SchemaElement> _children = new List<SchemaElement>();
+
+      public ICollection<SchemaElement> Children => _children;
+
       /// <summary>
       /// Used by derived classes to invoke 
       /// </summary>
