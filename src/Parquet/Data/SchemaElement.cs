@@ -84,7 +84,7 @@ namespace Parquet.Data
       /// <summary>
       /// Gets the children schemas
       /// </summary>
-      public ICollection<SchemaElement> Children => _children;
+      public IList<SchemaElement> Children => _children;
 
       public SchemaElement Parent { get; private set; }
 
