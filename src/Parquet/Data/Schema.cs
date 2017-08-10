@@ -38,16 +38,20 @@ namespace Parquet.Data
             while (node.Children.Count < count)
             {
                Thrift.SchemaElement tse = fm.Schema[i];
-               var mse = new SchemaElement(tse, isRoot ? null : node, formatOptions);
+               int childCount = tse.Num_children;
+               bool isContainer = childCount > 0;
+
+               SchemaElement parent = isRoot ? null : node;
+               var mse = new SchemaElement(tse, parent, formatOptions, isContainer ? typeof(Row) : null);
                _pathToElement[mse.Path] = mse;
                node.Children.Add(mse);
 
                if (tse.Num_children > 0)
                {
-                  Build(mse, i + 1, tse.Num_children, false);
+                  Build(mse, i + 1, childCount, false);
                }
 
-               i += tse.Num_children;
+               i += childCount;
                i += 1;
             }
          }

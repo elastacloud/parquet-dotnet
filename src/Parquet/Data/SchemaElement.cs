@@ -15,7 +15,7 @@ namespace Parquet.Data
       /// Initializes a new instance of the <see cref="SchemaElement"/> class.
       /// </summary>
       /// <param name="name">Column name</param>
-      public SchemaElement(string name) : base(name, typeof(T))
+      public SchemaElement(string name, SchemaElement parent = null) : base(name, typeof(T), parent)
       {
          
       }
@@ -106,10 +106,11 @@ namespace Parquet.Data
       /// </summary>
       /// <param name="name">Column name</param>
       /// <param name="elementType">Type of the element in this column</param>
-      public SchemaElement(string name, Type elementType)
+      public SchemaElement(string name, Type elementType, SchemaElement parent = null)
       {
          SetProperties(name, elementType);
          TypeFactory.AdjustSchema(Thrift, elementType);
+         Parent = parent;
       }
 
       private void SetProperties(string name, Type elementType)
@@ -126,12 +127,12 @@ namespace Parquet.Data
          };
       }
 
-      internal SchemaElement(Thrift.SchemaElement thriftSchema, SchemaElement parent, ParquetOptions formatOptions)
+      internal SchemaElement(Thrift.SchemaElement thriftSchema, SchemaElement parent, ParquetOptions formatOptions, Type elementType)
       {
          Name = thriftSchema.Name;
          Thrift = thriftSchema;
          Parent = parent;
-         ElementType = TypeFactory.ToSystemType(this, formatOptions);
+         ElementType = elementType ?? TypeFactory.ToSystemType(this, formatOptions);
       }
 
       /// <summary>
