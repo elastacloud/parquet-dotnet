@@ -101,6 +101,8 @@ namespace Parquet.File
 
                definitions == null ? 0 : definitions.Count);
 
+            Console.WriteLine("page: {0}, count: {1}", dataPageCount, totalCount);
+
             if(totalCount >= maxValues)
             {
                break;   //limit reached
@@ -169,9 +171,10 @@ namespace Parquet.File
          {
             using (var reader = new BinaryReader(dataStream))
             {
-               List<int> repetitions = _schemaElement.HasRepetitionLevelsPage
+               /*List<int> repetitions = _schemaElement.HasRepetitionLevelsPage
                   ? ReadRepetitionLevels(reader, (int)maxValues)
-                  : null;
+                  : null;*/
+               List<int> repetitions = null;
 
                List<int> definitions = _schemaElement.HasDefinitionLevelsPage
                   ? ReadDefinitionLevels(reader, (int)maxValues)
@@ -200,8 +203,6 @@ namespace Parquet.File
          RunLengthBitPackingHybridValuesReader.ReadRleBitpackedHybrid(reader, bitWidth, 0, result, valueCount);
 
          ValueMerger.TrimTail(result, valueCount);  //trim result so null count procudes correct value
-         int nullCount = valueCount - result.Count(r => r == maxLevel);
-         if (nullCount == 0) return null;
 
          return result;
       }
@@ -215,8 +216,6 @@ namespace Parquet.File
          RunLengthBitPackingHybridValuesReader.ReadRleBitpackedHybrid(reader, bitWidth, 0, result, valueCount);
 
          ValueMerger.TrimTail(result, valueCount);  //trim result so null count procudes correct value
-         int nullCount = valueCount - result.Count(r => r == maxLevel);
-         if (nullCount == 0) return null;
 
          return result;
       }
