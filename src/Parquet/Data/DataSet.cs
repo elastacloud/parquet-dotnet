@@ -127,11 +127,9 @@ namespace Parquet.Data
       internal void AddFromFlatColumns(IEnumerable<IList> columnValues)
       {
          IEnumerator[] iear = columnValues.Select(c => c.GetEnumerator()).ToArray();
-         IEnumerator ies = Schema.Elements.GetEnumerator();
          iear.ForEach(ie => ie.Reset());
-         ies.Reset();
 
-         while (iear.All(ie => ie.MoveNext()) && ies.MoveNext())
+         while (iear.All(ie => ie.MoveNext()))
          {
             int vi = 0;
             Row row = CreateRow(Schema.Elements, iear, ref vi);
