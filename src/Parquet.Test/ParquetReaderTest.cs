@@ -4,6 +4,7 @@ using Parquet.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using Xunit;
 
@@ -137,6 +138,29 @@ namespace Parquet.Test
          Assert.True(ds1.Metadata.CreatedBy.StartsWith("parquet-dotnet"));
       }
 
+      //this only tests that the file is readable as it used to completely crash before
+      [Fact]
+      public void Reads_compat_nation_impala_file()
+      {
+         DataSet nation = ParquetReader.ReadFile(GetDataFilePath("nation.impala.parquet"));
+
+         Assert.Equal(25, nation.RowCount);
+      }
+
+      //this only tests that the file is readable as it used to completely crash before
+      [Fact]
+      public void Reads_compat_customer_impala_file()
+      {
+         /*
+          * c_name:
+          *    45 pages (0-44)
+          */
+
+         DataSet customer = ParquetReader.ReadFile(GetDataFilePath("customer.impala.parquet"));
+
+         Assert.Equal(150000, customer.RowCount);
+      }
+
       [Fact]
       public void Reads_nested_struct()
       {
@@ -150,6 +174,14 @@ namespace Parquet.Test
          Assert.Equal(typeof(long), ds.Schema[3].ElementType);
          Assert.Equal(typeof(Row), ds.Schema[4].ElementType);
       }
+
+
+      private string GetDataFilePath(string name)
+      {
+         string thisPath = Assembly.Load(new AssemblyName("Parquet.Test")).Location;
+         return Path.Combine(Path.GetDirectoryName(thisPath), "data", name);
+      }
+
 
       class ReadableNonSeekableStream : DelegatedStream
       {

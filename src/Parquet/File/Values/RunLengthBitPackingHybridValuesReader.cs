@@ -76,8 +76,11 @@ namespace Parquet.File.Values
          int groupCount = header >> 1;
          int count = groupCount * 8;
          int byteCount = (bitWidth * count) / 8;
+         //int byteCount2 = (int)Math.Ceiling(bitWidth * count / 8.0);
 
          byte[] rawBytes = reader.ReadBytes(byteCount);
+         byteCount = rawBytes.Length;  //sometimes there will be less data available, typically on the last page
+
          int mask = MaskForBits(bitWidth);
 
          int i = 0;

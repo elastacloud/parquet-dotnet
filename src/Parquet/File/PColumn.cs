@@ -92,23 +92,55 @@ namespace Parquet.File
 
             if (page.repetitions != null) throw new NotImplementedException();
 
-            if((values.Count >= maxValues) || (indexes != null && indexes.Count >= maxValues) || (definitions != null && definitions.Count >= maxValues))
+            int totalCount = Math.Max(
+
+               values.Count +
+               (indexes == null
+                  ? 0
+                  : indexes.Count),
+
+               definitions == null ? 0 : definitions.Count);
+
+            if(totalCount >= maxValues)
             {
                break;   //limit reached
             }
 
-            ph = _thrift.Read<Thrift.PageHeader>(); //get next page
+            ph = ReadDataPageHeader(dataPageCount); //get next page
+
+
             if (ph.Type != Thrift.PageType.DATA_PAGE)
             {
                break;
             }
          }
 
-         IList mergedValues = new ValueMerger(_schemaElement, _options, values).Apply(dictionaryPage, definitions, indexes, maxValues);
+         IList mergedValues = new ValueMerger(_schemaElement, _options, values).Apply(dictionaryPage, definitions, indexes, (int)maxValues);
 
-         ValueMerger.Trim(mergedValues, offset, count);
+         ValueMerger.Trim(mergedValues, (int)offset, (int)count);
 
          return mergedValues;
+      }
+
+      private Thrift.PageHeader ReadDataPageHeader(int pageNo)
+      {
+         Thrift.PageHeader ph;
+
+         try
+         {
+            ph = _thrift.Read<Thrift.PageHeader>();
+         }
+         catch (Exception ex)
+         {
+            throw new IOException($"failed to read data page header after page #{pageNo}", ex);
+         }
+
+         if (ph.Type != Thrift.PageType.DATA_PAGE)
+         {
+            throw new IOException($"expected data page but read {ph.Type}");
+         }
+
+         return ph;
       }
 
       private IList ReadDictionaryPage(Thrift.PageHeader ph)
@@ -131,6 +163,7 @@ namespace Parquet.File
       private (ICollection definitions, ICollection repetitions, List<int> indexes) ReadDataPage(Thrift.PageHeader ph, IList destination, long maxValues)
       {
          byte[] data = ReadRawBytes(ph, _inputStream);
+         int max = ph.Data_page_header.Num_values;
 
          using (var dataStream = new MemoryStream(data))
          {
@@ -145,7 +178,7 @@ namespace Parquet.File
                   : null;
 
                // these are pointers back to the Values table - lookup on values 
-               List<int> indexes = ReadColumnValues(reader, ph.Data_page_header.Encoding, destination, maxValues);
+               List<int> indexes = ReadColumnValues(reader, ph.Data_page_header.Encoding, destination, max);
 
                //trim output if it exceeds max number of values
                int numValues = ph.Data_page_header.Num_values;
