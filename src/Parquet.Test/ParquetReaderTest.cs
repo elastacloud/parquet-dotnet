@@ -175,6 +175,19 @@ namespace Parquet.Test
          Assert.Equal(typeof(Row), ds.Schema[4].ElementType);
       }
 
+      [Fact]
+      public void Reads_simple_nested_array()
+      {
+         DataSet ds = ParquetReader.ReadFile(GetDataFilePath("nested-array.parquet"));
+
+         Assert.Equal(1, ds.Count);
+
+         Assert.Equal(typeof(string), ds.Schema[0].ElementType);
+         Assert.Equal(typeof(long), ds.Schema[1].ElementType);
+         Assert.Equal(typeof(Row), ds.Schema[2].ElementType);
+         Assert.Equal(typeof(long), ds.Schema[3].ElementType);
+         Assert.Equal(typeof(Row), ds.Schema[4].ElementType);
+      }
 
       private string GetDataFilePath(string name)
       {

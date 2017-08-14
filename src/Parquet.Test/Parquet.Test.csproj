@@ -19,6 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="data\nested-array.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="data\nested-struct.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
