@@ -182,7 +182,7 @@ namespace Parquet.File
 
                //trim output if it exceeds max number of values
                int numValues = ph.Data_page_header.Num_values;
-               if (repetitions != null) ValueMerger.TrimTail(repetitions, maxValues);
+               if (repetitions != null) ValueMerger.TrimTail(repetitions, numValues);
                if(definitions != null) ValueMerger.TrimTail(definitions, numValues);
                if(indexes != null) ValueMerger.TrimTail(indexes, numValues);
 
