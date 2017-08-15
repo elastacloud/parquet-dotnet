@@ -15,6 +15,7 @@ namespace Parquet.Data
       /// Initializes a new instance of the <see cref="SchemaElement"/> class.
       /// </summary>
       /// <param name="name">Column name</param>
+      /// <param name="parent">Parent schema element</param>
       public SchemaElement(string name, SchemaElement parent = null) : base(name, typeof(T), parent)
       {
          
