@@ -33,7 +33,7 @@ namespace Parquet.Data
 
       internal Schema(Thrift.FileMetaData fm, ParquetOptions formatOptions)
       {
-         void Build(SchemaElement node, int i, int count, bool isRoot)
+         void Build(SchemaElement node, ref int i, int count, bool isRoot)
          {
             while (node.Children.Count < count)
             {
@@ -46,19 +46,19 @@ namespace Parquet.Data
                _pathToElement[mse.Path] = mse;
                node.Children.Add(mse);
 
+               i += 1;
+
                if (tse.Num_children > 0)
                {
-                  Build(mse, i + 1, childCount, false);
+                  Build(mse, ref i, childCount, false);
                }
-
-               i += childCount;
-               i += 1;
             }
          }
 
          //extract schema tree
          var root = new SchemaElement<int>("root");
-         Build(root, 1, fm.Schema[0].Num_children, true);
+         int start = 1;
+         Build(root, ref start, fm.Schema[0].Num_children, true);
 
          _elements = root.Children.ToList();
       }

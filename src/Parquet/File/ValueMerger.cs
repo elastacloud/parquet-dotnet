@@ -25,7 +25,7 @@ namespace Parquet.File
       /// <summary>
       /// Applies dictionary with indexes and definition levels directly over the column
       /// </summary>
-      public IList Apply(IList dictionary, List<int> definitions, List<int> indexes, int maxValues)
+      public IList Apply(IList dictionary, List<int> definitions, List<int> repetitions, List<int> indexes, int maxValues)
       {
          if (dictionary == null && definitions == null && indexes == null) return _values;  //values are just values
 
