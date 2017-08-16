@@ -248,7 +248,7 @@ namespace Parquet.Data
       /// </summary>
       public override string ToString()
       {
-         return $"{Name} ({ElementType}), nullable: {IsNullable}";
+         return $"{Name}: {ElementType} (nullable = {IsNullable})";
       }
 
       /// <summary>

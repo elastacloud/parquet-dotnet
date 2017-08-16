@@ -171,16 +171,34 @@ namespace Parquet.Data
       /// Shows schema in human readable form
       /// </summary>
       /// <returns></returns>
-      public string Show()
+      public override string ToString()
       {
          var sb = new StringBuilder();
 
+         int level = 0;
+         sb.AppendLine("root");
          foreach (SchemaElement se in _elements)
          {
-            sb.AppendLine($"- name: '{se.Name}', type: {se.ElementType}, nullable: {se.IsNullable}");
+            ToString(sb, se, level);
          }
 
          return sb.ToString();
+      }
+
+      private void ToString(StringBuilder sb, SchemaElement se, int level)
+      {
+         sb.Append("|");
+         for(int i = 0; i < level; i++)
+         {
+            sb.Append("    |");
+         }
+         sb.Append("-- ");
+         sb.AppendLine(se.ToString());
+
+         foreach(SchemaElement child in se.Children)
+         {
+            ToString(sb, child, level + 1);
+         }
       }
    }
 }
