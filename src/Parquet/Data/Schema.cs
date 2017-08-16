@@ -11,7 +11,8 @@ namespace Parquet.Data
    public class Schema : IEquatable<Schema>
    {
       private readonly List<SchemaElement> _elements;
-      private readonly Dictionary<string, SchemaElement> _pathToElement = new Dictionary<string, SchemaElement>();
+      private Dictionary<string, SchemaElement> _pathToElement;
+      public const string PathSeparator = ".";
 
       /// <summary>
       /// Initializes a new instance of the <see cref="Schema"/> class from schema elements.
@@ -89,9 +90,31 @@ namespace Parquet.Data
       {
          get
          {
-            string path = string.Join(".", value.Meta_data.Path_in_schema);
+            string path = string.Join(PathSeparator, value.Meta_data.Path_in_schema);
 
-            return _pathToElement[path];
+            if (_pathToElement == null) BuildPathCache();
+
+            if (!_pathToElement.TryGetValue(path, out SchemaElement result))
+               throw new ArgumentException($"cannot find schema element by path '{path}'", nameof(value));
+
+            return result;
+         }
+      }
+
+      private void BuildPathCache()
+      {
+         _pathToElement = new Dictionary<string, SchemaElement>();
+
+         CachePath(Elements);
+      }
+
+      private void CachePath(IEnumerable<SchemaElement> elements)
+      {
+         foreach(SchemaElement element in elements)
+         {
+            _pathToElement[element.Path] = element;
+
+            if (element.Children.Count > 0) CachePath(element.Children);
          }
       }
 
@@ -109,7 +132,7 @@ namespace Parquet.Data
 
          if (_elements.Count != other._elements.Count) return false;
 
-         foreach(var pair in EnumerableEx.MultiIterate(_elements, other.Elements))
+         foreach(Tuple<SchemaElement, SchemaElement> pair in EnumerableEx.MultiIterate(_elements, other.Elements))
          {
             if (!pair.Item1.Equals(pair.Item2)) return false;
          }

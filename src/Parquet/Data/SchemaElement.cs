@@ -167,7 +167,7 @@ namespace Parquet.Data
             }
 
             parts.Reverse();
-            return string.Join(".", parts);
+            return string.Join(Schema.PathSeparator, parts);
          }
       }
 

@@ -123,7 +123,7 @@ namespace Parquet
 
             Schema existingSchema = new FileMetadataParser(fileMeta).ParseSchema(_formatOptions);
 
-            if (!ds.Schema.Equals(fileMeta))
+            if (!ds.Schema.Equals(existingSchema))
             {
                throw new ParquetException($"{nameof(DataSet)} schema does not match existing file schema");
             }

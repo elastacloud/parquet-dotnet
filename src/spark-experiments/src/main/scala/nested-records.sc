@@ -20,13 +20,28 @@ def write(df: DataFrame, path: String): Unit = {
 }
 
 def convert(name: String, writeFile: Boolean): DataFrame = {
-  val df = spark.read.json(root + name + ".json")
+  val df = spark
+     .read
+     .option("wholeFile", true)
+     .option("mode", "PERMISSIVE")
+     .json(root + name + ".json")
   if(writeFile) {
-    write(df, root + name + ".parquet")
+    write(df, root + name + ".dir.parquet")
   }
   df
 }
 
-val df = convert("nested-array", false)
+def convertFromFormattedJson(name: String, writeFile: Boolean): DataFrame = {
+   val df = spark
+      .read
+      .json(sc.wholeTextFiles(root + name + ".json").values)
+
+   if(writeFile) {
+      write(df, root + name + ".dir.parquet")
+   }
+   df
+}
+
+val df = convertFromFormattedJson("nested", true)
 
 df.printSchema()

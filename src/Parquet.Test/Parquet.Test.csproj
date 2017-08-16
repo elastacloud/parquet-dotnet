@@ -19,13 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="data\nested-array.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\nested-array.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\nested-struct.json">
+    <None Update="data\nested.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="data\alltypes_no_headers.csv">
@@ -94,7 +88,7 @@
     <None Update="data\nation.plain.parquet">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="data\nested-struct.parquet">
+    <None Update="data\nested.parquet">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="data\postcodes.csv">
