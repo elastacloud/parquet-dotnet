@@ -31,38 +31,6 @@ namespace Parquet.Data
          _elements = elements.ToList();
       }
 
-      internal Schema(Thrift.FileMetaData fm, ParquetOptions formatOptions)
-      {
-         void Build(SchemaElement node, ref int i, int count, bool isRoot)
-         {
-            while (node.Children.Count < count)
-            {
-               Thrift.SchemaElement tse = fm.Schema[i];
-               int childCount = tse.Num_children;
-               bool isContainer = childCount > 0;
-
-               SchemaElement parent = isRoot ? null : node;
-               var mse = new SchemaElement(tse, parent, formatOptions, isContainer ? typeof(Row) : null);
-               _pathToElement[mse.Path] = mse;
-               node.Children.Add(mse);
-
-               i += 1;
-
-               if (tse.Num_children > 0)
-               {
-                  Build(mse, ref i, childCount, false);
-               }
-            }
-         }
-
-         //extract schema tree
-         var root = new SchemaElement<int>("root");
-         int start = 1;
-         Build(root, ref start, fm.Schema[0].Num_children, true);
-
-         _elements = root.Children.ToList();
-      }
-
       /// <summary>
       /// Gets the schema elements
       /// </summary>
@@ -141,7 +109,12 @@ namespace Parquet.Data
 
          if (_elements.Count != other._elements.Count) return false;
 
-         return !_elements.Where((t, i) => !t.Equals(other.Elements[i])).Any();
+         foreach(var pair in EnumerableEx.MultiIterate(_elements, other.Elements))
+         {
+            if (!pair.Item1.Equals(pair.Item2)) return false;
+         }
+
+         return true;
       }
 
       /// <summary>

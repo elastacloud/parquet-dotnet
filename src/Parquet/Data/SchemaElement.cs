@@ -87,6 +87,9 @@ namespace Parquet.Data
       /// </summary>
       public IList<SchemaElement> Children => _children;
 
+      /// <summary>
+      /// Gets parent schema element, if present. Null for root schema elements.
+      /// </summary>
       public SchemaElement Parent { get; private set; }
 
       /// <summary>
@@ -107,6 +110,7 @@ namespace Parquet.Data
       /// </summary>
       /// <param name="name">Column name</param>
       /// <param name="elementType">Type of the element in this column</param>
+      /// <param name="parent">Parent element, or null when this element belongs to a root.</param>
       public SchemaElement(string name, Type elementType, SchemaElement parent = null)
       {
          SetProperties(name, elementType);
@@ -146,6 +150,9 @@ namespace Parquet.Data
       /// </summary>
       public Type ElementType { get; internal set; }
 
+      /// <summary>
+      /// Element path, separated by dots (.)
+      /// </summary>
       public string Path
       {
          get
@@ -256,6 +263,8 @@ namespace Parquet.Data
          if (ReferenceEquals(null, other)) return false;
          if (ReferenceEquals(this, other)) return true;
 
+         //todo: check equality for child elements
+
          return string.Equals(Name, other.Name) &&
                 ElementType == other.ElementType &&
                 Thrift.Type.Equals(other.Thrift.Type) &&
@@ -289,7 +298,7 @@ namespace Parquet.Data
       {
          unchecked
          {
-            var hashCode = (Name != null ? Name.GetHashCode() : 0);
+            int hashCode = (Name != null ? Name.GetHashCode() : 0);
             hashCode = (hashCode * 397) ^ (ElementType != null ? ElementType.GetHashCode() : 0);
             hashCode = (hashCode * 397) ^ (Thrift != null ? Thrift.GetHashCode() : 0);
             return hashCode;

@@ -66,9 +66,7 @@ namespace Parquet
       /// <param name="fullPath">The full path.</param>
       /// <param name="formatOptions">Optional reader options.</param>
       /// <param name="readerOptions">The reader options.</param>
-      /// <returns>
-      /// DataSet
-      /// </returns>
+      /// <returns><see cref="DataSet"/></returns>
       public static DataSet ReadFile(string fullPath, ParquetOptions formatOptions = null, ReaderOptions readerOptions = null)
       {
          using (Stream fs = System.IO.File.OpenRead(fullPath))
@@ -80,6 +78,13 @@ namespace Parquet
          }
       }
 
+      /// <summary>
+      /// Reads <see cref="DataSet"/> from an open stream
+      /// </summary>
+      /// <param name="source">Input stream</param>
+      /// <param name="formatOptions">Parquet options, optional.</param>
+      /// <param name="readerOptions">Reader options, optional</param>
+      /// <returns><see cref="DataSet"/></returns>
       public static DataSet Read(Stream source, ParquetOptions formatOptions = null, ReaderOptions readerOptions = null)
       {
          using (var reader = new ParquetReader(source, formatOptions, readerOptions))
@@ -107,7 +112,8 @@ namespace Parquet
 
          _meta = ReadMetadata();
 
-         var ds = new DataSet(new Schema(_meta, _formatOptions));
+         var fmp = new FileMetadataParser(_meta);
+         var ds = new DataSet(fmp.ParseSchema(_formatOptions));
 
          ds.TotalRowCount = _meta.Num_rows;
          ds.Metadata.CreatedBy = _meta.Created_by;
