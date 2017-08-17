@@ -117,7 +117,7 @@ namespace Parquet
 
          ds.TotalRowCount = _meta.Num_rows;
          ds.Metadata.CreatedBy = _meta.Created_by;
-         var cols = new List<IList>();
+         var pathToValues = new Dictionary<string, IList>();
          long pos = 0;
          long rowsRead = 0;
 
@@ -137,38 +137,42 @@ namespace Parquet
             for(int icol = 0; icol < rg.Columns.Count; icol++)
             {
                Thrift.ColumnChunk cc = rg.Columns[icol];
+               SchemaElement se = ds.Schema[cc];
 
-               var p = new PColumn(cc, ds.Schema, _input, ThriftStream, _formatOptions);
-               string columnName = string.Join(".", cc.Meta_data.Path_in_schema);
+               var p = new PColumn(cc, se, _input, ThriftStream, _formatOptions);
 
                try
                {
-                  IList column = p.Read(columnName, offset, count);
-                  if (icol == cols.Count)
+                  IList chunkValues = p.Read(offset, count);
+
+                  if(!pathToValues.TryGetValue(se.Path, out IList allValues))
                   {
-                     cols.Add(column);
+                     pathToValues[se.Path] = chunkValues;
                   }
                   else
                   {
-                     IList col = cols[icol];
-                     col.AddRange(column);
+                     allValues.AddRange(chunkValues);
                   }
 
                   if(icol == 0)
                   {
-                     rowsRead += column.Count;
+                     //todo: this may not work
+                     rowsRead += chunkValues.Count;
                   }
                }
                catch(Exception ex)
                {
-                  throw new ParquetException($"fatal error reading column '{columnName}'", ex);
+                  throw new ParquetException($"fatal error reading column '{se}'", ex);
                }
             }
 
             pos += rg.Num_rows;
          }
 
-         ds.AddFromFlatColumns(cols);
+         var merger = new RecursiveMerge(ds.Schema);
+         DataSet tmp = merger.Merge(pathToValues);
+
+         //ds.AddFromFlatColumns(pathToValues);
 
          return ds;
       }

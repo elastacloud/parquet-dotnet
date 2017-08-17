@@ -14,29 +14,27 @@ namespace Parquet.File
       private readonly Thrift.ColumnChunk _thriftChunk;
       private readonly Stream _inputStream;
       private readonly ThriftStream _thrift;
-      private readonly Schema _schema;
-      private readonly SchemaElement _schemaElement;
+      private readonly SchemaElement _schema;
       private readonly ParquetOptions _options;
 
       private readonly IValuesReader _plainReader;
       private static readonly IValuesReader _rleReader = new RunLengthBitPackingHybridValuesReader();
       private static readonly IValuesReader _dictionaryReader = new PlainDictionaryValuesReader();
 
-      public PColumn(Thrift.ColumnChunk thriftChunk, Schema schema, Stream inputStream, ThriftStream thriftStream, ParquetOptions options)
+      public PColumn(Thrift.ColumnChunk thriftChunk, SchemaElement schema, Stream inputStream, ThriftStream thriftStream, ParquetOptions options)
       {
          _thriftChunk = thriftChunk;
          _thrift = thriftStream;
          _schema = schema;
          _inputStream = inputStream;
-         _schemaElement = _schema[_thriftChunk];
          _options = options;
 
          _plainReader = new PlainValuesReader(options);
       }
 
-      public IList Read(string columnName, long offset, long count)
+      public IList Read(long offset, long count)
       {
-         IList values = TypeFactory.Create(_schemaElement, _options);
+         IList values = TypeFactory.Create(_schema, _options);
 
          //get the minimum offset, we'll just read pages in sequence
          long fileOffset = new[] { _thriftChunk.Meta_data.Dictionary_page_offset, _thriftChunk.Meta_data.Data_page_offset }.Where(e => e != 0).Min();
@@ -62,7 +60,7 @@ namespace Parquet.File
          while (true)
          {
             int valuesSoFar = Math.Max(indexes == null ? 0 : indexes.Count, values.Count);
-            var page = ReadDataPage(ph, values, maxValues - valuesSoFar);
+            (List<int> definitions, List<int> repetitions, List<int> indexes) page = ReadDataPage(ph, values, maxValues - valuesSoFar);
 
             indexes = AssignOrAdd(indexes, page.indexes);
             definitions = AssignOrAdd(definitions, page.definitions);
@@ -86,9 +84,10 @@ namespace Parquet.File
             if (ph.Type != Thrift.PageType.DATA_PAGE) break;
          }
 
-         IList mergedValues = new ValueMerger(_schemaElement, _options, values)
+         IList mergedValues = new ValueMerger(_schema, _options, values)
             .Apply(dictionaryPage, definitions, repetitions, indexes, (int)maxValues);
 
+         //todo: this won't work for nested arrays
          ValueMerger.Trim(mergedValues, (int)offset, (int)count);
 
          return mergedValues;
@@ -143,8 +142,8 @@ namespace Parquet.File
          {
             using (var dataReader = new BinaryReader(dataStream))
             {
-               IList result = TypeFactory.Create(_schemaElement, _options);
-               _plainReader.Read(dataReader, _schemaElement, result, int.MaxValue);
+               IList result = TypeFactory.Create(_schema, _options);
+               _plainReader.Read(dataReader, _schema, result, int.MaxValue);
                return result;
             }
          }
@@ -159,11 +158,11 @@ namespace Parquet.File
          {
             using (var reader = new BinaryReader(dataStream))
             {
-               List<int> repetitions = _schemaElement.HasRepetitionLevelsPage
+               List<int> repetitions = _schema.HasRepetitionLevelsPage
                   ? ReadRepetitionLevels(reader, (int)maxValues)
                   : null;
 
-               List<int> definitions = _schemaElement.HasDefinitionLevelsPage
+               List<int> definitions = _schema.HasDefinitionLevelsPage
                   ? ReadDefinitionLevels(reader, (int)maxValues)
                   : null;
 
@@ -183,7 +182,7 @@ namespace Parquet.File
 
       private List<int> ReadRepetitionLevels(BinaryReader reader, int valueCount)
       {
-         int maxLevel = _schemaElement.MaxRepetitionLevel;
+         int maxLevel = _schema.MaxRepetitionLevel;
          int bitWidth = PEncoding.GetWidthFromMaxInt(maxLevel);
          var result = new List<int>();
          //todo: there might be more data on larger files, therefore line below need to be called in a loop until valueCount is satisfied
@@ -196,7 +195,7 @@ namespace Parquet.File
 
       private List<int> ReadDefinitionLevels(BinaryReader reader, int valueCount)
       {
-         int maxLevel = _schemaElement.MaxDefinitionLevel;
+         int maxLevel = _schema.MaxDefinitionLevel;
          int bitWidth = PEncoding.GetWidthFromMaxInt(maxLevel);
          var result = new List<int>();
          //todo: there might be more data on larger files, therefore line below need to be called in a loop until valueCount is satisfied
@@ -214,17 +213,17 @@ namespace Parquet.File
          switch(encoding)
          {
             case Thrift.Encoding.PLAIN:
-               _plainReader.Read(reader, _schemaElement, destination, maxValues);
+               _plainReader.Read(reader, _schema, destination, maxValues);
                return null;
 
             case Thrift.Encoding.RLE:
                var rleIndexes = new List<int>();
-               _rleReader.Read(reader, _schemaElement, rleIndexes, maxValues);
+               _rleReader.Read(reader, _schema, rleIndexes, maxValues);
                return rleIndexes;
 
             case Thrift.Encoding.PLAIN_DICTIONARY:
                var dicIndexes = new List<int>();
-               _dictionaryReader.Read(reader, _schemaElement, dicIndexes, maxValues);
+               _dictionaryReader.Read(reader, _schema, dicIndexes, maxValues);
                return dicIndexes;
 
             default:

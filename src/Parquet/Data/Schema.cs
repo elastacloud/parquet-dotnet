@@ -10,9 +10,13 @@ namespace Parquet.Data
    /// </summary>
    public class Schema : IEquatable<Schema>
    {
+      /// <summary>
+      /// Symbol used to separate path parts in schema element path
+      /// </summary>
+      public const string PathSeparator = ".";
+
       private readonly List<SchemaElement> _elements;
       private Dictionary<string, SchemaElement> _pathToElement;
-      public const string PathSeparator = ".";
 
       /// <summary>
       /// Initializes a new instance of the <see cref="Schema"/> class from schema elements.

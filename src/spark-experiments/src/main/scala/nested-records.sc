@@ -34,7 +34,7 @@ def convert(name: String, writeFile: Boolean): DataFrame = {
 def convertFromFormattedJson(name: String, writeFile: Boolean): DataFrame = {
    val df = spark
       .read
-      .json(sc.wholeTextFiles(root + name + ".json").values)
+      .json(sc.wholeTextFiles(root + name + "*.json").values)
 
    if(writeFile) {
       write(df, root + name + ".dir.parquet")

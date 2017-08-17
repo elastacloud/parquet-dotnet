@@ -112,21 +112,9 @@ namespace Parquet.Data
          Add(new Row(values));
       }
 
-      internal void AddColumnar(IEnumerable<IList> columnsList)
+      internal void AddFromFlatColumns(Dictionary<string, IList> pathToValues)
       {
-         IEnumerator[] iear = columnsList.Select(c => c.GetEnumerator()).ToArray();
-         iear.ForEach(ie => ie.Reset());
-
-         while (iear.All(ie => ie.MoveNext()))
-         {
-            var row = new Row(iear.Select(ie => ie.Current));
-            _rows.Add(row);
-         }
-      }
-
-      internal void AddFromFlatColumns(IEnumerable<IList> columnValues)
-      {
-         IEnumerator[] iear = columnValues.Select(c => c.GetEnumerator()).ToArray();
+         IEnumerator[] iear = pathToValues.Select(c => c.Value.GetEnumerator()).ToArray();
          iear.ForEach(ie => ie.Reset());
 
          while (iear.All(ie => ie.MoveNext()))
@@ -136,7 +124,6 @@ namespace Parquet.Data
 
             _rows.Add(row);
          }
-
       }
 
       internal Row CreateRow(IList<SchemaElement> schema, IEnumerator[] flatValues, ref int vi)
