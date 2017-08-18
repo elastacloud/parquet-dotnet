@@ -2,6 +2,7 @@
 using System;
 using Parquet.File.Values;
 using System.Collections.Generic;
+using System.Collections;
 
 namespace Parquet.Data
 {
@@ -81,6 +82,7 @@ namespace Parquet.Data
    public class SchemaElement : IEquatable<SchemaElement>
    {
       private readonly List<SchemaElement> _children = new List<SchemaElement>();
+      private string _path;
 
       /// <summary>
       /// Gets the children schemas
@@ -137,7 +139,23 @@ namespace Parquet.Data
          Name = thriftSchema.Name;
          Thrift = thriftSchema;
          Parent = parent;
-         ElementType = elementType ?? TypeFactory.ToSystemType(this, formatOptions);
+
+         if(elementType != null)
+         {
+            ElementType = elementType;
+
+            if (elementType == typeof(IEnumerable))
+            {
+               Type itemType = TypeFactory.ToSystemType(this, formatOptions);
+               Type ienumType = typeof(IEnumerable<>);
+               Type ienumGenericType = ienumType.MakeGenericType(itemType);
+               ElementType = ienumGenericType;
+            }
+         }
+         else
+         {
+            ElementType = TypeFactory.ToSystemType(this, formatOptions);
+         }
       }
 
       /// <summary>
@@ -157,17 +175,16 @@ namespace Parquet.Data
       {
          get
          {
-            var parts = new List<string>();
-            SchemaElement current = this;
+            if (_path != null) return _path;
 
-            while (current != null)
-            {
-               parts.Add(current.Name);
-               current = current.Parent;
-            }
+            if (Parent == null) return Name;
 
-            parts.Reverse();
-            return string.Join(Schema.PathSeparator, parts);
+            return Parent.Path + Schema.PathSeparator + Name;
+
+         }
+         internal set
+         {
+            _path = value;
          }
       }
 

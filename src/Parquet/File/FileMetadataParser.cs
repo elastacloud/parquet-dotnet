@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Parquet.Data;
@@ -24,21 +25,52 @@ namespace Parquet.File
             while (node.Children.Count < count)
             {
                Thrift.SchemaElement tse = _fileMeta.Schema[i];
-               int childCount = tse.Num_children;
-               bool isContainer = childCount > 0;
-               Type containerType = isContainer
-                  ? (tse.Repetition_type == Thrift.FieldRepetitionType.REPEATED ? typeof(IEnumerable<Row>) : typeof(Row))
-                  : null;
+               SchemaElement mse;
 
-               SchemaElement parent = isRoot ? null : node;
-               var mse = new SchemaElement(tse, parent, formatOptions, containerType);
+               if (tse.Converted_type == Thrift.ConvertedType.LIST)
+               {
+                  Thrift.SchemaElement tseTop = tse;
+                  Thrift.SchemaElement tseList = _fileMeta.Schema[++i];
+                  Thrift.SchemaElement tseElement = _fileMeta.Schema[++i];
+
+                  var tseMerged = new Thrift.SchemaElement(tse.Name);
+                  tseMerged.Converted_type = tseElement.Converted_type;
+                  tseMerged.Num_children = tseElement.Num_children;
+                  tseMerged.Precision = tseElement.Precision;
+                  tseMerged.Repetition_type = tseList.Repetition_type;
+                  tseMerged.Scale = tseElement.Scale;
+                  tseMerged.Type = tseElement.Type;
+                  tseMerged.Type_length = tseElement.Type_length;
+
+                  mse = new SchemaElement(tseMerged,
+                     isRoot ? null : node,
+                     formatOptions,
+                     tseElement.Num_children == 0
+                     ? typeof(IEnumerable)   //augmented to generic IEnumerable in constructor
+                     : typeof(IEnumerable<Row>));
+                  mse.Path = string.Join(Schema.PathSeparator, tseTop.Name, tseList.Name, tseElement.Name);
+                  if (!isRoot) mse.Path = node.Path + Schema.PathSeparator + mse.Path;
+
+                  tse = tseElement;
+               }
+               else
+               {
+
+                  Type containerType = tse.Num_children > 0
+                     ? typeof(Row)
+                     : null;
+
+                  SchemaElement parent = isRoot ? null : node;
+                  mse = new SchemaElement(tse, parent, formatOptions, containerType);
+               }
+
                node.Children.Add(mse);
 
                i += 1;
 
                if (tse.Num_children > 0)
                {
-                  Build(mse, ref i, childCount, false);
+                  Build(mse, ref i, tse.Num_children, false);
                }
             }
          }

@@ -71,7 +71,7 @@ namespace Parquet.File
 
          bool flag = false;
          TypeTag tag = DefaultTypeTag;
-         foreach (var type in AllTags)
+         foreach (TypeTag type in AllTags)
          {
             if (type.ConcreteType == systemType)
             {
