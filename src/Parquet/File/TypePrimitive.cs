@@ -46,10 +46,13 @@ namespace Parquet.File
          new TypePrimitive<bool>(Thrift.Type.BOOLEAN, null, 1),
          new TypePrimitive<string>(Thrift.Type.BYTE_ARRAY, Thrift.ConvertedType.UTF8),
          new TypePrimitive<float>(Thrift.Type.FLOAT),
+         new TypePrimitive<decimal>(Thrift.Type.BYTE_ARRAY, Thrift.ConvertedType.DECIMAL),
+         new TypePrimitive<long>(Thrift.Type.BYTE_ARRAY, Thrift.ConvertedType.INT_64),
          new TypePrimitive<double>(Thrift.Type.DOUBLE),
          new TypePrimitive<DateTimeOffset>(Thrift.Type.INT96),
          new TypePrimitive<DateTimeOffset>(Thrift.Type.INT64, Thrift.ConvertedType.TIMESTAMP_MILLIS),
-         new TypePrimitive<Interval>(Thrift.Type.FIXED_LEN_BYTE_ARRAY, Thrift.ConvertedType.INTERVAL)
+         new TypePrimitive<Interval>(Thrift.Type.FIXED_LEN_BYTE_ARRAY, Thrift.ConvertedType.INTERVAL),
+         new TypePrimitive<DateTime>(Thrift.Type.INT96)
       };
 
       private static readonly Dictionary<Type, TypePrimitive> systemTypeToPrimitive =

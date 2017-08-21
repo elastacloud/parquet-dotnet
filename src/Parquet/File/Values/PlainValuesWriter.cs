@@ -155,7 +155,7 @@ namespace Parquet.File.Values
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       private void WriteInt96(BinaryWriter writer, SchemaElement schema, IList data)
       {
-         if (_options.TreatBigIntegersAsDates)
+         if(schema.ElementType == typeof(DateTimeOffset))
          {
             foreach (DateTimeOffset dto in data)
             {
@@ -163,9 +163,16 @@ namespace Parquet.File.Values
                nano.Write(writer);
             }
          }
+         else if (schema.ElementType == typeof(DateTime))
+         {
+            foreach (DateTime dtm in data)
+            {
+               var nano = new NanoTime(dtm.ToUniversalTime());
+               nano.Write(writer);
+            }
+         }
          else
          {
-            // assume that this is an a 12 byte decimal form
             foreach (byte[] dto in data)
             {
                writer.Write(dto);
@@ -200,7 +207,7 @@ namespace Parquet.File.Values
          else if (elementType == typeof(Interval))
          {
             var src = (List<Interval>) data;
-            foreach (var interval in src)
+            foreach (Interval interval in src)
             {
                writer.Write(BitConverter.GetBytes(interval.Months));
                writer.Write(BitConverter.GetBytes(interval.Days));
