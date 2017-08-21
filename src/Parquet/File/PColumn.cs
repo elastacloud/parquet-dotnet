@@ -185,10 +185,11 @@ namespace Parquet.File
          int maxLevel = _schema.MaxRepetitionLevel;
          int bitWidth = PEncoding.GetWidthFromMaxInt(maxLevel);
          var result = new List<int>();
+
          //todo: there might be more data on larger files, therefore line below need to be called in a loop until valueCount is satisfied
          RunLengthBitPackingHybridValuesReader.ReadRleBitpackedHybrid(reader, bitWidth, 0, result, valueCount);
 
-         ValueMerger.TrimTail(result, valueCount);  //trim result so null count procudes correct value
+         ValueMerger.TrimTail(result, valueCount);
 
          return result;
       }
@@ -198,10 +199,11 @@ namespace Parquet.File
          int maxLevel = _schema.MaxDefinitionLevel;
          int bitWidth = PEncoding.GetWidthFromMaxInt(maxLevel);
          var result = new List<int>();
+
          //todo: there might be more data on larger files, therefore line below need to be called in a loop until valueCount is satisfied
          RunLengthBitPackingHybridValuesReader.ReadRleBitpackedHybrid(reader, bitWidth, 0, result, valueCount);
 
-         ValueMerger.TrimTail(result, valueCount);  //trim result so null count procudes correct value
+         ValueMerger.TrimTail(result, valueCount);
 
          return result;
       }

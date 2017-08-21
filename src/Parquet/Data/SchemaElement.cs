@@ -191,7 +191,7 @@ namespace Parquet.Data
       /// <summary>
       /// Returns true if element can have null values
       /// </summary>
-      public bool IsNullable
+      internal bool IsNullable
       {
          get => Thrift.Repetition_type != Parquet.Thrift.FieldRepetitionType.REQUIRED;
          set => Thrift.Repetition_type = value ? Parquet.Thrift.FieldRepetitionType.OPTIONAL : Parquet.Thrift.FieldRepetitionType.REQUIRED;
@@ -205,60 +205,13 @@ namespace Parquet.Data
          return Thrift.__isset.converted_type && Thrift.Converted_type == ct;
       }
 
-      /// <summary>
-      /// Detect if data page has definition levels written.
-      /// </summary>
-      internal bool HasDefinitionLevelsPage
-      {
-         get
-         {
-            if (!Thrift.__isset.repetition_type)
-               throw new ParquetException("repetiton type is missing");
+      internal bool HasDefinitionLevelsPage => MaxDefinitionLevel > 0;
 
-            return Thrift.Repetition_type != Parquet.Thrift.FieldRepetitionType.REQUIRED;
-         }
-      }
-
-      internal int MaxDefinitionLevel
-      {
-         get
-         {
-            int maxLevel = 0;
-
-            //detect max repetition level for the given path
-            SchemaElement se = this;
-            while (se != null)
-            {
-               if (se.Thrift.Repetition_type != Parquet.Thrift.FieldRepetitionType.REQUIRED) maxLevel += 1;
-
-               se = se.Parent;
-            }
-
-            return maxLevel;
-         }
-      }
-
+      internal int MaxDefinitionLevel { get; set; }
 
       internal bool HasRepetitionLevelsPage => MaxRepetitionLevel > 0;
 
-      internal int MaxRepetitionLevel
-      {
-         get
-         {
-            int maxLevel = 0;
-
-            //detect max repetition level for the given path
-            SchemaElement se = this;
-            while (se != null)
-            {
-               if (se.Thrift.Repetition_type == Parquet.Thrift.FieldRepetitionType.REPEATED) maxLevel += 1;
-
-               se = se.Parent;
-            }
-
-            return maxLevel;
-         }
-      }
+      internal int MaxRepetitionLevel { get; set; }
 
       /// <summary>
       /// Pretty prints
