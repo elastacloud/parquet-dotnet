@@ -212,7 +212,7 @@ namespace Parquet
                }
 
                //write data
-               if (!_dicWriter.Write(writer, schema, values, out IList dicValues))
+               if (!_writerOptions.UseDictionaryEncoding || !_dicWriter.Write(writer, schema, values, out IList dicValues))
                {
                   _plainWriter.Write(writer, schema, values, out IList plainExtra);
                }

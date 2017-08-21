@@ -8,7 +8,7 @@ using Type = Parquet.Thrift.Type;
 
 namespace Parquet.Test
 {
-   public class ParquetWriterTest
+   public class ParquetWriterTest : TestBase
    {
       [Fact]
       public void Write_different_compressions()
@@ -171,5 +171,18 @@ namespace Parquet.Test
          ds2.Add(4d);
          Assert.Throws<ParquetException>(() => ParquetWriter.Write(ds2, ms, CompressionMethod.Gzip, null, null, true));
       }
+
+      [Fact]
+      public void athena193()
+      {
+         var ds = new DataSet(new SchemaElement<int>("id"), new SchemaElement<string>("city"));
+         ds.Add(1, "London");
+         ds.Add(2, "London");
+
+         DataSet ds1 = DataSetGenerator.WriteRead(ds, new WriterOptions() { UseDictionaryEncoding = false } );
+
+         ParquetWriter.WriteFile(ds1, "c:\\tmp\\fuckathena.parquet");
+      }
+
    }
 }
