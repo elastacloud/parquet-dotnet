@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Parquet.Data;
+using System.Linq;
 
 namespace Parquet.File
 {
@@ -40,9 +41,10 @@ namespace Parquet.File
                      ? typeof(IEnumerable)   //augmented to generic IEnumerable in constructor
                      : typeof(IEnumerable<Row>));
                   mse.Path = string.Join(Schema.PathSeparator, tseTop.Name, tseList.Name, tseElement.Name);
-                  mse.MaxDefinitionLevel = GetDefinitionLevel(mse, tseList, tseTop);
-                  mse.MaxRepetitionLevel = GetRepetitionLevel(mse, tseList, tseTop);
                   if (!isRoot) mse.Path = node.Path + Schema.PathSeparator + mse.Path;
+
+                  mse.MaxDefinitionLevel = CountRepetitions(Thrift.FieldRepetitionType.OPTIONAL, mse, tseList);
+                  mse.MaxRepetitionLevel = CountRepetitions(Thrift.FieldRepetitionType.REPEATED, mse, tseList, tseTop);
 
                   tse = tseElement;
                }
@@ -55,8 +57,8 @@ namespace Parquet.File
 
                   SchemaElement parent = isRoot ? null : node;
                   mse = new SchemaElement(tse, parent, formatOptions, containerType);
-                  mse.MaxDefinitionLevel = GetDefinitionLevel(mse);
-                  mse.MaxRepetitionLevel = GetRepetitionLevel(mse);
+                  mse.MaxDefinitionLevel = CountRepetitions(Thrift.FieldRepetitionType.OPTIONAL, mse);
+                  mse.MaxRepetitionLevel = CountRepetitions(Thrift.FieldRepetitionType.REPEATED, mse);
                }
 
                node.Children.Add(mse);
@@ -78,56 +80,18 @@ namespace Parquet.File
          return new Schema(root.Children);
       }
 
-      private int GetRepetitionLevel(SchemaElement schema, params Thrift.SchemaElement[] missed)
+      private int CountRepetitions(Thrift.FieldRepetitionType repetitionType, SchemaElement schema, params Thrift.SchemaElement[] extra)
       {
-         int level = 0;
-
+         var elements = new List<Thrift.SchemaElement>();
          while(schema != null)
          {
-            if (IsRepeated(schema.Thrift)) level += 1;
+            elements.Add(schema.Thrift);
             schema = schema.Parent;
          }
 
-         if(missed != null)
-         {
-            foreach(Thrift.SchemaElement tse in missed)
-            {
-               if (IsRepeated(tse)) level += 1;
-            }
-         }
+         if (extra != null) elements.AddRange(extra);
 
-         return level;
-      }
-
-      private int GetDefinitionLevel(SchemaElement schema, params Thrift.SchemaElement[] missed)
-      {
-         int level = 0;
-
-         while (schema != null)
-         {
-            if (IsOptional(schema.Thrift)) level += 1;
-            schema = schema.Parent;
-         }
-
-         if (missed != null)
-         {
-            foreach (Thrift.SchemaElement tse in missed)
-            {
-               if (IsOptional(tse)) level += 1;
-            }
-         }
-
-         return level;
-      }
-
-      private bool IsRepeated(Thrift.SchemaElement schema)
-      {
-         return schema.Repetition_type == Thrift.FieldRepetitionType.REPEATED;
-      }
-
-      private bool IsOptional(Thrift.SchemaElement schema)
-      {
-         return schema.Repetition_type == Thrift.FieldRepetitionType.OPTIONAL;
+         return elements.Count(e => e.__isset.repetition_type && e.Repetition_type == repetitionType);
       }
    }
 }

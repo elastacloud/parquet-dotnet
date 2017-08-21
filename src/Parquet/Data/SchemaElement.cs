@@ -85,9 +85,9 @@ namespace Parquet.Data
       private string _path;
 
       /// <summary>
-      /// Gets the children schemas
+      /// Gets the children schemas. Made internal temporarily, until we can actually read nested structures.
       /// </summary>
-      public IList<SchemaElement> Children => _children;
+      internal IList<SchemaElement> Children => _children;
 
       /// <summary>
       /// Gets parent schema element, if present. Null for root schema elements.

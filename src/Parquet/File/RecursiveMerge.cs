@@ -25,7 +25,28 @@ namespace Parquet.File
 
          var ds = new DataSet(_schema);
 
+         for(int i = 0; i < count; i++)
+         {
+            Row row = CreateRow(i, pathToValues);
+            ds.Add(row);
+         }
+
          return ds;
       }
+
+      internal Row CreateRow(int rowIdx, Dictionary<string, IList> pathToValues)
+      {
+         var values = new List<object>();
+
+         foreach(SchemaElement se in _schema.Elements)
+         {
+            IList column = pathToValues[se.Path];
+            object value = column[rowIdx];
+            values.Add(value);
+         }
+
+         return new Row(values);
+      }
+   
    }
 }

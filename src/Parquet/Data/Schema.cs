@@ -105,6 +105,11 @@ namespace Parquet.Data
          }
       }
 
+      /// <summary>
+      /// Returns true if schema contains any nested structures declarations, false otherwise
+      /// </summary>
+      public bool HasNestedElements => _elements.Any(e => e.Children.Count > 0);
+
       private void BuildPathCache()
       {
          _pathToElement = new Dictionary<string, SchemaElement>();

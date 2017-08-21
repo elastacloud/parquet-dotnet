@@ -112,11 +112,11 @@ namespace Parquet
 
          _meta = ReadMetadata();
 
-         var fmp = new FileMetadataParser(_meta);
-         var ds = new DataSet(fmp.ParseSchema(_formatOptions));
+         var metaParser = new FileMetadataParser(_meta);
+         Schema schema = metaParser.ParseSchema(_formatOptions);
 
-         ds.TotalRowCount = _meta.Num_rows;
-         ds.Metadata.CreatedBy = _meta.Created_by;
+         if (schema.HasNestedElements) throw new NotSupportedException("nested structures are not yet supported");
+
          var pathToValues = new Dictionary<string, IList>();
          long pos = 0;
          long rowsRead = 0;
@@ -137,7 +137,7 @@ namespace Parquet
             for(int icol = 0; icol < rg.Columns.Count; icol++)
             {
                Thrift.ColumnChunk cc = rg.Columns[icol];
-               SchemaElement se = ds.Schema[cc];
+               SchemaElement se = schema[cc];
 
                var p = new PColumn(cc, se, _input, ThriftStream, _formatOptions);
 
@@ -169,10 +169,11 @@ namespace Parquet
             pos += rg.Num_rows;
          }
 
-         var merger = new RecursiveMerge(ds.Schema);
-         DataSet tmp = merger.Merge(pathToValues);
+         var merger = new RecursiveMerge(schema);
+         DataSet ds = merger.Merge(pathToValues);
 
-         //ds.AddFromFlatColumns(pathToValues);
+         ds.TotalRowCount = _meta.Num_rows;
+         ds.Metadata.CreatedBy = _meta.Created_by;
 
          return ds;
       }
