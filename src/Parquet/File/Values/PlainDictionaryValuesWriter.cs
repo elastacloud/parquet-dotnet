@@ -9,7 +9,12 @@ namespace Parquet.File.Values
 {
    class PlainDictionaryValuesWriter : IValuesWriter
    {
-      private static readonly IValuesWriter _rleWriter = new RunLengthBitPackingHybridValuesWriter();
+      private readonly IValuesWriter _rleWriter;
+
+      public PlainDictionaryValuesWriter(IValuesWriter rleWriter)
+      {
+         _rleWriter = rleWriter ?? throw new ArgumentNullException(nameof(rleWriter));
+      }
 
       public bool Write(BinaryWriter writer, SchemaElement schema, IList data, out IList extraValues)
       {
@@ -36,7 +41,7 @@ namespace Parquet.File.Values
          dictionary = null;
          indexes = null;
 
-         if (data.Count == 0) return true;
+         if (data.Count == 0) return false;
 
          if (schema.ElementType != typeof(string)) return false; //only support strings in dictionaries for now
 
