@@ -195,7 +195,7 @@ namespace Parquet.File.Values
       {
          if (data.Count == 0) return;
 
-         SType elementType = data[0].GetType();
+         SType elementType = schema.ElementType;
          if(elementType == typeof(string))
          {
             var src = (List<string>)data;
@@ -242,6 +242,10 @@ namespace Parquet.File.Values
                   writer.Write(b);
                }
             }
+         }
+         else if (elementType == typeof(decimal))
+         {
+            decimal d;
          }
          else
          {
