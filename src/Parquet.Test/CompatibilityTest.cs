@@ -22,7 +22,7 @@ namespace Parquet.Test
    {
       private readonly string _runnerRootPath;
 
-      public CompatibilityTest(string runnerRootPath)
+      protected CompatibilityTest(string runnerRootPath)
       {
          _runnerRootPath = runnerRootPath;
       }
