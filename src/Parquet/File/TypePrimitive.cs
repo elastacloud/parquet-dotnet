@@ -46,8 +46,8 @@ namespace Parquet.File
          new TypePrimitive<bool>(Thrift.Type.BOOLEAN, null, 1),
          new TypePrimitive<string>(Thrift.Type.BYTE_ARRAY, Thrift.ConvertedType.UTF8),
          new TypePrimitive<float>(Thrift.Type.FLOAT),
-         new TypePrimitive<decimal>(Thrift.Type.BYTE_ARRAY, Thrift.ConvertedType.DECIMAL),
-         new TypePrimitive<long>(Thrift.Type.BYTE_ARRAY, Thrift.ConvertedType.INT_64),
+         new TypePrimitive<decimal>(Thrift.Type.BYTE_ARRAY, Thrift.ConvertedType.DECIMAL),   //complex
+         new TypePrimitive<long>(Thrift.Type.INT64),
          new TypePrimitive<double>(Thrift.Type.DOUBLE),
          new TypePrimitive<DateTimeOffset>(Thrift.Type.INT96),
          new TypePrimitive<DateTimeOffset>(Thrift.Type.INT64, Thrift.ConvertedType.TIMESTAMP_MILLIS),

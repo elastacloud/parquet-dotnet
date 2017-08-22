@@ -133,7 +133,7 @@ namespace Parquet.File.Values
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       private static void WriteLong(BinaryWriter writer, SchemaElement schema, IList data)
       {
-         if (schema.IsAnnotatedWith(Thrift.ConvertedType.TIMESTAMP_MILLIS))
+         if (schema.ElementType == typeof(DateTimeOffset))
          {
             var lst = (List<DateTimeOffset>)data;
             foreach(DateTimeOffset dto in lst)
@@ -212,6 +212,14 @@ namespace Parquet.File.Values
                writer.Write(BitConverter.GetBytes(interval.Months));
                writer.Write(BitConverter.GetBytes(interval.Days));
                writer.Write(BitConverter.GetBytes(interval.Millis));
+            }
+         }
+         else if (elementType == typeof(long))
+         {
+            var src = (List<long>)data;
+            foreach (long l in src)
+            {
+               writer.Write(BitConverter.GetBytes(l));
             }
          }
          else if(elementType == typeof(byte[]))
