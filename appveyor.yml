@@ -10,6 +10,7 @@ configuration: Release
 before_build:
 - ps: >-
    pip install pyarrow
+
    .\appveyor.ps1
 build:
   project: src/Parquet.sln
