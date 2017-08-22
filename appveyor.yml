@@ -9,8 +9,6 @@ image: Visual Studio 2017
 configuration: Release
 before_build:
 - ps: >-
-   pip install pyarrow
-
    .\appveyor.ps1
 build:
   project: src/Parquet.sln
