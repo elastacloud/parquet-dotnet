@@ -15,13 +15,7 @@ build:
   verbosity: minimal
 test_script:
 - cmd: >-
-    cd src\Parquet.Test
-
-    dotnet test
-
-    cd ..
-
-    cd ..
+   dotnet test src/Parquet.Test/Parquet.Test.csproj
 artifacts:
 - path: src/Parquet/bin/**/*.nupkg
 deploy:

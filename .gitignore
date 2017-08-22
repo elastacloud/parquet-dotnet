@@ -286,3 +286,4 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+/3rdparty/pyarrow/in.csv
