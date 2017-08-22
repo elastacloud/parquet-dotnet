@@ -195,16 +195,16 @@ namespace Parquet.Test
       }
 
       [Fact]
-      public void athena193()
+      public void Athena193()
       {
          var ds = new DataSet(new SchemaElement<int>("id"), new SchemaElement<string>("city"));
          ds.Add(1, "London");
          ds.Add(2, "London");
 
-         DataSet ds1 = DataSetGenerator.WriteRead(ds, new WriterOptions() { UseDictionaryEncoding = false } );
+         //DataSet ds1 = DataSetGenerator.WriteRead(ds, new WriterOptions() { UseDictionaryEncoding = false, EmulationMode = EmulationMode.ApacheSpark } );
 
-         ParquetWriter.WriteFile(ds1, "c:\\tmp\\fuckathena.parquet");
+         //ParquetWriter.WriteFile(ds, "c:\\tmp\\fuckathena.parquet", CompressionMethod.None, null, new WriterOptions() { UseDictionaryEncoding = false, EmulationMode = EmulationMode.ApacheSpark });
+         ParquetWriter.WriteFile(ds, "c:\\tmp\\fuckathena.parquet", CompressionMethod.None, null);
       }
-
    }
 }

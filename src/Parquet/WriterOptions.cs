@@ -1,4 +1,6 @@
-﻿namespace Parquet
+﻿using Parquet.Data;
+
+namespace Parquet
 {
 
    /// <summary>
@@ -25,5 +27,6 @@
       /// </summary>
       public bool UseDictionaryEncoding { get; set; }
 
+      internal EmulationMode EmulationMode { get; set; }
    }
 }
