@@ -8,7 +8,9 @@ skip_tags: true
 image: Visual Studio 2017
 configuration: Release
 before_build:
-- ps: .\appveyor.ps1
+- ps: >-
+   conda
+   .\appveyor.ps1
 build:
   project: src/Parquet.sln
   verbosity: minimal
