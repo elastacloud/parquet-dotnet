@@ -173,6 +173,28 @@ namespace Parquet.Test
       }
 
       [Fact]
+      public void Write_column_with_only_one_null_value()
+      {
+         var ds = new DataSet(
+           new SchemaElement<int>("id"),
+           new SchemaElement<int>("city")
+       );
+
+         ds.Add(0, null);
+
+         var ms = new MemoryStream();
+         ParquetWriter.Write(ds, ms);
+
+         ms.Position = 0;
+         DataSet ds1 = ParquetReader.Read(ms);
+
+         Assert.Equal(1, ds1.RowCount);
+         Assert.Equal(0, ds1[0][0]);
+         Assert.Null(ds1[0][1]);
+
+      }
+
+      [Fact]
       public void athena193()
       {
          var ds = new DataSet(new SchemaElement<int>("id"), new SchemaElement<string>("city"));
