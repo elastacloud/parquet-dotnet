@@ -6,7 +6,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-def csv_to_parquet(in_file: str, out_file):
+def csv_to_parquet(in_file: str, out_file: str):
    print("reading csv...")
    csv = pd.read_csv(in_file)
 
