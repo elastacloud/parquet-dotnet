@@ -13,7 +13,8 @@ $RepositoryType = "GitHub"
 #Enable Miniconda36
 $env:path = "C:\Miniconda36-x64;$env:path"
 
-Invoke-Expression "conda"
+dir C:\Miniconda36-x64
+
 
 $gv = $env:APPVEYOR_BUILD_VERSION
 if($gv -eq $null)
