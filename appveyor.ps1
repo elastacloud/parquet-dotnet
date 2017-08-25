@@ -11,9 +11,11 @@ $PackageLicenseUrl = "https://github.com/elastacloud/parquet-dotnet/blob/master/
 $RepositoryType = "GitHub"
 
 #Enable Miniconda36
+#see https://www.appveyor.com/docs/build-environment/#miniconda
 $env:path = "C:\Miniconda36-x64;C:\Miniconda36-x64\Scripts;$env:path"
 
-conda install -c conda-forge pyarrow
+#Install pyArrow
+conda install -c conda-forge -y pyarrow
 
 $gv = $env:APPVEYOR_BUILD_VERSION
 if($gv -eq $null)
