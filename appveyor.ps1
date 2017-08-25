@@ -15,7 +15,8 @@ $RepositoryType = "GitHub"
 $env:path = "C:\Miniconda36-x64;C:\Miniconda36-x64\Scripts;$env:path"
 
 #Install pyArrow
-conda install -c conda-forge -y pyarrow
+Write-Host "installing conda"
+conda install -c conda-forge -y -q pyarrow
 
 $gv = $env:APPVEYOR_BUILD_VERSION
 if($gv -eq $null)
