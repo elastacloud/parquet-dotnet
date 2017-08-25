@@ -205,6 +205,8 @@ root
       public void Read_hardcoded_decimal()
       {
          DataSet ds = ParquetReader.ReadFile(GetDataFilePath("complex-primitives.parquet"));
+
+         Assert.Equal((decimal)1.2, ds[0][1]);
       }
 
       class ReadableNonSeekableStream : DelegatedStream
