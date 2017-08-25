@@ -201,6 +201,11 @@ root
          Assert.Equal(typeof(Row), ds.Schema[4].ElementType);*/
       }
 
+      [Fact]
+      public void Read_hardcoded_decimal()
+      {
+         DataSet ds = ParquetReader.ReadFile(GetDataFilePath("complex-primitives.parquet"));
+      }
 
       class ReadableNonSeekableStream : DelegatedStream
       {

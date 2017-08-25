@@ -6,6 +6,7 @@ using System.Text;
 using Parquet.File.Values;
 using Xunit;
 using Xunit.Extensions;
+using Parquet.File.Values.Primitives;
 
 namespace Parquet.Test
 {
