@@ -13,8 +13,7 @@ $RepositoryType = "GitHub"
 #Enable Miniconda36
 $env:path = "C:\Miniconda36-x64;C:\Miniconda36-x64\Scripts;$env:path"
 
-conda
-
+conda install -c conda-forge pyarrow
 
 $gv = $env:APPVEYOR_BUILD_VERSION
 if($gv -eq $null)

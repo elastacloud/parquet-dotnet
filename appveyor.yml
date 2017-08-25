@@ -10,8 +10,6 @@ configuration: Release
 before_build:
 - ps: >-
    .\appveyor.ps1
-
-   conda install -c conda-forge pyarrow
 build:
   project: src/Parquet.sln
   verbosity: minimal
