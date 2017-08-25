@@ -11,9 +11,9 @@ $PackageLicenseUrl = "https://github.com/elastacloud/parquet-dotnet/blob/master/
 $RepositoryType = "GitHub"
 
 #Enable Miniconda36
-$env:path = "C:\Miniconda36-x64;$env:path"
+$env:path = "C:\Miniconda36-x64;C:\Miniconda36-x64\Scripts\$env:path"
 
-dir C:\Miniconda36-x64
+conda
 
 
 $gv = $env:APPVEYOR_BUILD_VERSION
