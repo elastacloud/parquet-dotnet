@@ -54,7 +54,7 @@ namespace Parquet.Test
          Assert.True(expectedValue.Equals(actualValue),
             $"{name}| expected: {expectedValue}, actual: {actualValue}, schema element: {schema}");
 
-         if (schema.ElementType == typeof(decimal)) ParquetWriter.WriteFile(ds1, "c:\\tmp\\decimals.parquet");
+         //if (schema.ElementType == typeof(decimal)) ParquetWriter.WriteFile(ds1, "c:\\tmp\\decimals.parquet");
       }
    }
 }
