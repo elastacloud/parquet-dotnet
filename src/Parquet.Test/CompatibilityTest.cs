@@ -82,8 +82,10 @@ namespace Parquet.Test
          {
             StartInfo = new ProcessStartInfo
             {
-               FileName = "python.exe",
-               Arguments = $"{runnerPath} out {inPath} {outPath}",
+               //FileName = @"cmd",
+               //Arguments = $"/c python.exe {runnerPath} out {inPath} {outPath}",
+               FileName = "python",
+               //Arguments = "-V",
                UseShellExecute = false,
                RedirectStandardError = true,
                RedirectStandardOutput = true
@@ -96,7 +98,7 @@ namespace Parquet.Test
          string so = p.StandardOutput.ReadToEnd();
          string se = p.StandardError.ReadToEnd();
 
-         if (!string.IsNullOrEmpty(se)) Assert.True(false, "failed to execute: " + se);
+         if (!string.IsNullOrEmpty(se)) Assert.True(false, $"failed to execute: [{se}], standard output: [{so}]");
       }
 
       [Fact]
