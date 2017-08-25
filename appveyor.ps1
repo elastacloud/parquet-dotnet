@@ -10,6 +10,11 @@ $Authors = "Ivan Gavryliuk (@aloneguid); Richard Conway (@azurecoder)"
 $PackageLicenseUrl = "https://github.com/elastacloud/parquet-dotnet/blob/master/LICENSE"
 $RepositoryType = "GitHub"
 
+#Enable Miniconda36
+$env:path = "C:\Miniconda36-x64;$env:path"
+
+Invoke-Expression "conda"
+
 $gv = $env:APPVEYOR_BUILD_VERSION
 if($gv -eq $null)
 {
