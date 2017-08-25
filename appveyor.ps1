@@ -12,10 +12,10 @@ $RepositoryType = "GitHub"
 
 #Enable Miniconda36
 #see https://www.appveyor.com/docs/build-environment/#miniconda
-$env:path = "C:\Miniconda36-x64;C:\Miniconda36-x64\Scripts;$env:path"
+$env:path = "C:\Miniconda36;C:\Miniconda36\Scripts;$env:path"
 
 #Install pyArrow
-Write-Host "installing conda"
+Write-Host "installing pyArrow..."
 conda install -c conda-forge -y -q pyarrow
 
 $gv = $env:APPVEYOR_BUILD_VERSION

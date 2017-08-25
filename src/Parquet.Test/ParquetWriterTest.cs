@@ -194,16 +194,5 @@ namespace Parquet.Test
 
       }
 
-      [Fact]
-      public void Write_for_polybase()
-      {
-         var ds = new DataSet(
-            new SchemaElement<string>("id"),
-            new SchemaElement<DateTimeOffset>("date"));
-
-         ds.Add("ivan", new DateTimeOffset(DateTime.UtcNow));
-
-         ParquetWriter.WriteFile(ds, "c:\\tmp\\polybase.parquet");
-      }
    }
 }
