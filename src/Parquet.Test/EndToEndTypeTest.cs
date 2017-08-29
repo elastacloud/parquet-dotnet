@@ -22,10 +22,10 @@ namespace Parquet.Test
          new object[] { new SchemaElement<long>("long"), (long)1234 },
 
          //difference cases of decimals
-         new object[] { new SchemaElement<decimal>("dec"), 123.4m },
-         new object[] { new DecimalSchemaElement("dec", 4, 12), 12.4m},
-         new object[] { new DecimalSchemaElement("dec", 12, 12), 1234567.88m},
-         new object[] { new DecimalSchemaElement("dec", 48, 12), 34434.5m},
+         new object[] { new SchemaElement<decimal>("decDefault"), 123.4m },
+         new object[] { new DecimalSchemaElement("decInt32", 4, 1), 12.4m},
+         new object[] { new DecimalSchemaElement("decInt64", 17, 12), 1234567.88m},
+         new object[] { new DecimalSchemaElement("decFixedByteArray", 48, 12), 34434.5m},
 
          //loses precision slightly, i.e.
          //Expected: 2017-07-13T10:58:44.3767154+00:00

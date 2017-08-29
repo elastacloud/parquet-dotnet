@@ -180,7 +180,7 @@ namespace Parquet.Data
 
             if (elementType == typeof(IEnumerable))
             {
-               Type itemType = TypeFactory.ToSystemType(this, formatOptions);
+               Type itemType = TypePrimitive.GetSystemTypeBySchema(this, formatOptions);
                Type ienumType = typeof(IEnumerable<>);
                Type ienumGenericType = ienumType.MakeGenericType(itemType);
                ElementType = ienumGenericType;
@@ -188,7 +188,7 @@ namespace Parquet.Data
          }
          else
          {
-            ElementType = TypeFactory.ToSystemType(this, formatOptions);
+            ElementType = TypePrimitive.GetSystemTypeBySchema(this, formatOptions);
          }
       }
 
