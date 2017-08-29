@@ -110,6 +110,16 @@ namespace Parquet.File.Values
                writer.Write(days + 1);
             }
          }
+         else if (schema.IsAnnotatedWith(Thrift.ConvertedType.DECIMAL))
+         {
+            var dataTyped = (List<decimal>)data;
+            foreach (decimal d in dataTyped)
+            {
+               var bd = new BigDecimal(d, schema.Thrift.Precision, schema.Thrift.Scale);
+               int i = (int) bd.Value;
+               writer.Write(i);
+            }
+         }
          else
          {
             var dataTyped = (List<int>)data;
