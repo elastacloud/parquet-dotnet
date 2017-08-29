@@ -24,4 +24,4 @@ In order to specify different precision / schema for decimal type use `DecimalSc
 var element = new DecimalSchemaElement("column name", precision, scale);
 ```
 
-this element accepts `double` as column values. Note that reading back this column produces a schema element `SchemaElement<double>`.
+this element accepts `decimal` as column values. Note that reading back this column produces a schema element `SchemaElement<decimal>`.
