@@ -14,32 +14,27 @@ namespace Parquet.File
       private readonly Thrift.ColumnChunk _thriftChunk;
       private readonly Stream _inputStream;
       private readonly ThriftStream _thrift;
-      private readonly Schema _schema;
-      private readonly SchemaElement _schemaElement;
+      private readonly SchemaElement _schema;
       private readonly ParquetOptions _options;
 
       private readonly IValuesReader _plainReader;
       private static readonly IValuesReader _rleReader = new RunLengthBitPackingHybridValuesReader();
       private static readonly IValuesReader _dictionaryReader = new PlainDictionaryValuesReader();
 
-      public PColumn(Thrift.ColumnChunk thriftChunk, Schema schema, Stream inputStream, ThriftStream thriftStream, ParquetOptions options)
+      public PColumn(Thrift.ColumnChunk thriftChunk, SchemaElement schema, Stream inputStream, ThriftStream thriftStream, ParquetOptions options)
       {
-         if (thriftChunk.Meta_data.Path_in_schema.Count != 1)
-            throw new NotImplementedException("path in scheme is not flat");
-
          _thriftChunk = thriftChunk;
          _thrift = thriftStream;
          _schema = schema;
          _inputStream = inputStream;
-         _schemaElement = _schema[_thriftChunk];
          _options = options;
 
          _plainReader = new PlainValuesReader(options);
       }
 
-      public IList Read(string columnName, long offset, long count)
+      public IList Read(long offset, long count)
       {
-         IList values = TypeFactory.Create(_schemaElement, _options);
+         IList values = TypeFactory.Create(_schema, _options);
 
          //get the minimum offset, we'll just read pages in sequence
          long fileOffset = new[] { _thriftChunk.Meta_data.Dictionary_page_offset, _thriftChunk.Meta_data.Data_page_offset }.Where(e => e != 0).Min();
@@ -52,6 +47,7 @@ namespace Parquet.File
          IList dictionaryPage = null;
          List<int> indexes = null;
          List<int> definitions = null;
+         List<int> repetitions = null;
 
          //there can be only one dictionary page in column
          if (ph.Type == Thrift.PageType.DICTIONARY_PAGE)
@@ -64,54 +60,76 @@ namespace Parquet.File
          while (true)
          {
             int valuesSoFar = Math.Max(indexes == null ? 0 : indexes.Count, values.Count);
-            var page = ReadDataPage(ph, values, maxValues - valuesSoFar);
+            (List<int> definitions, List<int> repetitions, List<int> indexes) page = ReadDataPage(ph, values, maxValues - valuesSoFar);
 
-            //merge indexes
-            if (page.indexes != null)
-            {
-               if (indexes == null)
-               {
-                  indexes = page.indexes;
-               }
-               else
-               {
-                  indexes.AddRange(page.indexes);
-               }
-            }
-
-            if (page.definitions != null)
-            {
-               if (definitions == null)
-               {
-                  definitions = (List<int>) page.definitions;
-               }
-               else
-               {
-                  definitions.AddRange((List<int>) page.definitions);
-               }
-            }
+            indexes = AssignOrAdd(indexes, page.indexes);
+            definitions = AssignOrAdd(definitions, page.definitions);
+            repetitions = AssignOrAdd(repetitions, page.repetitions);
 
             dataPageCount++;
 
-            if (page.repetitions != null) throw new NotImplementedException();
+            int totalCount = Math.Max(
 
-            if((values.Count >= maxValues) || (indexes != null && indexes.Count >= maxValues) || (definitions != null && definitions.Count >= maxValues))
+               values.Count +
+               (indexes == null
+                  ? 0
+                  : indexes.Count),
+
+               definitions == null ? 0 : definitions.Count);
+
+            if (totalCount >= maxValues) break; //limit reached
+
+            ph = ReadDataPageHeader(dataPageCount); //get next page
+
+            if (ph.Type != Thrift.PageType.DATA_PAGE) break;
+         }
+
+         IList mergedValues = new ValueMerger(_schema, _options, values)
+            .Apply(dictionaryPage, definitions, repetitions, indexes, (int)maxValues);
+
+         //todo: this won't work for nested arrays
+         ValueMerger.Trim(mergedValues, (int)offset, (int)count);
+
+         return mergedValues;
+      }
+
+      private List<int> AssignOrAdd(List<int> container, List<int> source)
+      {
+         if (source != null)
+         {
+
+            if (container == null)
             {
-               break;   //limit reached
+               container = source;
             }
-
-            ph = _thrift.Read<Thrift.PageHeader>(); //get next page
-            if (ph.Type != Thrift.PageType.DATA_PAGE)
+            else
             {
-               break;
+               container.AddRange(source);
             }
          }
 
-         IList mergedValues = new ValueMerger(_schemaElement, _options, values).Apply(dictionaryPage, definitions, indexes, maxValues);
+         return container;
+      }
 
-         ValueMerger.Trim(mergedValues, offset, count);
+      private Thrift.PageHeader ReadDataPageHeader(int pageNo)
+      {
+         Thrift.PageHeader ph;
 
-         return mergedValues;
+         try
+         {
+            ph = _thrift.Read<Thrift.PageHeader>();
+         }
+         catch (Exception ex)
+         {
+            throw new IOException($"failed to read data page header after page #{pageNo}", ex);
+         }
+
+         if (ph.Type != Thrift.PageType.DATA_PAGE)
+         {
+            throw new IOException($"expected data page but read {ph.Type}");
+         }
+
+         return ph;
       }
 
       private IList ReadDictionaryPage(Thrift.PageHeader ph)
@@ -124,54 +142,68 @@ namespace Parquet.File
          {
             using (var dataReader = new BinaryReader(dataStream))
             {
-               IList result = TypeFactory.Create(_schemaElement, _options);
-               _plainReader.Read(dataReader, _schemaElement, result, int.MaxValue);
+               IList result = TypeFactory.Create(_schema, _options);
+               _plainReader.Read(dataReader, _schema, result, int.MaxValue);
                return result;
             }
          }
       }
 
-      private (ICollection definitions, ICollection repetitions, List<int> indexes) ReadDataPage(Thrift.PageHeader ph, IList destination, long maxValues)
+      private (List<int> definitions, List<int> repetitions, List<int> indexes) ReadDataPage(Thrift.PageHeader ph, IList destination, long maxValues)
       {
          byte[] data = ReadRawBytes(ph, _inputStream);
+         int max = ph.Data_page_header.Num_values;
 
          using (var dataStream = new MemoryStream(data))
          {
             using (var reader = new BinaryReader(dataStream))
             {
-               //todo: read repetition levels (only relevant for nested columns)
+               List<int> repetitions = _schema.HasRepetitionLevelsPage
+                  ? ReadRepetitionLevels(reader, (int)maxValues)
+                  : null;
 
-               //check if there are definitions at all
-               bool hasDefinitions = _schemaElement.HasDefinitionLevelsPage(ph);
-               List<int> definitions = hasDefinitions
+               List<int> definitions = _schema.HasDefinitionLevelsPage
                   ? ReadDefinitionLevels(reader, (int)maxValues)
                   : null;
 
                // these are pointers back to the Values table - lookup on values 
-               List<int> indexes = ReadColumnValues(reader, ph.Data_page_header.Encoding, destination, maxValues);
+               List<int> indexes = ReadColumnValues(reader, ph.Data_page_header.Encoding, destination, max);
 
                //trim output if it exceeds max number of values
                int numValues = ph.Data_page_header.Num_values;
-               if(definitions != null) ValueMerger.TrimTail(definitions, numValues);
-               if(indexes != null) ValueMerger.TrimTail(indexes, numValues);
+               if (repetitions != null) ValueMerger.TrimTail(repetitions, numValues);
+               if (definitions != null) ValueMerger.TrimTail(definitions, numValues);
+               if (indexes != null) ValueMerger.TrimTail(indexes, numValues);
 
-               return (definitions, null, indexes);
+               return (definitions, repetitions, indexes);
             }
          }
       }
 
-      private List<int> ReadDefinitionLevels(BinaryReader reader, int valueCount)
+      private List<int> ReadRepetitionLevels(BinaryReader reader, int valueCount)
       {
-         const int maxDefinitionLevel = 1;   //todo: for nested columns this needs to be calculated properly
-         int bitWidth = PEncoding.GetWidthFromMaxInt(maxDefinitionLevel);
+         int maxLevel = _schema.MaxRepetitionLevel;
+         int bitWidth = PEncoding.GetWidthFromMaxInt(maxLevel);
          var result = new List<int>();
+
          //todo: there might be more data on larger files, therefore line below need to be called in a loop until valueCount is satisfied
          RunLengthBitPackingHybridValuesReader.ReadRleBitpackedHybrid(reader, bitWidth, 0, result, valueCount);
 
-         int maxLevel = _schema.GetMaxDefinitionLevel(_thriftChunk);
-         ValueMerger.TrimTail(result, valueCount);  //trim result so null count procudes correct value
-         int nullCount = valueCount - result.Count(r => r == maxLevel);
-         if (nullCount == 0) return null;
+         ValueMerger.TrimTail(result, valueCount);
+
+         return result;
+      }
+
+      private List<int> ReadDefinitionLevels(BinaryReader reader, int valueCount)
+      {
+         int maxLevel = _schema.MaxDefinitionLevel;
+         int bitWidth = PEncoding.GetWidthFromMaxInt(maxLevel);
+         var result = new List<int>();
+
+         //todo: there might be more data on larger files, therefore line below need to be called in a loop until valueCount is satisfied
+         RunLengthBitPackingHybridValuesReader.ReadRleBitpackedHybrid(reader, bitWidth, 0, result, valueCount);
+
+         ValueMerger.TrimTail(result, valueCount);
 
          return result;
       }
@@ -183,17 +215,17 @@ namespace Parquet.File
          switch(encoding)
          {
             case Thrift.Encoding.PLAIN:
-               _plainReader.Read(reader, _schemaElement, destination, maxValues);
+               _plainReader.Read(reader, _schema, destination, maxValues);
                return null;
 
             case Thrift.Encoding.RLE:
                var rleIndexes = new List<int>();
-               _rleReader.Read(reader, _schemaElement, rleIndexes, maxValues);
+               _rleReader.Read(reader, _schema, rleIndexes, maxValues);
                return rleIndexes;
 
             case Thrift.Encoding.PLAIN_DICTIONARY:
                var dicIndexes = new List<int>();
-               _dictionaryReader.Read(reader, _schemaElement, dicIndexes, maxValues);
+               _dictionaryReader.Read(reader, _schema, dicIndexes, maxValues);
                return dicIndexes;
 
             default:

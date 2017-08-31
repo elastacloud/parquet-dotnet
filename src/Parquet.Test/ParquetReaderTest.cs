@@ -4,12 +4,13 @@ using Parquet.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using Xunit;
 
 namespace Parquet.Test
 {
-   public class ParquetReaderTest
+   public class ParquetReaderTest : TestBase
    {
       [Fact]
       public void Opening_null_stream_fails()
@@ -135,6 +136,77 @@ namespace Parquet.Test
          ms.Position = 0;
          DataSet ds1 = ParquetReader.Read(ms);
          Assert.True(ds1.Metadata.CreatedBy.StartsWith("parquet-dotnet"));
+      }
+
+      //this only tests that the file is readable as it used to completely crash before
+      [Fact]
+      public void Reads_compat_nation_impala_file()
+      {
+         DataSet nation = ParquetReader.ReadFile(GetDataFilePath("nation.impala.parquet"));
+
+         Assert.Equal(25, nation.RowCount);
+      }
+
+      //this only tests that the file is readable as it used to completely crash before
+      [Fact]
+      public void Reads_compat_customer_impala_file()
+      {
+         /*
+          * c_name:
+          *    45 pages (0-44)
+          */
+
+         DataSet customer = ParquetReader.ReadFile(GetDataFilePath("customer.impala.parquet"));
+
+         Assert.Equal(150000, customer.RowCount);
+      }
+
+      [Fact]
+      public void Reads_really_mad_nested_file()
+      {
+         /* Spark schema:
+root
+|-- addresses: array (nullable = true)
+|    |-- element: struct (containsNull = true)
+|    |    |-- line1: string (nullable = true)
+|    |    |-- name: string (nullable = true)
+|    |    |-- openingHours: array (nullable = true)
+|    |    |    |-- element: long (containsNull = true)
+|    |    |-- postcode: string (nullable = true)
+|-- cities: array (nullable = true)
+|    |-- element: string (containsNull = true)
+|-- comment: string (nullable = true)
+|-- id: long (nullable = true)
+|-- location: struct (nullable = true)
+|    |-- latitude: double (nullable = true)
+|    |-- longitude: double (nullable = true)
+|-- price: struct (nullable = true)
+|    |-- lunch: struct (nullable = true)
+|    |    |-- max: long (nullable = true)
+|    |    |-- min: long (nullable = true) 
+         */
+
+
+         Assert.Throws<NotSupportedException>(() => ParquetReader.ReadFile(GetDataFilePath("nested.parquet")));
+
+         //DataSet ds = ParquetReader.ReadFile(GetDataFilePath("nested.parquet"));
+
+         //Assert.Equal(2, ds.Count);
+         //Assert.Equal(6, ds.Schema.Length);
+
+         /*Assert.Equal(typeof(string), ds.Schema[0].ElementType);
+         Assert.Equal(typeof(long), ds.Schema[1].ElementType);
+         Assert.Equal(typeof(Row), ds.Schema[2].ElementType);
+         Assert.Equal(typeof(long), ds.Schema[3].ElementType);
+         Assert.Equal(typeof(Row), ds.Schema[4].ElementType);*/
+      }
+
+      [Fact]
+      public void Read_hardcoded_decimal()
+      {
+         DataSet ds = ParquetReader.ReadFile(GetDataFilePath("complex-primitives.parquet"));
+
+         Assert.Equal((decimal)1.2, ds[0][1]);
       }
 
       class ReadableNonSeekableStream : DelegatedStream

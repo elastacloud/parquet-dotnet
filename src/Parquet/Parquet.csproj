@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard1.4;netstandard1.6;net451</TargetFrameworks>
-    <Version>1.0.0</Version>
-    <FileVersion>1.0.0.0</FileVersion>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Version>1.2.0.0</Version>
+    <FileVersion>1.2.3.4</FileVersion>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <DefineConstants>DEBUG</DefineConstants>
     <SignAssembly>False</SignAssembly>
     <AssemblyOriginatorKeyFile>C:\dev\parquet-dotnet\src\pqnet.snk</AssemblyOriginatorKeyFile>
@@ -18,6 +18,19 @@
     <PackageIconUrl>http://i.isolineltd.com/nuget/parquet.png</PackageIconUrl>
     <PackageLicenseUrl>https://github.com/elastacloud/parquet-dotnet/blob/master/LICENSE</PackageLicenseUrl>
     <Copyright>Copyright (c) 2017 by Elastacloud Ltd.</Copyright>
+    <PackageReleaseNotes>v1.1
+new features:
+- Reader supports nested structures.
+- Parquet output is now compatible with AWS Athena
+- Writer can append data to existing file
+
+improvements:
+- Parquet metadata sets page sizes according to standard
+- Schema and SchemaElement has Show method allowing to get user readable representation 
+
+bug fixes:
+- some files mix encodings between data pages resulting in wrong count of rows and occasional crashes (#183)
+- some string encoded fields not annotated properly were crashing Parquet.Net reader (#138)</PackageReleaseNotes>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard1.6|AnyCPU'">
     <DocumentationFile>bin\Debug\netstandard1.6\Parquet.xml</DocumentationFile>
@@ -44,8 +57,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="apache-thrift-netcore" Version="0.9.3.1" />
-    <PackageReference Include="NetBox" Version="1.4.19" />
+    <PackageReference Include="NetBox" Version="1.4.20" />
     <PackageReference Include="Snappy.Sharp" Version="1.0.0-b20170602007" />
-    <PackageReference Include="System.ValueTuple" Version="4.3.1" />
+    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
   </ItemGroup>
 </Project>

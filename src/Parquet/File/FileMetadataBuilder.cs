@@ -10,25 +10,27 @@ using TSchemaElement = Parquet.Thrift.SchemaElement;
 
 namespace Parquet.File
 {
-   class MetaBuilder
+   /// <summary>
+   /// Responsible for building Thrift file metadata when writing files
+   /// </summary>
+   class FileMetadataBuilder
    {
       private Thrift.FileMetaData _meta;
-      private static readonly string CreatedBy;
+      private readonly WriterOptions _writerOptions;
 
-      static MetaBuilder()
+      static FileMetadataBuilder()
       {
          //get file version
-         Assembly asm = typeof(MetaBuilder).GetTypeInfo().Assembly;
-         var fva = asm.CustomAttributes.First(a => a.AttributeType == typeof(AssemblyFileVersionAttribute));
-         CustomAttributeTypedArgument varg = fva.ConstructorArguments[0];
-         string fileVersion = varg.Value.ToString();
-
-         CreatedBy = $"parquet-dotnet version {fileVersion} (build {fileVersion.GetHash(HashType.Sha1)})";
+         Version fileVersion = typeof(FileMetadataBuilder).FileVersion();
+         CreatedBy = $"parquet-dotnet version {fileVersion} (build {fileVersion.ToString().GetHash(HashType.Sha1)})";
       }
 
-      public MetaBuilder()
+      public static string CreatedBy { internal get; set; }
+
+      public FileMetadataBuilder(WriterOptions writerOptions)
       {
          _meta = new Thrift.FileMetaData();
+         this._writerOptions = writerOptions;
 
          _meta.Created_by = CreatedBy;
          _meta.Version = 1;
@@ -36,11 +38,6 @@ namespace Parquet.File
       }
 
       public Thrift.FileMetaData ThriftMeta => _meta;
-
-      public Schema CreateSchema(ParquetOptions formatOptions)
-      {
-         return new Schema(_meta, formatOptions);
-      }
 
       public void AddSchema(DataSet ds)
       {
@@ -76,6 +73,8 @@ namespace Parquet.File
          chunk.Meta_data.Data_page_offset = startPos;
          chunk.Meta_data.Encodings = new List<Thrift.Encoding>
          {
+            Thrift.Encoding.RLE,
+            Thrift.Encoding.BIT_PACKED,
             Thrift.Encoding.PLAIN
          };
          chunk.Meta_data.Path_in_schema = new List<string> { schema.Name };

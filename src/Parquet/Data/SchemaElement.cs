@@ -1,6 +1,9 @@
 ﻿using Parquet.File;
 using System;
 using Parquet.File.Values;
+using System.Collections.Generic;
+using System.Collections;
+using Parquet.File.Values.Primitives;
 
 namespace Parquet.Data
 {
@@ -14,7 +17,8 @@ namespace Parquet.Data
       /// Initializes a new instance of the <see cref="SchemaElement"/> class.
       /// </summary>
       /// <param name="name">Column name</param>
-      public SchemaElement(string name) : base(name, typeof(T))
+      /// <param name="parent">Parent schema element</param>
+      public SchemaElement(string name, SchemaElement parent = null) : base(name, typeof(T), parent)
       {
          
       }
@@ -72,12 +76,66 @@ namespace Parquet.Data
       }
    }
 
+   /// <summary>
+   /// Maps to Parquet decimal type, allowing to specify custom scale and precision
+   /// </summary>
+   public class DecimalSchemaElement : SchemaElement
+   {
+      /// <summary>
+      /// Constructs class instance
+      /// </summary>
+      /// <param name="name">The name of the column</param>
+      /// <param name="precision">Cusom precision</param>
+      /// <param name="scale">Custom scale</param>
+      /// <param name="forceByteArrayEncoding">Whether to force decimal type encoding as fixed bytes. Hive and Impala only understands decimals when forced to true.</param>
+      public DecimalSchemaElement(string name, int precision, int scale, bool forceByteArrayEncoding = false) : base(name)
+      {
+         if (precision < 1) throw new ArgumentException("precision cannot be less than 1", nameof(precision));
+         if (scale < 1) throw new ArgumentException("scale cannot be less than 1", nameof(scale));
+
+         Thrift.Type tt;
+
+         if (forceByteArrayEncoding)
+         {
+            tt = Parquet.Thrift.Type.FIXED_LEN_BYTE_ARRAY;
+         }
+         else
+         {
+            if (precision <= 9)
+               tt = Parquet.Thrift.Type.INT32;
+            else if (precision <= 18)
+               tt = Parquet.Thrift.Type.INT64;
+            else
+               tt = Parquet.Thrift.Type.FIXED_LEN_BYTE_ARRAY;
+         }
+
+         Thrift.Type = tt;
+         Thrift.Converted_type = Parquet.Thrift.ConvertedType.DECIMAL;
+         Thrift.Precision = precision;
+         Thrift.Scale = scale;
+         ElementType = typeof(decimal);
+      }
+   }
+
 
    /// <summary>
    /// Element of dataset's schema
    /// </summary>
    public class SchemaElement : IEquatable<SchemaElement>
    {
+      private readonly List<SchemaElement> _children = new List<SchemaElement>();
+      private string _path;
+
+      /// <summary>
+      /// Gets the children schemas. Made internal temporarily, until we can actually read nested structures.
+      /// </summary>
+      internal IList<SchemaElement> Children => _children;
+
+      /// <summary>
+      /// Gets parent schema element, if present. Null for root schema elements.
+      /// </summary>
+      public SchemaElement Parent { get; private set; }
+
       /// <summary>
       /// Used by derived classes to invoke 
       /// </summary>
@@ -96,10 +154,12 @@ namespace Parquet.Data
       /// </summary>
       /// <param name="name">Column name</param>
       /// <param name="elementType">Type of the element in this column</param>
-      public SchemaElement(string name, Type elementType)
+      /// <param name="parent">Parent element, or null when this element belongs to a root.</param>
+      public SchemaElement(string name, Type elementType, SchemaElement parent = null)
       {
          SetProperties(name, elementType);
          TypeFactory.AdjustSchema(Thrift, elementType);
+         Parent = parent;
       }
 
       private void SetProperties(string name, Type elementType)
@@ -116,11 +176,28 @@ namespace Parquet.Data
          };
       }
 
-      internal SchemaElement(Thrift.SchemaElement thriftSchema, ParquetOptions formatOptions)
+      internal SchemaElement(Thrift.SchemaElement thriftSchema, SchemaElement parent, ParquetOptions formatOptions, Type elementType)
       {
          Name = thriftSchema.Name;
          Thrift = thriftSchema;
-         ElementType = TypeFactory.ToSystemType(this, formatOptions);
+         Parent = parent;
+
+         if(elementType != null)
+         {
+            ElementType = elementType;
+
+            if (elementType == typeof(IEnumerable))
+            {
+               Type itemType = TypePrimitive.GetSystemTypeBySchema(this, formatOptions);
+               Type ienumType = typeof(IEnumerable<>);
+               Type ienumGenericType = ienumType.MakeGenericType(itemType);
+               ElementType = ienumGenericType;
+            }
+         }
+         else
+         {
+            ElementType = TypePrimitive.GetSystemTypeBySchema(this, formatOptions);
+         }
       }
 
       /// <summary>
@@ -134,9 +211,29 @@ namespace Parquet.Data
       public Type ElementType { get; internal set; }
 
       /// <summary>
+      /// Element path, separated by dots (.)
+      /// </summary>
+      public string Path
+      {
+         get
+         {
+            if (_path != null) return _path;
+
+            if (Parent == null) return Name;
+
+            return Parent.Path + Schema.PathSeparator + Name;
+
+         }
+         internal set
+         {
+            _path = value;
+         }
+      }
+
+      /// <summary>
       /// Returns true if element can have null values
       /// </summary>
-      public bool IsNullable
+      internal bool IsNullable
       {
          get => Thrift.Repetition_type != Parquet.Thrift.FieldRepetitionType.REQUIRED;
          set => Thrift.Repetition_type = value ? Parquet.Thrift.FieldRepetitionType.OPTIONAL : Parquet.Thrift.FieldRepetitionType.REQUIRED;
@@ -150,23 +247,20 @@ namespace Parquet.Data
          return Thrift.__isset.converted_type && Thrift.Converted_type == ct;
       }
 
-      /// <summary>
-      /// Detect if data page has definition levels written.
-      /// </summary>
-      internal bool HasDefinitionLevelsPage(Thrift.PageHeader ph)
-      {
-         if (!Thrift.__isset.repetition_type)
-            throw new ParquetException("repetiton type is missing");
+      internal bool HasDefinitionLevelsPage => MaxDefinitionLevel > 0;
 
-         return Thrift.Repetition_type != Parquet.Thrift.FieldRepetitionType.REQUIRED;
-      }
+      internal int MaxDefinitionLevel { get; set; }
+
+      internal bool HasRepetitionLevelsPage => MaxRepetitionLevel > 0;
+
+      internal int MaxRepetitionLevel { get; set; }
 
       /// <summary>
       /// Pretty prints
       /// </summary>
       public override string ToString()
       {
-         return $"{Name} ({ElementType}), nullable: {IsNullable}";
+         return $"{Name}: {ElementType} (nullable = {IsNullable})";
       }
 
       /// <summary>
@@ -180,6 +274,8 @@ namespace Parquet.Data
       {
          if (ReferenceEquals(null, other)) return false;
          if (ReferenceEquals(this, other)) return true;
+
+         //todo: check equality for child elements
 
          return string.Equals(Name, other.Name) &&
                 ElementType == other.ElementType &&
@@ -214,7 +310,7 @@ namespace Parquet.Data
       {
          unchecked
          {
-            var hashCode = (Name != null ? Name.GetHashCode() : 0);
+            int hashCode = (Name != null ? Name.GetHashCode() : 0);
             hashCode = (hashCode * 397) ^ (ElementType != null ? ElementType.GetHashCode() : 0);
             hashCode = (hashCode * 397) ^ (Thrift != null ? Thrift.GetHashCode() : 0);
             return hashCode;

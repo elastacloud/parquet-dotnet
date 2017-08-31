@@ -112,27 +112,17 @@ namespace Parquet.Data
          Add(new Row(values));
       }
 
-      internal void AddColumnar(IEnumerable<IList> columnsList)
-      {
-         IEnumerator[] iear = columnsList.Select(c => c.GetEnumerator()).ToArray();
-         iear.ForEach(ie => ie.Reset());
-
-         while (iear.All(ie => ie.MoveNext()))
-         {
-            var row = new Row(iear.Select(ie => ie.Current));
-            _rows.Add(row);
-         }
-      }
-
       private void Validate(Row row)
       {
          if (row == null)
             throw new ArgumentNullException(nameof(row));
 
-         if (row.Length != _schema.Length)
-            throw new ArgumentException($"the row has {row.Length} values but schema expects {_schema.Length}", nameof(row));
+         int rl = row.Length;
 
-         for(int i = 0; i < row.Length; i++)
+         if (rl != _schema.Length)
+            throw new ArgumentException($"the row has {rl} values but schema expects {_schema.Length}", nameof(row));
+
+         for(int i = 0; i < rl; i++)
          {
             object rowValue = row[i];
             SchemaElement se = _schema.Elements[i];

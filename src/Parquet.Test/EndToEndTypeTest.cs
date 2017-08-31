@@ -6,6 +6,7 @@ using System.Text;
 using Parquet.File.Values;
 using Xunit;
 using Xunit.Extensions;
+using Parquet.File.Values.Primitives;
 
 namespace Parquet.Test
 {
@@ -17,6 +18,14 @@ namespace Parquet.Test
          new object[] {  new SchemaElement<string>("s"), "L'Oréal Paris" },
          new object[] {  new SchemaElement<float>("f"), 1.23f },
          new object[] {  new SchemaElement<double>("d"), 10.44D },
+         new object[] { new SchemaElement<DateTime>("datetime"), DateTime.UtcNow.RoundToSecond()},
+         new object[] { new SchemaElement<long>("long"), (long)1234 },
+
+         //difference cases of decimals
+         new object[] { new SchemaElement<decimal>("decDefault"), 123.4m },
+         new object[] { new DecimalSchemaElement("decInt32", 4, 1), 12.4m},
+         new object[] { new DecimalSchemaElement("decInt64", 17, 12), 1234567.88m},
+         new object[] { new DecimalSchemaElement("decFixedByteArray", 48, 12), 34434.5m},
 
          //loses precision slightly, i.e.
          //Expected: 2017-07-13T10:58:44.3767154+00:00
@@ -43,8 +52,14 @@ namespace Parquet.Test
 
          object expectedValue = ds[0][0];
          object actualValue = ds1[0][0];
+
+         if(schema.ElementType == typeof(DateTime))
+            actualValue = ((DateTimeOffset) actualValue).DateTime;
+
          Assert.True(expectedValue.Equals(actualValue),
             $"{name}| expected: {expectedValue}, actual: {actualValue}, schema element: {schema}");
+
+         //if (schema.ElementType == typeof(decimal)) ParquetWriter.WriteFile(ds1, "c:\\tmp\\decimals.parquet");
       }
    }
 }

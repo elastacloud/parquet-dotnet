@@ -32,7 +32,7 @@ namespace Parquet.File.Values
 
       private int GetBitWidth(SchemaElement schema)
       {
-         int bitWidth = TypeFactory.GetBitWidth(schema.ElementType);
+         int bitWidth = TypePrimitive.GetBitWidth(schema.ElementType);
 
          if (bitWidth == 0) throw new ParquetException($"cannot find bit width for type '{schema.ElementType}'");
 
@@ -98,9 +98,9 @@ namespace Parquet.File.Values
 
       private void WriteBitpacked()
       {
-         int header = 0x1;
+         //int header = 0x1;
 
-         //todo: implement this
+         throw new NotImplementedException();
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]

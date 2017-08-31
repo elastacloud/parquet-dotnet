@@ -39,7 +39,7 @@ namespace Parquet
    public class ParquetWriter : ParquetActor, IDisposable
    {
       private readonly Stream _output;
-      private readonly MetaBuilder _meta = new MetaBuilder();
+      private readonly FileMetadataBuilder _meta;
       private readonly ParquetOptions _formatOptions;
       private readonly WriterOptions _writerOptions;
       private readonly SchemaElement _definitionsSchema = new SchemaElement<bool>("definitions");
@@ -68,10 +68,11 @@ namespace Parquet
          if (!output.CanWrite) throw new ArgumentException("stream is not writeable", nameof(output));
          _formatOptions = formatOptions ?? new ParquetOptions();
          _writerOptions = writerOptions ?? new WriterOptions();
+         _meta = new FileMetadataBuilder(_writerOptions);
 
          _plainWriter = new PlainValuesWriter(_formatOptions);
          _rleWriter = new RunLengthBitPackingHybridValuesWriter();
-         _dicWriter = new PlainDictionaryValuesWriter();
+         _dicWriter = new PlainDictionaryValuesWriter(_rleWriter);
 
          GoToBeginning();
       }
@@ -121,7 +122,9 @@ namespace Parquet
             Thrift.FileMetaData fileMeta = ReadMetadata();
             _meta.SetMeta(fileMeta);
 
-            if (!ds.Schema.Equals(_meta.CreateSchema(_formatOptions)))
+            Schema existingSchema = new FileMetadataParser(fileMeta).ParseSchema(_formatOptions);
+
+            if (!ds.Schema.Equals(existingSchema))
             {
                throw new ParquetException($"{nameof(DataSet)} schema does not match existing file schema");
             }
@@ -137,6 +140,15 @@ namespace Parquet
          }
       }
 
+      /// <summary>
+      /// Writes <see cref="DataSet"/> to a target stream
+      /// </summary>
+      /// <param name="dataSet"><see cref="DataSet"/> to write</param>
+      /// <param name="destination">Destination stream</param>
+      /// <param name="compression">Compression method</param>
+      /// <param name="formatOptions">Parquet options, optional.</param>
+      /// <param name="writerOptions">Writer options, optional.</param>
+      /// <param name="append">When true, assumes that this stream contains existing file and appends data to it, otherwise writes a new Parquet file.</param>
       public static void Write(DataSet dataSet, Stream destination, CompressionMethod compression = CompressionMethod.Gzip, ParquetOptions formatOptions = null, WriterOptions writerOptions = null, bool append = false)
       {
          using (var writer = new ParquetWriter(destination, formatOptions, writerOptions))
@@ -145,13 +157,22 @@ namespace Parquet
          }
       }
 
-      public static void WriteFile(DataSet ds, string fileName, CompressionMethod compression = CompressionMethod.Gzip, ParquetOptions formatOptions = null, WriterOptions writerOptions = null)
+      /// <summary>
+      /// Writes <see cref="DataSet"/> to a target file
+      /// </summary>
+      /// <param name="dataSet"><see cref="DataSet"/> to write</param>
+      /// <param name="fileName">Path to a file to write to.</param>
+      /// <param name="compression">Compression method</param>
+      /// <param name="formatOptions">Parquet options, optional.</param>
+      /// <param name="writerOptions">Writer options, optional.</param>
+      /// <param name="append">When true, assumes that this stream contains existing file and appends data to it, otherwise writes a new Parquet file.</param>
+      public static void WriteFile(DataSet dataSet, string fileName, CompressionMethod compression = CompressionMethod.Gzip, ParquetOptions formatOptions = null, WriterOptions writerOptions = null, bool append = false)
       {
          using (Stream fs = System.IO.File.Create(fileName))
          {
             using (var writer = new ParquetWriter(fs, formatOptions, writerOptions))
             {
-               writer.Write(ds, compression);
+               writer.Write(dataSet, compression);
             }
          }
       }
@@ -176,6 +197,7 @@ namespace Parquet
       {
          var result = new List<PageTag>();
          byte[] dictionaryPageBytes = null;
+         int dictionaryPageCount = 0;
          byte[] dataPageBytes;
 
          using (var ms = new MemoryStream())
@@ -183,7 +205,7 @@ namespace Parquet
             using (var writer = new BinaryWriter(ms))
             {
                //write definitions
-               if(stats.NullCount > 0)
+               if(schema.IsNullable)
                {
                   CreateDefinitions(values, schema, out IList newValues, out List<int> definitions);
                   values = newValues;
@@ -192,12 +214,13 @@ namespace Parquet
                }
 
                //write data
-               if (!_dicWriter.Write(writer, schema, values, out IList dicValues))
+               if (!_writerOptions.UseDictionaryEncoding || !_dicWriter.Write(writer, schema, values, out IList dicValues))
                {
                   _plainWriter.Write(writer, schema, values, out IList plainExtra);
                }
                else
                {
+                  dictionaryPageCount = dicValues.Count;
                   ph.Data_page_header.Encoding = Thrift.Encoding.PLAIN_DICTIONARY;
                   using (var dms = new MemoryStream())
                      using(var dwriter = new BinaryWriter(dms))
@@ -213,7 +236,7 @@ namespace Parquet
 
          if(dictionaryPageBytes != null)
          {
-            Thrift.PageHeader dph = _meta.CreateDictionaryPage(values.Count);
+            Thrift.PageHeader dph = _meta.CreateDictionaryPage(dictionaryPageCount);
             dictionaryPageBytes = Compress(dph, dictionaryPageBytes, compression);
             int dictionaryHeaderSize = Write(dph, dictionaryPageBytes);
             result.Add(new PageTag { HeaderSize = dictionaryHeaderSize, HeaderMeta = dph });
@@ -231,7 +254,7 @@ namespace Parquet
          nonNullableValues = TypeFactory.Create(schema, _formatOptions, false);
          definitions = new List<int>();
 
-         foreach(var value in values)
+         foreach(object value in values)
          {
             if(value == null)
             {

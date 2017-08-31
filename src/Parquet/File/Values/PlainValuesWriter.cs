@@ -110,6 +110,24 @@ namespace Parquet.File.Values
                writer.Write(days + 1);
             }
          }
+         else if (schema.IsAnnotatedWith(Thrift.ConvertedType.DECIMAL))
+         {
+            var dataTyped = (List<decimal>)data;
+            double scaleFactor = Math.Pow(10, schema.Thrift.Scale);
+            foreach (decimal d in dataTyped)
+            {
+               try
+               {
+                  int i = (int) (d * (decimal) scaleFactor);
+                  writer.Write(i);
+               }
+               catch (OverflowException)
+               {
+                  throw new ParquetException(
+                     $"value '{d}' is too large to fit into scale {schema.Thrift.Scale} and precision {schema.Thrift.Precision}");
+               }
+            }
+         }
          else
          {
             var dataTyped = (List<int>)data;
@@ -133,13 +151,32 @@ namespace Parquet.File.Values
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       private static void WriteLong(BinaryWriter writer, SchemaElement schema, IList data)
       {
-         if (schema.IsAnnotatedWith(Thrift.ConvertedType.TIMESTAMP_MILLIS))
+         if (schema.ElementType == typeof(DateTimeOffset))
          {
             var lst = (List<DateTimeOffset>)data;
             foreach(DateTimeOffset dto in lst)
             {
                long unixTime = dto.ToUnixTime();
                writer.Write(unixTime);
+            }
+         }
+         else if (schema.ElementType == typeof(decimal))
+         {
+            var dataTyped = (List<decimal>)data;
+            double scaleFactor = Math.Pow(10, schema.Thrift.Scale);
+
+            foreach (decimal d in dataTyped)
+            {
+               try
+               {
+                  long l = (long) (d * (decimal) scaleFactor);
+                  writer.Write(l);
+               }
+               catch (OverflowException)
+               {
+                  throw new ParquetException(
+                     $"value '{d}' is too large to fit into scale {schema.Thrift.Scale} and precision {schema.Thrift.Precision}");
+               }
             }
          }
          else
@@ -155,7 +192,7 @@ namespace Parquet.File.Values
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       private void WriteInt96(BinaryWriter writer, SchemaElement schema, IList data)
       {
-         if (_options.TreatBigIntegersAsDates)
+         if(schema.ElementType == typeof(DateTimeOffset))
          {
             foreach (DateTimeOffset dto in data)
             {
@@ -163,9 +200,16 @@ namespace Parquet.File.Values
                nano.Write(writer);
             }
          }
+         else if (schema.ElementType == typeof(DateTime))
+         {
+            foreach (DateTime dtm in data)
+            {
+               var nano = new NanoTime(dtm.ToUniversalTime());
+               nano.Write(writer);
+            }
+         }
          else
          {
-            // assume that this is an a 12 byte decimal form
             foreach (byte[] dto in data)
             {
                writer.Write(dto);
@@ -188,8 +232,7 @@ namespace Parquet.File.Values
       {
          if (data.Count == 0) return;
 
-         SType elementType = data[0].GetType();
-         if(elementType == typeof(string))
+         if(schema.ElementType == typeof(string))
          {
             var src = (List<string>)data;
             foreach(string s in src)
@@ -197,17 +240,25 @@ namespace Parquet.File.Values
                Write(writer, s);
             }
          }
-         else if (elementType == typeof(Interval))
+         else if (schema.ElementType == typeof(Interval))
          {
             var src = (List<Interval>) data;
-            foreach (var interval in src)
+            foreach (Interval interval in src)
             {
                writer.Write(BitConverter.GetBytes(interval.Months));
                writer.Write(BitConverter.GetBytes(interval.Days));
                writer.Write(BitConverter.GetBytes(interval.Millis));
             }
          }
-         else if(elementType == typeof(byte[]))
+         else if (schema.ElementType == typeof(long))
+         {
+            var src = (List<long>)data;
+            foreach (long l in src)
+            {
+               writer.Write(BitConverter.GetBytes(l));
+            }
+         }
+         else if(schema.ElementType == typeof(byte[]))
          {
             var src = (List<byte[]>)data;
 
@@ -228,9 +279,27 @@ namespace Parquet.File.Values
                }
             }
          }
+         else if (schema.ElementType == typeof(decimal))
+         {
+            var src = (List<decimal>)data;
+            foreach (decimal d in src)
+            {
+               var bd = new BigDecimal(d, 38, 18);
+               byte[] itemData = bd.ToByteArray(16);
+
+               if (!schema.Thrift.__isset.type_length)
+               {
+                  schema.Thrift.Precision = bd.Precision;
+                  schema.Thrift.Scale = bd.Scale;
+                  schema.Thrift.Type_length = 16;
+               }
+
+               writer.Write(itemData);
+            }
+         }
          else
          {
-            throw new ParquetException($"byte array type can be either byte or string but {elementType} found");
+            throw new ParquetException($"byte array type can be either byte or string but {schema.ElementType} found");
          }
       }
 

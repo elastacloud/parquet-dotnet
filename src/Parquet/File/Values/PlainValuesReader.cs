@@ -91,6 +91,16 @@ namespace Parquet.File.Values
                destination.Add(new DateTimeOffset(iv.FromUnixTime(), TimeSpan.Zero));
             }
          }
+         else if (schema.IsAnnotatedWith(Thrift.ConvertedType.DECIMAL))
+         {
+            decimal scaleFactor = (decimal) Math.Pow(10, -schema.Thrift.Scale);
+            for (int i = 0; i < data.Length; i += 4)
+            {
+               int iv = BitConverter.ToInt32(data, i);
+               decimal dv = iv * scaleFactor;
+               destination.Add(dv);
+            }
+         }
          else
          {
             for (int i = 0; i < data.Length; i += 4)
@@ -114,7 +124,7 @@ namespace Parquet.File.Values
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       private static void ReadLong(byte[] data, SchemaElement schema, IList destination)
       {
-         if (schema.IsAnnotatedWith(Thrift.ConvertedType.TIMESTAMP_MILLIS))
+         if (schema.ElementType == typeof(DateTimeOffset))
          {
             var lst = (List<DateTimeOffset>)destination;
 
@@ -122,6 +132,16 @@ namespace Parquet.File.Values
             {
                long lv = BitConverter.ToInt64(data, i);
                lst.Add(lv.FromUnixTime());
+            }
+         }
+         else if (schema.IsAnnotatedWith(Thrift.ConvertedType.DECIMAL))
+         {
+            decimal scaleFactor = (decimal)Math.Pow(10, -schema.Thrift.Scale);
+            for (int i = 0; i < data.Length; i += 8)
+            {
+               long lv = BitConverter.ToInt64(data, i);
+               decimal dv = lv * scaleFactor;
+               destination.Add(dv);
             }
          }
          else
@@ -147,22 +167,24 @@ namespace Parquet.File.Values
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
       private static void ReadFixedLenByteArray(byte[] data, SchemaElement schema, IList destination)
       {
-         for (int i = 0; i < data.Length; i += schema.Thrift.Type_length)
+         if (schema.IsAnnotatedWith(Thrift.ConvertedType.DECIMAL))
          {
-            if (schema.IsAnnotatedWith(Thrift.ConvertedType.DECIMAL))
+            int typeLength = schema.Thrift.Type_length;
+            byte[] itemData = ByteGarbage.GetByteArray(typeLength);
+            for (int i = 0; i < data.Length; i += typeLength)
             {
-               // go from data - decimal needs to be 16 bytes but not from Spark - variable fixed nonsense
-               byte[] dataNew = new byte[schema.Thrift.Type_length];
-               Array.Copy(data, i, dataNew, 0, schema.Thrift.Type_length);
-               var bigInt = new BigDecimal(new BigInteger(dataNew.Reverse().ToArray()), schema.Thrift.Scale,
-                  schema.Thrift.Precision);
+               Array.Copy(data, i, itemData, 0, typeLength);
 
-               decimal dc = (decimal) bigInt;
+               decimal dc = new BigDecimal(itemData, schema.Thrift);
                destination.Add(dc);
             }
-            else if (schema.IsAnnotatedWith(Thrift.ConvertedType.INTERVAL))
+         }
+         else if (schema.IsAnnotatedWith(Thrift.ConvertedType.INTERVAL))
+         {
+            for (int i = 0; i < data.Length; i += schema.Thrift.Type_length)
             {
                // assume this is the number of months / days / millis offset from the Julian calendar
+               //todo: optimize allocations
                byte[] months = new byte[4];
                byte[] days = new byte[4];
                byte[] millis = new byte[4];

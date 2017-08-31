@@ -10,8 +10,13 @@ namespace Parquet.Data
    /// </summary>
    public class Schema : IEquatable<Schema>
    {
+      /// <summary>
+      /// Symbol used to separate path parts in schema element path
+      /// </summary>
+      public const string PathSeparator = ".";
+
       private readonly List<SchemaElement> _elements;
-      private readonly Dictionary<string, SchemaElement> _pathToElement = new Dictionary<string, SchemaElement>();
+      private Dictionary<string, SchemaElement> _pathToElement;
 
       /// <summary>
       /// Initializes a new instance of the <see cref="Schema"/> class from schema elements.
@@ -29,15 +34,6 @@ namespace Parquet.Data
       public Schema(params SchemaElement[] elements)
       {
          _elements = elements.ToList();
-      }
-
-      internal Schema(Thrift.FileMetaData fm, ParquetOptions formatOptions)
-      {
-         _elements = fm.Schema.Skip(1).Select(se => new SchemaElement(se, formatOptions)).ToList();
-         foreach (Thrift.SchemaElement se in fm.Schema)
-         {
-            _pathToElement[se.Name] = new SchemaElement(se, formatOptions);
-         }
       }
 
       /// <summary>
@@ -59,10 +55,27 @@ namespace Parquet.Data
       /// Get schema element by index
       /// </summary>
       /// <param name="i">Index of schema element</param>
-      /// <returns></returns>
+      /// <returns>Schema element</returns>
       public SchemaElement this[int i]
       {
          get { return _elements[i]; }
+      }
+
+      /// <summary>
+      /// Get schema element by name
+      /// </summary>
+      /// <param name="name">Schema element name</param>
+      /// <returns>Schema element</returns>
+      public SchemaElement this[string name]
+      {
+         get
+         {
+            SchemaElement result = _elements.FirstOrDefault(e => e.Name == name);
+
+            if (result == null) throw new ArgumentException($"schema element '{name}' not found", nameof(name));
+
+            return result;
+         }
       }
 
       /// <summary>
@@ -77,20 +90,42 @@ namespace Parquet.Data
          return -1;
       }
 
-      internal int GetMaxDefinitionLevel(Thrift.ColumnChunk cc)
+      internal SchemaElement this[Thrift.ColumnChunk value]
       {
-         int max = 0;
-
-         foreach (string part in cc.Meta_data.Path_in_schema)
+         get
          {
-            SchemaElement element = _pathToElement[part];
-            if (element.Thrift.Repetition_type != Thrift.FieldRepetitionType.REQUIRED) max += 1;
-         }
+            string path = string.Join(PathSeparator, value.Meta_data.Path_in_schema);
 
-         return max;
+            if (_pathToElement == null) BuildPathCache();
+
+            if (!_pathToElement.TryGetValue(path, out SchemaElement result))
+               throw new ArgumentException($"cannot find schema element by path '{path}'", nameof(value));
+
+            return result;
+         }
       }
 
-      internal SchemaElement this[Thrift.ColumnChunk value] => _pathToElement[value.Meta_data.Path_in_schema[0]];
+      /// <summary>
+      /// Returns true if schema contains any nested structures declarations, false otherwise
+      /// </summary>
+      public bool HasNestedElements => _elements.Any(e => e.Children.Count > 0);
+
+      private void BuildPathCache()
+      {
+         _pathToElement = new Dictionary<string, SchemaElement>();
+
+         CachePath(Elements);
+      }
+
+      private void CachePath(IEnumerable<SchemaElement> elements)
+      {
+         foreach(SchemaElement element in elements)
+         {
+            _pathToElement[element.Path] = element;
+
+            if (element.Children.Count > 0) CachePath(element.Children);
+         }
+      }
 
       /// <summary>
       /// Indicates whether the current object is equal to another object of the same type.
@@ -106,7 +141,12 @@ namespace Parquet.Data
 
          if (_elements.Count != other._elements.Count) return false;
 
-         return !_elements.Where((t, i) => !t.Equals(other.Elements[i])).Any();
+         foreach(Tuple<SchemaElement, SchemaElement> pair in EnumerableEx.MultiIterate(_elements, other.Elements))
+         {
+            if (!pair.Item1.Equals(pair.Item2)) return false;
+         }
+
+         return true;
       }
 
       /// <summary>
@@ -140,16 +180,34 @@ namespace Parquet.Data
       /// Shows schema in human readable form
       /// </summary>
       /// <returns></returns>
-      public string Show()
+      public override string ToString()
       {
          var sb = new StringBuilder();
 
+         int level = 0;
+         sb.AppendLine("root");
          foreach (SchemaElement se in _elements)
          {
-            sb.AppendLine($"- name: '{se.Name}', type: {se.ElementType}, nullable: {se.IsNullable}");
+            ToString(sb, se, level);
          }
 
          return sb.ToString();
+      }
+
+      private void ToString(StringBuilder sb, SchemaElement se, int level)
+      {
+         sb.Append("|");
+         for(int i = 0; i < level; i++)
+         {
+            sb.Append("    |");
+         }
+         sb.Append("-- ");
+         sb.AppendLine(se.ToString());
+
+         foreach(SchemaElement child in se.Children)
+         {
+            ToString(sb, child, level + 1);
+         }
       }
    }
 }
