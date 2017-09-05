@@ -10,8 +10,54 @@ namespace Parquet.Test
    public class MergeTest
    {
       [Fact]
-      public void Merge_DataSet_NoColsSame_Success()
+      public void Merge_DataSet_NoColsSame_Success_NumCols()
       {
+         var ds1 = new DataSet(new SchemaElement<int>("id") { IsNullable = true })
+         {
+            1
+         };
+         var ds2 = new DataSet(new SchemaElement<DateTime>("iddtt2") { IsNullable = true })
+         {
+            DateTime.UtcNow
+         };
+
+         DataSet ds3 = ds1.Merge(ds2);
+         Assert.Equal(2, ds3.ColumnCount);
+      }
+
+      [Fact]
+      public void Merge_DataSet_NoColsSame_Success_NumRows()
+      {
+         var ds1 = new DataSet(new SchemaElement<int>("id") { IsNullable = true })
+         {
+            1
+         };
+         var ds2 = new DataSet(new SchemaElement<DateTime>("iddtt2") { IsNullable = true })
+         {
+            DateTime.UtcNow
+         };
+
+         DataSet ds3 = ds1.Merge(ds2);
+         Assert.Equal(2, ds3.RowCount);
+      }
+
+      [Fact]
+      public void Merge_DataSet_NoColsSame_Success_TypesCorrect()
+      {
+         var ds1 = new DataSet(new SchemaElement<int>("id") { IsNullable = true })
+         {
+            1
+         };
+         var ds2 = new DataSet(new SchemaElement<DateTime>("iddtt2") { IsNullable = true })
+         {
+            new DateTime(2003, 10, 1)
+         };
+
+         DataSet ds3 = ds1.Merge(ds2);
+         Assert.Equal(1, ds3[0][0]);
+         Assert.Equal(null, ds3[0][1]);
+         Assert.Equal(null, ds3[1][0]);
+         Assert.Equal(new DateTime(2003, 10, 1), ds3[1][1]);
       }
 
       [Fact]
@@ -22,6 +68,7 @@ namespace Parquet.Test
       [Fact]
       public void Merge_DataSet_NameColTypeDifferent_Exception()
       {
+         //Assert.Throws<ArgumentNullException>(() => ds.Add((Row)null));
       }
 
       [Fact]
