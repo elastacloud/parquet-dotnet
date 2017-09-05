@@ -1,8 +1,7 @@
-﻿using Parquet.File;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using Parquet.File;
 
 namespace Parquet.Data
 {
@@ -110,6 +109,77 @@ namespace Parquet.Data
       public void Add(params object[] values)
       {
          Add(new Row(values));
+      }
+
+      /// <summary>
+      /// Used to merge and add columns to a dataset 
+      /// </summary>
+      /// <param name="ds">A second dataset to merge this one with</param>
+      public DataSet Merge(DataSet ds)
+      {
+         // Get the new schema that we have to build fold the row copies into a new view
+         List<SchemaElement> additionalSchema = CoalesceRows(ds);
+         // Create a new dataset form the previous two
+         var newSchema = new List<SchemaElement>();
+         newSchema.AddRange(Schema.Elements);
+         newSchema.AddRange(additionalSchema);
+         var mergedDs = new DataSet(newSchema);
+
+         // now that we've got the datasets let's build the rows 
+         int biggestRows = this.RowCount < ds.RowCount ? ds.RowCount : this.RowCount;
+         int totalColumns = this.ColumnCount + additionalSchema.Count;
+         // build in the first addition of nulls from dataset 0
+         for (int i = 0; i < this.RowCount; i++)
+         {
+            object[] newValues = new object[additionalSchema.Count];
+            mergedDs.Add(this[i].RawValues, newValues);
+         }
+         // Build the second part of the dataset but nulling out the initial except for any coincidence in values
+         // TODO: At the moment only works for the singular case of non-coalescing rows
+         for (int i = 0; i < ds.RowCount; i++)
+         {
+            object[] newValues = new object[ColumnCount];
+            mergedDs.Add(newValues, ds[i].RawValues);
+         }
+         return mergedDs;
+      }
+
+      private List<SchemaElement> CoalesceRows(DataSet ds)
+      {
+         // get the columns!!
+         var combinedRowNames = new List<SchemaElement>();
+         var additionalRowNames = new List<SchemaElement>();
+         // go through the available columns in the second dataset
+         foreach (SchemaElement schemaElement in ds._schema.Elements)
+         {
+            foreach (SchemaElement schemaElementThis in _schema.Elements)
+            {
+               if (schemaElementThis.Name == schemaElement.Name &&
+                   schemaElementThis.ElementType == schemaElement.ElementType)
+               {
+                  // then this element belongs to this schema so we can add but need to define the superset
+                  // this can then be added to the existing rowset
+                  combinedRowNames.Add(schemaElementThis);
+               }
+               else if (schemaElementThis.Name == schemaElement.Name &&
+                        schemaElementThis.ElementType == schemaElement.ElementType)
+               {
+                  throw new ParquetException(
+                     $"unable to merge schema, {schemaElementThis.Name} has different types in schemas");
+               }
+               else
+               {
+                  // Add the new column but null out the details if the column isn't nullable then throw an exception
+                  if (!schemaElementThis.IsNullable)
+                  {
+                     throw new ParquetException($"unable to merge schema, {schemaElementThis.Name} is not nullable");
+                  }
+                  // add new null column value here
+                  additionalRowNames.Add(schemaElementThis);
+               }
+            }
+         }
+         return additionalRowNames;
       }
 
       private void Validate(Row row)
