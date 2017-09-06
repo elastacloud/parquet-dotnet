@@ -118,74 +118,7 @@ namespace Parquet.Data
       /// <param name="ds">A second dataset to merge this one with</param>
       public DataSet Merge(DataSet ds)
       {
-         // Get the new schema that we have to build fold the row copies into a new view
-         List<SchemaElement> additionalSchema = CoalesceRows(ds);
-         // Create a new dataset form the previous two
-         var newSchema = new List<SchemaElement>();
-         newSchema.AddRange(Schema.Elements);
-         newSchema.AddRange(additionalSchema);
-         var mergedDs = new DataSet(newSchema);
-
-         // now that we've got the datasets let's build the rows 
-         int biggestRows = this.RowCount < ds.RowCount ? ds.RowCount : this.RowCount;
-         int totalColumns = this.ColumnCount + additionalSchema.Count;
-         // build in the first addition of nulls from dataset 0
-         // TODO: Fold all of this up and add to comparer and design a union operator 
-         for (int i = 0; i < this.RowCount; i++)
-         {
-            List<object> newValues = new List<object>();
-            newValues.AddRange(this[i].RawValues);
-            newValues.AddRange(new object[additionalSchema.Count]);
-            mergedDs.Add(newValues.ToArray());
-         }
-         // Build the second part of the dataset but nulling out the initial except for any coincidence in values
-         // TODO: At the moment only works for the singular case of non-coalescing rows
-         for (int i = 0; i < ds.RowCount; i++)
-         {
-            List<object> newValues = new List<object>();
-            newValues.AddRange(new object[ColumnCount]);
-            newValues.AddRange(ds[i].RawValues);
-            mergedDs.Add(newValues.ToArray());
-         }
-         return mergedDs;
-      }
-      
-      private List<SchemaElement> CoalesceRows(DataSet ds)
-      {
-         // get the columns!!
-         var combinedRowNames = new List<SchemaElement>();
-         var additionalRowNames = new List<SchemaElement>();
-         // go through the available columns in the second dataset
-         foreach (SchemaElement schemaElement in ds._schema.Elements)
-         {
-            foreach (SchemaElement schemaElementThis in _schema.Elements)
-            {
-               if (schemaElementThis.Name == schemaElement.Name &&
-                   schemaElementThis.ElementType == schemaElement.ElementType)
-               {
-                  // then this element belongs to this schema so we can add but need to define the superset
-                  // this can then be added to the existing rowset
-                  combinedRowNames.Add(schemaElement);
-               }
-               else if (schemaElementThis.Name == schemaElement.Name &&
-                        schemaElementThis.ElementType == schemaElement.ElementType)
-               {
-                  throw new ParquetException(
-                     $"unable to merge schema, {schemaElement.Name} has different types in schemas");
-               }
-               else
-               {
-                  // Add the new column but null out the details if the column isn't nullable then throw an exception
-                  if (!schemaElement.IsNullable)
-                  {
-                     throw new ParquetException($"unable to merge schema, {schemaElement.Name} is not nullable");
-                  }
-                  // add new null column value here
-                  additionalRowNames.Add(schemaElement);
-               }
-            }
-         }
-         return additionalRowNames;
+         return new DataSetMerge().Merge(this, ds);
       }
 
       private void Validate(Row row)

@@ -63,17 +63,50 @@ namespace Parquet.Test
       [Fact]
       public void Merge_DataSet_OneColSame_Success()
       {
+         var ds1 = new DataSet(new SchemaElement<int>("id") { IsNullable = true })
+         {
+            1
+         };
+         var ds2 = new DataSet(new SchemaElement<int>("id") { IsNullable = true })
+         {
+            2
+         };
+
+         DataSet ds3 = ds1.Merge(ds2);
+         Assert.Equal(2, ds3.RowCount);
+         Assert.Equal(1, ds3.ColumnCount);
+         Assert.Equal(1, ds3[0][0]);
+         Assert.Equal(2, ds3[1][0]);
       }
 
       [Fact]
       public void Merge_DataSet_NameColTypeDifferent_Exception()
       {
-         //Assert.Throws<ArgumentNullException>(() => ds.Add((Row)null));
+         var ds1 = new DataSet(new SchemaElement<int>("id") { IsNullable = true })
+         {
+            1
+         };
+         var ds2 = new DataSet(new SchemaElement<DateTime>("id") { IsNullable = true })
+         {
+            DateTime.UtcNow
+         };
+
+         Assert.Throws<ParquetException>(() => ds1.Merge(ds2));
       }
 
       [Fact]
       public void Merge_DataSet_NonNullableSchema_Exception()
       {
+         var ds1 = new DataSet(new SchemaElement<int>("id") { IsNullable = false })
+         {
+            1
+         };
+         var ds2 = new DataSet(new SchemaElement<DateTime>("iddtt2") { IsNullable = true })
+         {
+            DateTime.UtcNow
+         };
+
+         Assert.Throws<ParquetException>(() => ds1.Merge(ds2));
       }
    }
 }
