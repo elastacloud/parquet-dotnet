@@ -12,11 +12,11 @@ namespace Parquet.Test
       [Fact]
       public void Merge_DataSet_NoColsSame_Success_NumCols()
       {
-         var ds1 = new DataSet(new SchemaElement<int>("id") { IsNullable = true })
+         var ds1 = new DataSet(new SchemaElement<int>("id"))
          {
             1
          };
-         var ds2 = new DataSet(new SchemaElement<DateTime>("iddtt2") { IsNullable = true })
+         var ds2 = new DataSet(new SchemaElement<DateTime>("iddtt2"))
          {
             DateTime.UtcNow
          };
@@ -28,11 +28,11 @@ namespace Parquet.Test
       [Fact]
       public void Merge_DataSet_NoColsSame_Success_NumRows()
       {
-         var ds1 = new DataSet(new SchemaElement<int>("id") { IsNullable = true })
+         var ds1 = new DataSet(new SchemaElement<int>("id"))
          {
             1
          };
-         var ds2 = new DataSet(new SchemaElement<DateTime>("iddtt2") { IsNullable = true })
+         var ds2 = new DataSet(new SchemaElement<DateTime>("iddtt2"))
          {
             DateTime.UtcNow
          };
@@ -44,11 +44,11 @@ namespace Parquet.Test
       [Fact]
       public void Merge_DataSet_NoColsSame_Success_TypesCorrect()
       {
-         var ds1 = new DataSet(new SchemaElement<int>("id") { IsNullable = true })
+         var ds1 = new DataSet(new SchemaElement<int>("id"))
          {
             1
          };
-         var ds2 = new DataSet(new SchemaElement<DateTime>("iddtt2") { IsNullable = true })
+         var ds2 = new DataSet(new SchemaElement<DateTime>("iddtt2"))
          {
             new DateTime(2003, 10, 1)
          };
@@ -63,11 +63,11 @@ namespace Parquet.Test
       [Fact]
       public void Merge_DataSet_OneColSame_Success()
       {
-         var ds1 = new DataSet(new SchemaElement<int>("id") { IsNullable = true })
+         var ds1 = new DataSet(new SchemaElement<int>("id"))
          {
             1
          };
-         var ds2 = new DataSet(new SchemaElement<int>("id") { IsNullable = true })
+         var ds2 = new DataSet(new SchemaElement<int>("id"))
          {
             2
          };
@@ -82,26 +82,11 @@ namespace Parquet.Test
       [Fact]
       public void Merge_DataSet_NameColTypeDifferent_Exception()
       {
-         var ds1 = new DataSet(new SchemaElement<int>("id") { IsNullable = true })
+         var ds1 = new DataSet(new SchemaElement<int>("id"))
          {
             1
          };
-         var ds2 = new DataSet(new SchemaElement<DateTime>("id") { IsNullable = true })
-         {
-            DateTime.UtcNow
-         };
-
-         Assert.Throws<ParquetException>(() => ds1.Merge(ds2));
-      }
-
-      [Fact]
-      public void Merge_DataSet_NonNullableSchema_Exception()
-      {
-         var ds1 = new DataSet(new SchemaElement<int>("id") { IsNullable = false })
-         {
-            1
-         };
-         var ds2 = new DataSet(new SchemaElement<DateTime>("iddtt2") { IsNullable = true })
+         var ds2 = new DataSet(new SchemaElement<DateTime>("id"))
          {
             DateTime.UtcNow
          };

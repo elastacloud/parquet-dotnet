@@ -21,7 +21,6 @@ namespace Parquet.Data
          List<SchemaElement> newSchema = dataSet1.Schema.Elements.Union(dataSet2.Schema.Elements, this).ToList();
          // Create a new dataset form the previous two
          var mergedDs = new DataSet(newSchema);
-         NullCheck(mergedDs);
          TypeCheck(dataSet1, dataSet2);
          mergedDs = AddAdditionalMergedRows(mergedDs, dataSet1);
 
@@ -80,7 +79,7 @@ namespace Parquet.Data
       /// <returns>Equality check</returns>
       public bool Equals(SchemaElement x, SchemaElement y)
       {
-         return x.Name == y.Name && x.ElementType == y.ElementType;
+         return x.Equals(y);
       }
       /// <summary>
       /// Gets a unique has for the comparer 
@@ -89,7 +88,7 @@ namespace Parquet.Data
       /// <returns>An int value for uniqueness based on name and type</returns>
       public int GetHashCode(SchemaElement obj)
       {
-         return ASCIIEncoding.ASCII.GetBytes(String.Concat(obj.Name, obj.ElementType.Name)).Sum(item => (int) item);
+         return ASCIIEncoding.ASCII.GetBytes(String.Concat(obj.Name, obj.ElementType.Name)).Sum(item => (int)item);
       }
    }
 }
