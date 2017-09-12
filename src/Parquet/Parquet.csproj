@@ -67,8 +67,7 @@ bug fixes:
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="apache-thrift-netcore" Version="0.9.3.1" />
-    <PackageReference Include="NetBox" Version="1.4.20" />
-    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
+    <PackageReference Include="NetBox" Version="1.4.22" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="3rdparty\Snappy.Sharp\" />
