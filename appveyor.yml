@@ -7,21 +7,15 @@ branches:
 skip_tags: true
 image: Visual Studio 2017
 configuration: Release
-platform: Any CPU
 before_build:
-- ps: .\appveyor.ps1
+- ps: >-
+   .\appveyor.ps1
 build:
   project: src/Parquet.sln
   verbosity: minimal
 test_script:
 - cmd: >-
-    cd src\Parquet.Test
-
-    dotnet test
-
-    cd ..
-
-    cd ..
+   dotnet test src/Parquet.Test/Parquet.Test.csproj
 artifacts:
 - path: src/Parquet/bin/**/*.nupkg
 deploy:
