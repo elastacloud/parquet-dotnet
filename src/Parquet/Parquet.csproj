@@ -61,15 +61,7 @@ bug fixes:
     <DocumentationFile>bin\Release\net451\Parquet.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Primitives\**" />
-    <EmbeddedResource Remove="Primitives\**" />
-    <None Remove="Primitives\**" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="apache-thrift-netcore" Version="0.9.3.1" />
     <PackageReference Include="NetBox" Version="1.4.22" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="3rdparty\Snappy.Sharp\" />
   </ItemGroup>
 </Project>
