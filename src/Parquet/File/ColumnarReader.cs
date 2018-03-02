@@ -9,7 +9,7 @@ using Parquet.File.Values;
 
 namespace Parquet.File
 {
-   class ColumnarReader
+   public class ColumnarReader
    {
       private readonly Stream _inputStream;
       private readonly Thrift.ColumnChunk _thriftColumnChunk;

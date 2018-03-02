@@ -27,7 +27,7 @@ using System;
 
 namespace Thrift.Protocol
 {
-    enum TType : byte
+    public enum TType : byte
     {
         Stop = 0,
         Void = 1,

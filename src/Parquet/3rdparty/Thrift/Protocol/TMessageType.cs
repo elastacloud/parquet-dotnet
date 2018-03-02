@@ -21,7 +21,7 @@ using System;
 
 namespace Thrift.Protocol
 {
-    enum TMessageType
+    public enum TMessageType
     {
         Call = 1,
         Reply = 2,

@@ -14,7 +14,7 @@ namespace Parquet.Thrift
    /// Statistics per row group and per page
    /// All fields are optional.
    /// </summary>
-   class Statistics : TBase
+   public class Statistics : TBase
   {
     private byte[] _max;
     private byte[] _min;

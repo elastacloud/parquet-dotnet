@@ -13,7 +13,7 @@ namespace Parquet.Thrift
    /// <summary>
    /// statistics of a given page type and encoding
    /// </summary>
-   class PageEncodingStats : TBase
+   public class PageEncodingStats : TBase
   {
 
     /// <summary>

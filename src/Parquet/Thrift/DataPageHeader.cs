@@ -13,7 +13,7 @@ namespace Parquet.Thrift
    /// <summary>
    /// Data page header
    /// </summary>
-   class DataPageHeader : TBase
+   public class DataPageHeader : TBase
   {
     private Statistics _statistics;
 

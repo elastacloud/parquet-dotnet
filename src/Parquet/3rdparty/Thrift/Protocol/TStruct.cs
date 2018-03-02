@@ -29,7 +29,7 @@ using System.Text;
 
 namespace Thrift.Protocol
 {
-    struct TStruct
+    public struct TStruct
     {
         private string name;
 

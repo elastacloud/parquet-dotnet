@@ -24,7 +24,7 @@ using System.Collections.Generic;
 
 namespace Thrift.Collections
 {
-   class THashSet<T> : ICollection<T>
+   public class THashSet<T> : ICollection<T>
     {
         HashSet<T> set = new HashSet<T>();
 

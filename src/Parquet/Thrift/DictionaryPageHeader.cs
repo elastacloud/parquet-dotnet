@@ -13,7 +13,7 @@ namespace Parquet.Thrift
    /// <summary>
    /// TODO: *
    /// </summary>
-   class DictionaryPageHeader : TBase
+   public class DictionaryPageHeader : TBase
   {
     private bool _is_sorted;
 

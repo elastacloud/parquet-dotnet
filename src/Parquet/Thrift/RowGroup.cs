@@ -11,7 +11,7 @@ using Thrift.Protocol;
 namespace Parquet.Thrift
 {
 
-   class RowGroup : TBase
+   public class RowGroup : TBase
   {
     private List<SortingColumn> _sorting_columns;
 

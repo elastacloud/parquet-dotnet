@@ -27,7 +27,7 @@ using System.Text;
 
 namespace Thrift.Protocol
 {
-    struct TList
+    public struct TList
     {
         private TType elementType;
         private int count;

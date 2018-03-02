@@ -13,7 +13,7 @@ namespace Parquet.Thrift
    /// <summary>
    /// Wrapper struct to specify sort order
    /// </summary>
-   class SortingColumn : TBase
+   public class SortingColumn : TBase
   {
 
     /// <summary>

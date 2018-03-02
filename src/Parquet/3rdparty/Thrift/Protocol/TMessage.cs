@@ -27,7 +27,7 @@ using System.Text;
 
 namespace Thrift.Protocol
 {
-    struct TMessage
+    public struct TMessage
     {
         private string name;
         private TMessageType type;

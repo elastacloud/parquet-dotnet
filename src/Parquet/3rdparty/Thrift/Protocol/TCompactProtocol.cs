@@ -31,7 +31,7 @@ using System.Collections.Generic;
 
 namespace Thrift.Protocol
 {
-    class TCompactProtocol : TProtocol
+    public class TCompactProtocol : TProtocol
     {
         private static TStruct ANONYMOUS_STRUCT = new TStruct("");
         private static TField TSTOP = new TField("", TType.Stop, (short)0);

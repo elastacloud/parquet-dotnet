@@ -23,7 +23,7 @@ using System.Collections;
 
 namespace Thrift.Collections
 {
-    class TCollections
+    public class TCollections
     {
         /// <summary>
         /// This will return true if the two collections are value-wise the same.

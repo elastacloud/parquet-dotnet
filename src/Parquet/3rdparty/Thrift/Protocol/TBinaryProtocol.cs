@@ -27,7 +27,7 @@ using Thrift.Transport;
 
 namespace Thrift.Protocol
 {
-    class TBinaryProtocol : TProtocol
+    public class TBinaryProtocol : TProtocol
     {
         protected const uint VERSION_MASK = 0xffff0000;
         protected const uint VERSION_1 = 0x80010000;

@@ -20,7 +20,7 @@
 #pragma warning disable CS1587
 namespace Thrift.Protocol
 {
-    interface TAbstractBase
+    public interface TAbstractBase
     {
         ///
         /// Writes the objects out to the protocol

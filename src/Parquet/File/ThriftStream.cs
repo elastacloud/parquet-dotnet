@@ -7,7 +7,7 @@ namespace Parquet.File
    /// <summary>
    /// Utility methods to work with Thrift data in a stream
    /// </summary>
-   class ThriftStream
+   public class ThriftStream
    {
       private readonly Stream _s;
       private readonly TProtocol _protocol;

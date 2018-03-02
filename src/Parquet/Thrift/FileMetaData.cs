@@ -14,7 +14,7 @@ namespace Parquet.Thrift
    /// <summary>
    /// Description for file metadata
    /// </summary>
-   class FileMetaData : TBase
+   public class FileMetaData : TBase
   {
     private List<KeyValue> _key_value_metadata;
     private string _created_by;

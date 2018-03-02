@@ -8,7 +8,7 @@ using Parquet.File.Data;
 
 namespace Parquet.File
 {
-   class ThriftFooter
+   public class ThriftFooter
    {
       private readonly Thrift.FileMetaData _fileMeta;
 
@@ -292,7 +292,7 @@ namespace Parquet.File
 
       #region [ Helpers ]
 
-      class ThriftSchemaTree
+      public class ThriftSchemaTree
       {
          public class Node
          {
