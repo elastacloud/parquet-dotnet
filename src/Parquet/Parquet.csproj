@@ -41,4 +41,7 @@ Works on all flavours of Windows and Linux. Compatible with iOS and Android via 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net451|AnyCPU'">
     <DocumentationFile>bin\Release\net451\Parquet.xml</DocumentationFile>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Apache.Thrift" Version="1.0.2" />
+  </ItemGroup>
 </Project>

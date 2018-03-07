@@ -16,7 +16,7 @@ namespace Parquet.Thrift
    ///  - if it is a primitive type (leaf) then type is defined and num_children is undefined
    /// the nodes are listed in depth first traversal order.
    /// </summary>
-   class SchemaElement : TBase
+   public class SchemaElement : TBase
   {
     private Type _type;
     private int _type_length;

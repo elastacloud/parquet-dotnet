@@ -13,7 +13,7 @@ namespace Parquet.Thrift
    /// <summary>
    /// Wrapper struct to store key values
    /// </summary>
-   class KeyValue : TBase
+   public class KeyValue : TBase
   {
     private string _value;
 

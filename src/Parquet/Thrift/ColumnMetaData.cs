@@ -14,7 +14,7 @@ namespace Parquet.Thrift
    /// <summary>
    /// Description for column metadata
    /// </summary>
-   class ColumnMetaData : TBase
+   public class ColumnMetaData : TBase
   {
     private List<KeyValue> _key_value_metadata;
     private long _index_page_offset;

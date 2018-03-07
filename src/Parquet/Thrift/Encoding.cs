@@ -12,7 +12,7 @@ namespace Parquet.Thrift
   /// enums are also used to specify the encoding of definition and repetition levels.
   /// See the accompanying doc for the details of the more complicated encodings.
   /// </summary>
-  enum Encoding
+  public enum Encoding
   {
     /// <summary>
     /// Default encoding.

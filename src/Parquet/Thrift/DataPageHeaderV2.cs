@@ -16,7 +16,7 @@ namespace Parquet.Thrift
    /// The remaining section containing the data is compressed if is_compressed is true
    /// 
    /// </summary>
-   class DataPageHeaderV2 : TBase
+   public class DataPageHeaderV2 : TBase
   {
     private bool _is_compressed;
     private Statistics _statistics;

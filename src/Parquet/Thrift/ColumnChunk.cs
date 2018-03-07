@@ -9,7 +9,7 @@ using Thrift.Protocol;
 
 namespace Parquet.Thrift
 {
-   class ColumnChunk : TBase
+   public class ColumnChunk : TBase
   {
     private string _file_path;
     private ColumnMetaData _meta_data;

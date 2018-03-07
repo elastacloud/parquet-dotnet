@@ -20,7 +20,7 @@ namespace Parquet
       private BinaryWriter _binaryWriter;
       private ThriftStream _thriftStream;
 
-      internal ParquetActor(Stream fileStream)
+      public ParquetActor(Stream fileStream)
       {
          _fileStream = fileStream ?? throw new ArgumentNullException(nameof(_fileStream));
       }
@@ -36,7 +36,7 @@ namespace Parquet
 
       internal ThriftStream ThriftStream => _thriftStream ?? (_thriftStream = new ThriftStream(_fileStream));
 
-      internal void ValidateFile()
+      public void ValidateFile()
       {
          _fileStream.Seek(0, SeekOrigin.Begin);
          char[] head = Reader.ReadChars(4);
@@ -50,7 +50,7 @@ namespace Parquet
             throw new IOException($"not a Parquet file(head is '{stail}')");
       }
 
-      internal Thrift.FileMetaData ReadMetadata()
+      public Thrift.FileMetaData ReadMetadata()
       {
          GoBeforeFooter();
 

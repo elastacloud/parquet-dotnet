@@ -10,7 +10,7 @@ using Thrift.Protocol;
 namespace Parquet.Thrift
 {
 
-   class IndexPageHeader : TBase
+   public class IndexPageHeader : TBase
   {
 
     public IndexPageHeader() {

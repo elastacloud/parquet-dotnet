@@ -7,7 +7,7 @@
 
 namespace Parquet.Thrift
 {
-  enum PageType
+  public enum PageType
   {
     DATA_PAGE = 0,
     INDEX_PAGE = 1,
