@@ -1,9 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-
-namespace Parquet.File
+﻿namespace Parquet.File
 {
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+
+   
    /// <summary>
    /// Packs/unpacks repetition levels
    /// </summary>
@@ -19,7 +20,7 @@ namespace Parquet.File
          HierarchyToFlat(maxRepetitionLevel, hierarchyList, levels, flatList, ref touched, 0, hasValueFlags);
       }
 
-      private static void HierarchyToFlat(int maxRepetitionLevel, IList list, List<int> levels, IList flatValues, ref int touchedListLevel, int listLevel, List<bool> hasValueFlags = null)
+      static void HierarchyToFlat(int maxRepetitionLevel, IList list, List<int> levels, IList flatValues, ref int touchedListLevel, int listLevel, List<bool> hasValueFlags = null)
       {
          if(listLevel == maxRepetitionLevel && list.Count == 0 && hasValueFlags != null)
          {
@@ -91,7 +92,7 @@ namespace Parquet.File
          return values;
       }
 
-      private static void CreateNestedLists(int maxRepetitionLevel, Func<IList> createEmptyListFunc, IList[] hl, int rl)
+      static void CreateNestedLists(int maxRepetitionLevel, Func<IList> createEmptyListFunc, IList[] hl, int rl)
       {
          int maxIdx = maxRepetitionLevel - 1;
 
@@ -117,6 +118,5 @@ namespace Parquet.File
             hl[i].Add(hl[i + 1]);
          }
       }
-
    }
 }

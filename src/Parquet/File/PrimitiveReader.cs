@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using Parquet.Data;
-
-namespace Parquet.File
+﻿namespace Parquet.File
 {
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+   using System.IO;
+   using Parquet.Data;
+
+   
    class PrimitiveReader<TElement>
       where TElement : struct
    {
@@ -53,7 +53,7 @@ namespace Parquet.File
          return result;
       }
 
-      private void ReadNullable(List<TElement?> result, int totalStreamLength)
+      void ReadNullable(List<TElement?> result, int totalStreamLength)
       {
          Stream s = _binaryReader.BaseStream;
 
@@ -64,7 +64,7 @@ namespace Parquet.File
          }
       }
 
-      private void ReadNonNullable(List<TElement> result, int totalStreamLength)
+      void ReadNonNullable(List<TElement> result, int totalStreamLength)
       {
          Stream s = _binaryReader.BaseStream;
 
@@ -74,6 +74,5 @@ namespace Parquet.File
             result.Add(element);
          }
       }
-
    }
 }

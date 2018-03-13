@@ -1,7 +1,8 @@
-﻿using System.Collections;
-
-namespace Parquet
+﻿namespace Parquet
 {
+   using System.Collections;
+
+   
    static class CollectionExtensions
    {
       public static void TrimTail(this IList list, int maxValues)

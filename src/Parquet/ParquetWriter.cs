@@ -1,22 +1,25 @@
-﻿using System;
-using System.IO;
-using Parquet.File;
-using System.Collections.Generic;
-using System.Linq;
-using System.Collections;
-using Parquet.Data;
-
-namespace Parquet
+﻿namespace Parquet
 {
+   using System;
+   using System.IO;
+   using File;
+   using System.Collections.Generic;
+   using System.Linq;
+   using System.Collections;
+   using Data;
+
+   
    /// <summary>
    /// Implements Apache Parquet format writer
    /// </summary>
-   public class ParquetWriter : ParquetActor, IDisposable
+   public class ParquetWriter :
+      ParquetActor,
+      IDisposable
    {
-      private ThriftFooter _footer;
-      private readonly ParquetOptions _formatOptions;
-      private readonly WriterOptions _writerOptions;
-      private bool _dataWritten;
+      ThriftFooter _footer;
+      readonly ParquetOptions _formatOptions;
+      readonly WriterOptions _writerOptions;
+      bool _dataWritten;
 
       /// <summary>
       /// Creates an instance of parquet writer on top of a stream
@@ -82,7 +85,7 @@ namespace Parquet
          _dataWritten = true;
       }
 
-      private void PrepareFile(DataSet ds, bool append)
+      void PrepareFile(DataSet ds, bool append)
       {
          if (append)
          {
@@ -115,7 +118,7 @@ namespace Parquet
          }
       }
 
-      private void ValidateSchemasCompatible(ThriftFooter footer, DataSet ds)
+      void ValidateSchemasCompatible(ThriftFooter footer, DataSet ds)
       {
          Schema existingSchema = footer.CreateModelSchema(_formatOptions);
 
@@ -163,7 +166,7 @@ namespace Parquet
          }
       }
 
-      private void WriteMagic()
+      void WriteMagic()
       {
          Stream.Write(MagicBytes, 0, MagicBytes.Length);
       }

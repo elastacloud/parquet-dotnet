@@ -1,8 +1,5 @@
-﻿using Parquet.Data;
-
-namespace Parquet
+﻿namespace Parquet
 {
-
    /// <summary>
    /// Writer options
    /// </summary>

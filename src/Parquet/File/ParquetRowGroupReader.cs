@@ -1,21 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Parquet.Data;
-
-namespace Parquet.File
+﻿namespace Parquet.File
 {
+   using System;
+   using System.Collections.Generic;
+   using System.IO;
+   using Parquet.Data;
+   using Thrift;
+
+
    internal class ParquetRowGroupReader
    {
-      private readonly Thrift.RowGroup _rowGroup;
-      private readonly ThriftFooter _footer;
-      private readonly Stream _stream;
-      private readonly ThriftStream _thriftStream;
-      private readonly ParquetOptions _parquetOptions;
-      private readonly Dictionary<string, Thrift.ColumnChunk> _pathToChunk = new Dictionary<string, Thrift.ColumnChunk>();
+      readonly RowGroup _rowGroup;
+      readonly ThriftFooter _footer;
+      readonly Stream _stream;
+      readonly ThriftStream _thriftStream;
+      readonly ParquetOptions _parquetOptions;
+      readonly Dictionary<string, ColumnChunk> _pathToChunk = new Dictionary<string, ColumnChunk>();
 
       internal ParquetRowGroupReader(
-         Thrift.RowGroup rowGroup,
+         RowGroup rowGroup,
          ThriftFooter footer,
          Stream stream, ThriftStream thriftStream,
          ParquetOptions parquetOptions)
@@ -27,7 +29,7 @@ namespace Parquet.File
          _parquetOptions = parquetOptions ?? throw new ArgumentNullException(nameof(parquetOptions));
 
          //cache chunks
-         foreach (Thrift.ColumnChunk thriftChunk in _rowGroup.Columns)
+         foreach (var thriftChunk in _rowGroup.Columns)
          {
             string path = thriftChunk.GetPath();
             _pathToChunk[path] = thriftChunk;
@@ -48,7 +50,7 @@ namespace Parquet.File
       {
          if (field == null) throw new ArgumentNullException(nameof(field));
 
-         if (!_pathToChunk.TryGetValue(field.Path, out Thrift.ColumnChunk columnChunk))
+         if (!_pathToChunk.TryGetValue(field.Path, out ColumnChunk columnChunk))
          {
             throw new NotImplementedException();
          }

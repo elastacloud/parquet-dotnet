@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-
-namespace Parquet.Data
+﻿namespace Parquet.Data
 {
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+   using System.IO;
+
+   
    /// <summary>
    /// Prototype: data type interface
    /// </summary>
@@ -33,6 +34,5 @@ namespace Parquet.Data
       IList Read(Thrift.SchemaElement tse, BinaryReader reader, ParquetOptions formatOptions);
 
       void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values);
-
    }
 }

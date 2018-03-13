@@ -1,20 +1,21 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Parquet.Data
+﻿namespace Parquet.Data
 {
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+   using System.Linq;
+
+   
    /// <summary>
    /// The primary low-level structure to hold data for a parqut column.
    /// Handles internal data composition/decomposition to enrich with custom data Parquet format requires.
    /// </summary>
    internal class DataColumn
    {
-      private readonly DataField _field;
-      private readonly IList _definedData;            // data that is defined i.e. doesn't ever have nulls
-      private readonly List<int> _definitionLevels;   // not utilised at all when field is not nullable
-      private int _undefinedCount;
+      readonly DataField _field;
+      readonly IList _definedData; // data that is defined i.e. doesn't ever have nulls
+      readonly List<int> _definitionLevels; // not utilised at all when field is not nullable
+      int _undefinedCount;
 
       public DataColumn(DataField field)
       {
@@ -77,7 +78,7 @@ namespace Parquet.Data
          _definedData.Add(item);
       }
 
-      private void AddRange(IEnumerable data)
+      void AddRange(IEnumerable data)
       {
          foreach(object item in data)
          {

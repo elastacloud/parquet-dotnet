@@ -1,9 +1,10 @@
-using System;
-using System.Linq;
-using System.Numerics;
-
 namespace Parquet.File.Values.Primitives
 {
+   using System;
+   using System.Linq;
+   using System.Numerics;
+
+   
    /// <summary>
    /// A class that encapsulates BigDecimal like the java class
    /// </summary>
@@ -154,7 +155,7 @@ namespace Parquet.File.Values.Primitives
          return size;
       }
 
-      private byte[] AllocateResult()
+      byte[] AllocateResult()
       {
          int size = GetBufferSize(Precision);
          return new byte[size];

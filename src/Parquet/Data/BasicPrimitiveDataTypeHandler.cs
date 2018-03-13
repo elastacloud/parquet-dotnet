@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using Parquet.File;
-
-namespace Parquet.Data
+﻿namespace Parquet.Data
 {
+   using System.Collections;
+   using System.Collections.Generic;
+
+   
    abstract class BasicPrimitiveDataTypeHandler<TSystemType> : BasicDataTypeHandler<TSystemType>
       where TSystemType : struct
    {
@@ -22,12 +20,10 @@ namespace Parquet.Data
                ? (IList)(new List<List<TSystemType?>>(capacity))
                : (IList)(new List<List<TSystemType>>(capacity));
          }
-         else
-         {
-            return isNullable
-               ? (IList)(new List<TSystemType?>(capacity))
-               : (IList)(new List<TSystemType>(capacity));
-         }
+
+         return isNullable
+            ? (IList)(new List<TSystemType?>(capacity))
+            : (IList)(new List<TSystemType>(capacity));
       }
    }
 }

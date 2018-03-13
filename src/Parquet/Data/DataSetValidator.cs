@@ -1,9 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-
-namespace Parquet.Data
+﻿namespace Parquet.Data
 {
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+
+   
    static class DataSetValidator
    {
       public static void ValidateRow(Row row, IReadOnlyList<Field> schema)
@@ -13,7 +14,7 @@ namespace Parquet.Data
          ValidateRow(row.RawValues, schema);
       }
 
-      private static void ValidateRow(object[] values, IReadOnlyList<Field> schema)
+      static void ValidateRow(object[] values, IReadOnlyList<Field> schema)
       {
          if (values.Length != schema.Count)
             throw new ArgumentException($"the row has {values.Length} values but schema expects {schema.Count}", nameof(values));
@@ -36,7 +37,7 @@ namespace Parquet.Data
          }
       }
 
-      private static object ValidatePrimitive(DataField df, object value)
+      static object ValidatePrimitive(DataField df, object value)
       {
          if (value == null)
          {
@@ -82,7 +83,7 @@ namespace Parquet.Data
          return value;
       }
 
-      private static bool TrySmartConvertPrimitive(Type passedType, Type requiredType, object value, out object convertedValue)
+      static bool TrySmartConvertPrimitive(Type passedType, Type requiredType, object value, out object convertedValue)
       {
          if (passedType == typeof(DateTime) && requiredType == typeof(DateTimeOffset))
          {

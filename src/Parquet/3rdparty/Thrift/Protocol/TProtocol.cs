@@ -22,15 +22,16 @@
  * details.
  */
 
-using System;
-using System.Text;
-using Thrift.Transport;
-
 namespace Thrift.Protocol
 {
+   using System;
+   using System.Text;
+   using Transport;
+
+   
     abstract class TProtocol : IDisposable
     {
-        private const int DEFAULT_RECURSION_DEPTH = 64;
+       const int DEFAULT_RECURSION_DEPTH = 64;
 
         protected TTransport trans;
         protected int recursionLimit;
@@ -67,8 +68,7 @@ namespace Thrift.Protocol
             --recursionDepth;
         }
 
-        #region " IDisposable Support "
-        private bool _IsDisposed;
+       bool _IsDisposed;
 
         // IDisposable
         public void Dispose()
@@ -88,7 +88,6 @@ namespace Thrift.Protocol
             }
             _IsDisposed = true;
         }
-        #endregion
 
         public abstract void WriteMessageBegin(TMessage message);
         public abstract void WriteMessageEnd();

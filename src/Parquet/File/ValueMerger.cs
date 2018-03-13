@@ -1,19 +1,19 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System;
-using System.Linq;
-
-namespace Parquet.File
+﻿namespace Parquet.File
 {
+   using System.Collections;
+   using System.Collections.Generic;
+   using System;
+
+   
    /// <summary>
    /// Responsible for merging values from different parts of column parts (repetition, definitions etc.)
    /// </summary>
    class ValueMerger
    {
-      private readonly int _maxDefinitionLevel;
-      private readonly int _maxRepetitionLevel;
-      private readonly Func<IList> _createEmptyListFunc;
-      private IList _values;
+      readonly int _maxDefinitionLevel;
+      readonly int _maxRepetitionLevel;
+      readonly Func<IList> _createEmptyListFunc;
+      IList _values;
 
       public ValueMerger(
          int maxDefinitionLevel,
@@ -43,7 +43,7 @@ namespace Parquet.File
          return _values;
       }
 
-      private void ApplyDictionary(IList dictionary, List<int> indexes, int maxValues)
+      void ApplyDictionary(IList dictionary, List<int> indexes, int maxValues)
       {
          //merge with dictionary if present
          if (dictionary == null) return;

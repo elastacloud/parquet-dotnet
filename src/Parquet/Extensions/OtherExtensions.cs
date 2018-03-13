@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Parquet.Data;
-
-namespace Parquet
+﻿namespace Parquet
 {
+   using System;
+   using System.Collections.Generic;
+   using System.Linq;
+   using Data;
+
    static class OtherExtensions
    {
-      private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+      static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
       public static int GetBitWidth(this int value)
       {
@@ -51,7 +51,8 @@ namespace Parquet
          var path = new List<string>(parts.Length + 1);
 
          if (s != null) path.Add(s);
-         if (parts != null) path.AddRange(parts.Where(p => p != null));
+         if (parts != null)
+            path.AddRange(parts.Where(p => p != null));
 
          return string.Join(Schema.PathSeparator, path);
       }

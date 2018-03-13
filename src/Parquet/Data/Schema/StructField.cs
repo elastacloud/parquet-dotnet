@@ -1,16 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Parquet.Data
+﻿namespace Parquet.Data
 {
+   using System;
+   using System.Collections.Generic;
+   using System.Linq;
+
+   
    /// <summary>
    /// Represents a structure i.e. a container for other fields.
    /// </summary>
    public class StructField : Field, IEquatable<StructField>
    {
-      private string _path;
-      private readonly List<Field> _fields = new List<Field>();
+      string _path;
+      readonly List<Field> _fields = new List<Field>();
 
       /// <summary>
       /// Creates a new structure field 
@@ -48,7 +49,7 @@ namespace Parquet.Data
          }
       }
 
-      private StructField(string name) : base(name, SchemaType.Struct)
+      StructField(string name) : base(name, SchemaType.Struct)
       {
 
       }

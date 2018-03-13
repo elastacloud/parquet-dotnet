@@ -1,37 +1,39 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Parquet.Data;
-using Parquet.File.Data;
-using Parquet.File.Values;
-
-namespace Parquet.File
+﻿namespace Parquet.File
 {
+   using System.Collections;
+   using System.Collections.Generic;
+   using System.IO;
+   using System.Linq;
+   using Parquet.Data;
+   using Data;
+   using Thrift;
+   using Values;
+
+   
    class ColumnarWriter
    {
-      private readonly Stream _output;
-      private readonly ThriftStream _thriftStream;
-      private readonly ThriftFooter _footer;
-      private readonly Thrift.SchemaElement _tse;
-      private readonly CompressionMethod _compressionMethod;
-      private readonly ParquetOptions _formatOptions;
-      private readonly WriterOptions _writerOptions;
-      private readonly IDataTypeHandler _dataTypeHandler;
-      private readonly Thrift.ColumnChunk _chunk;
-      private readonly Thrift.PageHeader _ph;
-      private readonly int _maxRepetitionLevel;
-      private readonly int _maxDefinitionLevel;
+      readonly Stream _output;
+      readonly ThriftStream _thriftStream;
+      readonly ThriftFooter _footer;
+      readonly SchemaElement _tse;
+      readonly CompressionMethod _compressionMethod;
+      readonly ParquetOptions _formatOptions;
+      readonly WriterOptions _writerOptions;
+      readonly IDataTypeHandler _dataTypeHandler;
+      readonly ColumnChunk _chunk;
+      readonly PageHeader _ph;
+      readonly int _maxRepetitionLevel;
+      readonly int _maxDefinitionLevel;
 
-      private struct PageTag
+      struct PageTag
       {
          public int HeaderSize;
-         public Thrift.PageHeader HeaderMeta;
+         public PageHeader HeaderMeta;
       }
 
       public ColumnarWriter(Stream output, ThriftStream thriftStream,
          ThriftFooter footer,
-         Thrift.SchemaElement tse, List<string> path,
+         SchemaElement tse, List<string> path,
          CompressionMethod compressionMethod,
          ParquetOptions formatOptions,
          WriterOptions writerOptions)
@@ -52,7 +54,7 @@ namespace Parquet.File
          _maxDefinitionLevel = maxDefinitionLevel;
       }
 
-      public Thrift.ColumnChunk Write(int offset, int count, IList values)
+      public ColumnChunk Write(int offset, int count, IList values)
       {
          //note that values can be null, meaning there are no values at all
 
@@ -67,7 +69,7 @@ namespace Parquet.File
          return _chunk;
       }
 
-      private List<PageTag> WriteValues(IList values)
+      List<PageTag> WriteValues(IList values)
       {
          var result = new List<PageTag>();
          byte[] dataPageBytes;
@@ -129,25 +131,25 @@ namespace Parquet.File
          return result;
       }
 
-      private void TryAddStats(IList flatValues)
+      void TryAddStats(IList flatValues)
       {
          var counter = new StatCounter(flatValues);
       }
 
-      private void WriteLevels(BinaryWriter writer, List<int> levels, int maxLevel)
+      void WriteLevels(BinaryWriter writer, List<int> levels, int maxLevel)
       {
          int bitWidth = maxLevel.GetBitWidth();
          RunLengthBitPackingHybridValuesWriter.Write(writer, bitWidth, levels);
       }
 
-      private int Write(byte[] data)
+      int Write(byte[] data)
       {
          int headerSize = _thriftStream.Write(_ph);
          _output.Write(data, 0, data.Length);
          return headerSize;
       }
 
-      private byte[] Compress(byte[] data)
+      byte[] Compress(byte[] data)
       {
          //note that page size numbers do not include header size by spec
 
@@ -172,6 +174,5 @@ namespace Parquet.File
 
          return result;
       }
-
    }
 }

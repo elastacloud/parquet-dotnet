@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Parquet.Data
+﻿namespace Parquet.Data
 {
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+   using System.Linq;
+   
+
    static class RowExtractor
    {
       public static Row Extract(IEnumerable<Field> fields, int index, Dictionary<string, IList> columns)
@@ -13,57 +13,55 @@ namespace Parquet.Data
          return new Row(fields.Select(se => CreateElement(se, index, columns)));
       }
 
-      private static object CreateElement(Field field, int index, Dictionary<string, IList> columns)
+      static object CreateElement(Field field, int index, Dictionary<string, IList> columns)
       {
-         if (field.SchemaType == SchemaType.Map)
+         switch (field.SchemaType)
          {
-            return ((MapField)field).CreateCellValue(columns, index);
-         }
-         else if (field.SchemaType == SchemaType.Struct)
-         {
-            return Extract(((StructField)field).Fields, index, columns);
-         }
-         else if (field.SchemaType == SchemaType.List)
-         {
-            ListField lf = (ListField)field;
+            case SchemaType.Map:
+               return ((MapField)field).CreateCellValue(columns, index);
+            
+            case SchemaType.Struct:
+               return Extract(((StructField)field).Fields, index, columns);
+            
+            case SchemaType.List:
+               ListField lf = (ListField)field;
 
-            if (lf.Item.SchemaType == SchemaType.Struct)
-            {
-               StructField structField = (StructField)lf.Item;
-               Dictionary<string, IList> elementColumns = CreateFieldColumns(structField.Fields, index, columns, out int count);
-
-               var rows = new List<Row>(count);
-               for (int i = 0; i < count; i++)
+               switch (lf.Item.SchemaType)
                {
-                  Row row = Extract(structField.Fields, i, elementColumns);
-                  rows.Add(row);
+                  case SchemaType.Struct:
+                     StructField structField = (StructField)lf.Item;
+                     Dictionary<string, IList> elementColumns = CreateFieldColumns(structField.Fields, index, columns, out int count);
+
+                     var rows = new List<Row>(count);
+                     for (int i = 0; i < count; i++)
+                     {
+                        Row row = Extract(structField.Fields, i, elementColumns);
+                        rows.Add(row);
+                     }
+
+                     return rows;
+                  
+                  case SchemaType.Data:
+                     DataField dataField = (DataField)lf.Item;
+                     IList fieldPathValues = GetFieldPathValues(dataField, index, columns);
+                     
+                     return fieldPathValues;
+                  
+                  default:
+                     throw OtherExtensions.NotImplementedForPotentialAssholesAndMoaners($"reading {lf.Item.SchemaType} from lists");
+               }
+            
+            default:
+               if (!columns.TryGetValue(field.Path, out IList values))
+               {
+                  throw new ParquetException($"something terrible happened, there is no column by name '{field.Name}' and path '{field.Path}'");
                }
 
-               return rows;
-            }
-            else if(lf.Item.SchemaType == SchemaType.Data)
-            {
-               DataField dataField = (DataField)lf.Item;
-               IList values = GetFieldPathValues(dataField, index, columns);
-               return values;
-            }
-            else
-            {
-               throw OtherExtensions.NotImplementedForPotentialAssholesAndMoaners($"reading {lf.Item.SchemaType} from lists");
-            }
-         }
-         else
-         {
-            if (!columns.TryGetValue(field.Path, out IList values))
-            {
-               throw new ParquetException($"something terrible happened, there is no column by name '{field.Name}' and path '{field.Path}'");
-            }
-
-            return values[index];
+               return values[index];
          }
       }
 
-      private static Dictionary<string, IList> CreateFieldColumns(
+      static Dictionary<string, IList> CreateFieldColumns(
          IEnumerable<Field> fields, int index,
          Dictionary<string, IList> columns,
          out int count)
@@ -106,11 +104,10 @@ namespace Parquet.Data
          return elementColumns;
       }
 
-      private static IList GetFieldPathValues(Field field, int index, Dictionary<string, IList> columns)
+      static IList GetFieldPathValues(Field field, int index, Dictionary<string, IList> columns)
       {
          IList values = columns[field.Path][index] as IList;
          return values;
       }
-
    }
 }

@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
-
-namespace Parquet.Data
+﻿namespace Parquet.Data
 {
+   using System.Collections.Generic;
+
+   
    /// <summary>
    /// Public metadata
    /// </summary>

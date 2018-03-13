@@ -1,8 +1,10 @@
-﻿using System.IO;
-
-namespace Parquet.File.Data
+﻿namespace Parquet.File.Data
 {
-   class UncompressedDataWriter : IDataWriter
+   using System.IO;
+
+   
+   class UncompressedDataWriter :
+      IDataWriter
    {
       public void Write(byte[] buffer, Stream destination)
       {

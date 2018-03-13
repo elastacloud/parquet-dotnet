@@ -1,19 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Text;
-using Snappy.Sharp;
-
-namespace Parquet.File
+﻿namespace Parquet.File
 {
+   using System;
+   using System.IO;
+   using System.IO.Compression;
+   using Snappy.Sharp;
+
+   
    /// <summary>
    /// part of experiments
    /// </summary>
    static class DataStreamFactory
    {
-      public static PositionTrackingStream CreateWriter(
-         Stream nakedStream, CompressionMethod compressionMethod)
+      public static PositionTrackingStream CreateWriter(Stream nakedStream, CompressionMethod compressionMethod)
       {
          Stream dest = nakedStream;
 

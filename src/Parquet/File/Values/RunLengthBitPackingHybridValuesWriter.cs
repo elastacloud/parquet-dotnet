@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-
-namespace Parquet.File.Values
+﻿namespace Parquet.File.Values
 {
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+   using System.IO;
+   using System.Text;
+
+   
    class RunLengthBitPackingHybridValuesWriter
    {
       public static void Write(BinaryWriter writer, int bitWidth, IList data)
@@ -49,7 +50,7 @@ namespace Parquet.File.Values
          }
       }
 
-      private static void WriteData(BinaryWriter writer, List<int> data, int bitWidth)
+      static void WriteData(BinaryWriter writer, List<int> data, int bitWidth)
       {
          //for simplicity, we're only going to write RLE, however bitpacking needs to be implemented as well
 
@@ -87,7 +88,7 @@ namespace Parquet.File.Values
          }
       }
 
-      private static void WriteRle(BinaryWriter writer, int chunkCount, int value, int bitWidth)
+      static void WriteRle(BinaryWriter writer, int chunkCount, int value, int bitWidth)
       {
          int header = 0x0; // the last bit for RLE is 0
          header = chunkCount << 1;
@@ -97,14 +98,14 @@ namespace Parquet.File.Values
          WriteIntBytes(writer, value, byteWidth);
       }
 
-      private void WriteBitpacked()
+      void WriteBitpacked()
       {
          //int header = 0x1;
 
          throw OtherExtensions.NotImplementedForPotentialAssholesAndMoaners("bitpacked encoding");
       }
 
-      private static void WriteIntBytes(BinaryWriter writer, int value, int byteWidth)
+      static void WriteIntBytes(BinaryWriter writer, int value, int byteWidth)
       {
          byte[] dataBytes = BitConverter.GetBytes(value);
 
@@ -132,7 +133,7 @@ namespace Parquet.File.Values
          }
       }
 
-      private static void WriteUnsignedVarInt(BinaryWriter writer, int value)
+      static void WriteUnsignedVarInt(BinaryWriter writer, int value)
       {
          while(value > 127)
          {

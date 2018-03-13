@@ -4,17 +4,16 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-
 namespace Parquet.Thrift
 {
-  /// <summary>
-  /// Supported compression algorithms.
-  /// </summary>
-  enum CompressionCodec
-  {
-    UNCOMPRESSED = 0,
-    SNAPPY = 1,
-    GZIP = 2,
-    LZO = 3,
-  }
+   /// <summary>
+   /// Supported compression algorithms.
+   /// </summary>
+   enum CompressionCodec
+   {
+      UNCOMPRESSED = 0,
+      SNAPPY = 1,
+      GZIP = 2,
+      LZO = 3
+   }
 }
