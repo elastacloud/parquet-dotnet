@@ -4,68 +4,73 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-using System.Text;
-using Thrift.Protocol;
-
 namespace Parquet.Thrift
 {
+   using System.Text;
+   using global::Thrift.Protocol;
 
-   class IndexPageHeader : TBase
-  {
 
-    public IndexPageHeader() {
-    }
-
-    public void Read (TProtocol iprot)
-    {
-      iprot.IncrementRecursionDepth();
-      try
+   class IndexPageHeader :
+      TBase
+   {
+      public IndexPageHeader()
       {
-        TField field;
-        iprot.ReadStructBegin();
-        while (true)
-        {
-          field = iprot.ReadFieldBegin();
-          if (field.Type == TType.Stop) { 
-            break;
-          }
-          switch (field.ID)
-          {
-            default: 
-              TProtocolUtil.Skip(iprot, field.Type);
-              break;
-          }
-          iprot.ReadFieldEnd();
-        }
-        iprot.ReadStructEnd();
       }
-      finally
+
+      public void Read(TProtocol iprot)
       {
-        iprot.DecrementRecursionDepth();
-      }
-    }
+         iprot.IncrementRecursionDepth();
+         try
+         {
+            TField field;
+            iprot.ReadStructBegin();
+            while (true)
+            {
+               field = iprot.ReadFieldBegin();
+               if (field.Type == TType.Stop)
+               {
+                  break;
+               }
 
-    public void Write(TProtocol oprot) {
-      oprot.IncrementRecursionDepth();
-      try
+               switch (field.ID)
+               {
+                  default:
+                     TProtocolUtil.Skip(iprot, field.Type);
+                     break;
+               }
+
+               iprot.ReadFieldEnd();
+            }
+
+            iprot.ReadStructEnd();
+         }
+         finally
+         {
+            iprot.DecrementRecursionDepth();
+         }
+      }
+
+      public void Write(TProtocol oprot)
       {
-        TStruct struc = new TStruct("IndexPageHeader");
-        oprot.WriteStructBegin(struc);
-        oprot.WriteFieldStop();
-        oprot.WriteStructEnd();
+         oprot.IncrementRecursionDepth();
+         try
+         {
+            TStruct struc = new TStruct("IndexPageHeader");
+            oprot.WriteStructBegin(struc);
+            oprot.WriteFieldStop();
+            oprot.WriteStructEnd();
+         }
+         finally
+         {
+            oprot.DecrementRecursionDepth();
+         }
       }
-      finally
+
+      public override string ToString()
       {
-        oprot.DecrementRecursionDepth();
+         StringBuilder __sb = new StringBuilder("IndexPageHeader(");
+         __sb.Append(")");
+         return __sb.ToString();
       }
-    }
-
-    public override string ToString() {
-      StringBuilder __sb = new StringBuilder("IndexPageHeader(");
-      __sb.Append(")");
-      return __sb.ToString();
-    }
-
-  }
-
+   }
 }

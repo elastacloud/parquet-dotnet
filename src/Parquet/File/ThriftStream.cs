@@ -1,16 +1,17 @@
-﻿using System.IO;
-using Thrift.Protocol;
-using Thrift.Transport;
-
-namespace Parquet.File
+﻿namespace Parquet.File
 {
+   using System.IO;
+   using global::Thrift.Protocol;
+   using global::Thrift.Transport;
+
+   
    /// <summary>
    /// Utility methods to work with Thrift data in a stream
    /// </summary>
    class ThriftStream
    {
-      private readonly Stream _s;
-      private readonly TProtocol _protocol;
+      readonly Stream _s;
+      readonly TProtocol _protocol;
 
       public ThriftStream(Stream s)
       {

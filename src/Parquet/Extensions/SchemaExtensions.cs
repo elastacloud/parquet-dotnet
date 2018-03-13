@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
-using Parquet.Data;
-
-namespace Parquet
+﻿namespace Parquet
 {
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+   using System.Reflection;
+   using Data;
+
    static class SchemaExtensions
    {
       public static IList CreateGenericList(this DataField df, IEnumerable values)
@@ -34,6 +34,5 @@ namespace Parquet
 
          return result;
       }
-
    }
 }

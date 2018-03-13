@@ -1,10 +1,12 @@
-﻿using System;
-using System.IO;
-using System.IO.Compression;
-
-namespace Parquet.File.Data
+﻿namespace Parquet.File.Data
 {
-   class GzipDataWriter : IDataWriter
+   using System;
+   using System.IO;
+   using System.IO.Compression;
+
+   
+   class GzipDataWriter :
+      IDataWriter
    {
       public void Write(byte[] buffer, Stream destination)
       {
@@ -12,7 +14,7 @@ namespace Parquet.File.Data
          destination.Write(compressed, 0, compressed.Length);
       }
 
-      private static byte[] Compress(byte[] source)
+      static byte[] Compress(byte[] source)
       {
          using (var sourceStream = new MemoryStream(source))
          {
@@ -24,7 +26,7 @@ namespace Parquet.File.Data
          }
       }
 
-      private static void Compress(Stream source, Stream destination)
+      static void Compress(Stream source, Stream destination)
       {
          if (source == null) throw new ArgumentNullException(nameof(source));
          if (destination == null) throw new ArgumentNullException(nameof(destination));
@@ -35,6 +37,5 @@ namespace Parquet.File.Data
             compressor.Flush();
          }
       }
-
    }
 }

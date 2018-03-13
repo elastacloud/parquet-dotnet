@@ -1,13 +1,15 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-
-namespace Parquet.Data
+﻿namespace Parquet.Data
 {
-   class DataSetEnumerator : IEnumerator<Row>
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+
+   
+   class DataSetEnumerator :
+      IEnumerator<Row>
    {
-      private int _rowIndex = -1;
-      private readonly DataSet _ds;
+      int _rowIndex = -1;
+      readonly DataSet _ds;
 
       public DataSetEnumerator(DataSet ds)
       {

@@ -4,172 +4,192 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-using System.Text;
-using Thrift.Protocol;
-
 namespace Parquet.Thrift
 {
+   using System.Text;
+   using global::Thrift.Protocol;
+
 
    /// <summary>
    /// TODO: *
    /// </summary>
-   class DictionaryPageHeader : TBase
-  {
-    private bool _is_sorted;
+   class DictionaryPageHeader :
+      TBase
+   {
+      bool _is_sorted;
 
-    /// <summary>
-    /// Number of values in the dictionary *
-    /// </summary>
-    public int Num_values { get; set; }
+      /// <summary>
+      /// Number of values in the dictionary *
+      /// </summary>
+      public int Num_values { get; set; }
 
-    /// <summary>
-    /// Encoding using this dictionary page *
-    /// 
-    /// <seealso cref="Encoding"/>
-    /// </summary>
-    public Encoding Encoding { get; set; }
+      /// <summary>
+      /// Encoding using this dictionary page *
+      /// 
+      /// <seealso cref="Encoding"/>
+      /// </summary>
+      public Encoding Encoding { get; set; }
 
-    /// <summary>
-    /// If true, the entries in the dictionary are sorted in ascending order *
-    /// </summary>
-    public bool Is_sorted
-    {
-      get
+      /// <summary>
+      /// If true, the entries in the dictionary are sorted in ascending order *
+      /// </summary>
+      public bool Is_sorted
       {
-        return _is_sorted;
+         get => _is_sorted;
+         set
+         {
+            __isset.is_sorted = true;
+            this._is_sorted = value;
+         }
       }
-      set
+
+
+      public Isset __isset;
+
+
+      public struct Isset
       {
-        __isset.is_sorted = true;
-        this._is_sorted = value;
+         public bool is_sorted;
       }
-    }
 
-
-    public Isset __isset;
-    
-    
-    
-    public struct Isset {
-      public bool is_sorted;
-    }
-
-    public DictionaryPageHeader() {
-    }
-
-    public DictionaryPageHeader(int num_values, Encoding encoding) : this() {
-      this.Num_values = num_values;
-      this.Encoding = encoding;
-    }
-
-    public void Read (TProtocol iprot)
-    {
-      iprot.IncrementRecursionDepth();
-      try
+      public DictionaryPageHeader()
       {
-        bool isset_num_values = false;
-        bool isset_encoding = false;
-        TField field;
-        iprot.ReadStructBegin();
-        while (true)
-        {
-          field = iprot.ReadFieldBegin();
-          if (field.Type == TType.Stop) { 
-            break;
-          }
-          switch (field.ID)
-          {
-            case 1:
-              if (field.Type == TType.I32) {
-                Num_values = iprot.ReadI32();
-                isset_num_values = true;
-              } else { 
-                TProtocolUtil.Skip(iprot, field.Type);
-              }
-              break;
-            case 2:
-              if (field.Type == TType.I32) {
-                Encoding = (Encoding)iprot.ReadI32();
-                isset_encoding = true;
-              } else { 
-                TProtocolUtil.Skip(iprot, field.Type);
-              }
-              break;
-            case 3:
-              if (field.Type == TType.Bool) {
-                Is_sorted = iprot.ReadBool();
-              } else { 
-                TProtocolUtil.Skip(iprot, field.Type);
-              }
-              break;
-            default: 
-              TProtocolUtil.Skip(iprot, field.Type);
-              break;
-          }
-          iprot.ReadFieldEnd();
-        }
-        iprot.ReadStructEnd();
-        if (!isset_num_values)
-          throw new TProtocolException(TProtocolException.INVALID_DATA);
-        if (!isset_encoding)
-          throw new TProtocolException(TProtocolException.INVALID_DATA);
       }
-      finally
+
+      public DictionaryPageHeader(int num_values, Encoding encoding) : this()
       {
-        iprot.DecrementRecursionDepth();
+         this.Num_values = num_values;
+         this.Encoding = encoding;
       }
-    }
 
-    public void Write(TProtocol oprot) {
-      oprot.IncrementRecursionDepth();
-      try
+      public void Read(TProtocol iprot)
       {
-        TStruct struc = new TStruct("DictionaryPageHeader");
-        oprot.WriteStructBegin(struc);
-        TField field = new TField();
-        field.Name = "num_values";
-        field.Type = TType.I32;
-        field.ID = 1;
-        oprot.WriteFieldBegin(field);
-        oprot.WriteI32(Num_values);
-        oprot.WriteFieldEnd();
-        field.Name = "encoding";
-        field.Type = TType.I32;
-        field.ID = 2;
-        oprot.WriteFieldBegin(field);
-        oprot.WriteI32((int)Encoding);
-        oprot.WriteFieldEnd();
-        if (__isset.is_sorted) {
-          field.Name = "is_sorted";
-          field.Type = TType.Bool;
-          field.ID = 3;
-          oprot.WriteFieldBegin(field);
-          oprot.WriteBool(Is_sorted);
-          oprot.WriteFieldEnd();
-        }
-        oprot.WriteFieldStop();
-        oprot.WriteStructEnd();
+         iprot.IncrementRecursionDepth();
+         try
+         {
+            bool isset_num_values = false;
+            bool isset_encoding = false;
+            TField field;
+            iprot.ReadStructBegin();
+            while (true)
+            {
+               field = iprot.ReadFieldBegin();
+               if (field.Type == TType.Stop)
+               {
+                  break;
+               }
+
+               switch (field.ID)
+               {
+                  case 1:
+                     if (field.Type == TType.I32)
+                     {
+                        Num_values = iprot.ReadI32();
+                        isset_num_values = true;
+                     }
+                     else
+                     {
+                        TProtocolUtil.Skip(iprot, field.Type);
+                     }
+
+                     break;
+                  case 2:
+                     if (field.Type == TType.I32)
+                     {
+                        Encoding = (Encoding) iprot.ReadI32();
+                        isset_encoding = true;
+                     }
+                     else
+                     {
+                        TProtocolUtil.Skip(iprot, field.Type);
+                     }
+
+                     break;
+                  case 3:
+                     if (field.Type == TType.Bool)
+                     {
+                        Is_sorted = iprot.ReadBool();
+                     }
+                     else
+                     {
+                        TProtocolUtil.Skip(iprot, field.Type);
+                     }
+
+                     break;
+                  default:
+                     TProtocolUtil.Skip(iprot, field.Type);
+                     break;
+               }
+
+               iprot.ReadFieldEnd();
+            }
+
+            iprot.ReadStructEnd();
+            if (!isset_num_values)
+               throw new TProtocolException(TProtocolException.INVALID_DATA);
+            if (!isset_encoding)
+               throw new TProtocolException(TProtocolException.INVALID_DATA);
+         }
+         finally
+         {
+            iprot.DecrementRecursionDepth();
+         }
       }
-      finally
+
+      public void Write(TProtocol oprot)
       {
-        oprot.DecrementRecursionDepth();
+         oprot.IncrementRecursionDepth();
+         try
+         {
+            TStruct struc = new TStruct("DictionaryPageHeader");
+            oprot.WriteStructBegin(struc);
+            TField field = new TField();
+            field.Name = "num_values";
+            field.Type = TType.I32;
+            field.ID = 1;
+            oprot.WriteFieldBegin(field);
+            oprot.WriteI32(Num_values);
+            oprot.WriteFieldEnd();
+            field.Name = "encoding";
+            field.Type = TType.I32;
+            field.ID = 2;
+            oprot.WriteFieldBegin(field);
+            oprot.WriteI32((int) Encoding);
+            oprot.WriteFieldEnd();
+            if (__isset.is_sorted)
+            {
+               field.Name = "is_sorted";
+               field.Type = TType.Bool;
+               field.ID = 3;
+               oprot.WriteFieldBegin(field);
+               oprot.WriteBool(Is_sorted);
+               oprot.WriteFieldEnd();
+            }
+
+            oprot.WriteFieldStop();
+            oprot.WriteStructEnd();
+         }
+         finally
+         {
+            oprot.DecrementRecursionDepth();
+         }
       }
-    }
 
-    public override string ToString() {
-      StringBuilder __sb = new StringBuilder("DictionaryPageHeader(");
-      __sb.Append(", Num_values: ");
-      __sb.Append(Num_values);
-      __sb.Append(", Encoding: ");
-      __sb.Append(Encoding);
-      if (__isset.is_sorted) {
-        __sb.Append(", Is_sorted: ");
-        __sb.Append(Is_sorted);
+      public override string ToString()
+      {
+         StringBuilder __sb = new StringBuilder("DictionaryPageHeader(");
+         __sb.Append(", Num_values: ");
+         __sb.Append(Num_values);
+         __sb.Append(", Encoding: ");
+         __sb.Append(Encoding);
+         if (__isset.is_sorted)
+         {
+            __sb.Append(", Is_sorted: ");
+            __sb.Append(Is_sorted);
+         }
+
+         __sb.Append(")");
+         return __sb.ToString();
       }
-      __sb.Append(")");
-      return __sb.ToString();
-    }
-
-  }
-
+   }
 }

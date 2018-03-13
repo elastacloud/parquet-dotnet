@@ -1,10 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-
-namespace Parquet.Data
+﻿namespace Parquet.Data
 {
-   public partial class DataSet : IList<Row>
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+
+   
+   public partial class DataSet :
+      IList<Row>
    {
       /// <summary>
       /// Gets or sets row by index

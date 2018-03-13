@@ -1,19 +1,19 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using Parquet.File;
-
-namespace Parquet.Data
+﻿namespace Parquet.Data
 {
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+   using System.Linq;
+   using System.Numerics;
+   using System.Text;
+
+   
    /// <summary>
    /// Represents a row
    /// </summary>
    public class Row
    {
-      private object[] _values;
+      object[] _values;
 
       /// <summary>
       /// Initializes a new instance of the <see cref="Row"/> class.
@@ -37,14 +37,7 @@ namespace Parquet.Data
       /// </summary>
       public Row(bool isSingleValue, params object[] values)
       {
-         if(isSingleValue)
-         {
-            _values = new object[] { values };
-         }
-         else
-         {
-            _values = values;
-         }
+         _values = isSingleValue ? new object[] { values } : values;
       }
 
       /// <summary>
@@ -52,14 +45,7 @@ namespace Parquet.Data
       /// </summary>
       public Row(bool isSingleValue, IEnumerable<object> values)
       {
-         if (isSingleValue)
-         {
-            _values = new object[] { values };
-         }
-         else
-         {
-            _values = values.ToArray();
-         }
+         _values = isSingleValue ? new object[] { values } : values.ToArray();
       }
 
       /// <summary>
@@ -70,13 +56,7 @@ namespace Parquet.Data
       /// <summary>
       /// Gets the row value by index
       /// </summary>
-      public object this[int i]
-      {
-         get
-         {
-            return _values[i];
-         }
-      }
+      public object this[int i] => _values[i];
 
       /// <summary>
       /// Gets the value as boolean
@@ -220,67 +200,67 @@ namespace Parquet.Data
          return sb.ToString();
       }
 
-      private static void FormatValue(object v, StringBuilder sb)
+      static void FormatValue(object v, StringBuilder sb)
       {
-         if (v == null)
+         switch (v)
          {
-            sb.Append("<null>");
-         }
-         else if(v is IDictionary dic)
-         {
-            sb.Append("[");
-            bool first = true;
-            foreach(DictionaryEntry pair in dic)
-            {
-               if(first)
+            case null:
+               sb.Append("<null>");
+               break;
+            
+            case IDictionary dic:
+               sb.Append("[");
+               bool first = true;
+               
+               foreach(DictionaryEntry pair in dic)
                {
-                  first = false;
+                  if(first)
+                  {
+                     first = false;
+                  }
+                  else
+                  {
+                     sb.Append(";");
+                  }
+
+                  FormatValue(pair.Key, sb);
+                  sb.Append("=>");
+                  FormatValue(pair.Value, sb);
+               }
+               sb.Append("]");
+               break;
+            
+            case Row row:
+               sb.Append(row.ToString());
+               break;
+            
+            default:
+               if ((!v.GetType().IsSimple()) && v is IEnumerable ien)
+               {
+                  sb.Append("[");
+                  bool isFirst = true;
+                  foreach (object cv in ien)
+                  {
+                     if(isFirst)
+                     {
+                        isFirst = false;
+                     }
+                     else
+                     {
+                        sb.Append(";");
+                     }
+
+                     FormatValue(cv, sb);
+                  }
+                  sb.Append("]");
                }
                else
                {
-                  sb.Append(";");
+                  sb.Append(v.ToString());
                }
 
-               FormatValue(pair.Key, sb);
-               sb.Append("=>");
-               FormatValue(pair.Value, sb);
-            }
-            sb.Append("]");
+               break;
          }
-         else if (v is Row row)
-         {
-            sb.Append(row.ToString());
-         }
-         else if ((!v.GetType().IsSimple()) && v is IEnumerable ien)
-         {
-            sb.Append("[");
-            bool first = true;
-            foreach (object cv in ien)
-            {
-               if(first)
-               {
-                  first = false;
-               }
-               else
-               {
-                  sb.Append(";");
-               }
-
-               FormatValue(cv, sb);
-            }
-            sb.Append("]");
-         }
-         else
-         {
-            sb.Append(v.ToString());
-         }
-
       }
-
-      #region [ Internal Helpers ]
-
-
-
-      #endregion
    }
 }

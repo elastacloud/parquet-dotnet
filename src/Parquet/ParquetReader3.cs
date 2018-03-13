@@ -1,25 +1,27 @@
-﻿using Parquet.File;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using Parquet.Data;
-using System.Collections;
-using Parquet.Data.Predicates;
-using System.Linq;
-
-namespace Parquet
+﻿namespace Parquet
 {
+   using File;
+   using System;
+   using System.Collections.Generic;
+   using System.IO;
+   using System.Collections;
+   using Thrift;
+
+   
    /// <summary>
    /// Implements Apache Parquet format reader
    /// </summary>
-   internal class ParquetReader3 : ParquetActor, IEnumerable<ParquetRowGroupReader>, IDisposable
+   internal class ParquetReader3 :
+      ParquetActor,
+      IEnumerable<ParquetRowGroupReader>,
+      IDisposable
    {
-      private readonly Stream _input;
-      private readonly Thrift.FileMetaData _meta;
-      private readonly ThriftFooter _footer;
-      private readonly ParquetOptions _parquetOptions;
-      private readonly ReaderOptions _readerOptions;
-      private readonly List<ParquetRowGroupReader> _groupReaders = new List<ParquetRowGroupReader>();
+      readonly Stream _input;
+      readonly FileMetaData _meta;
+      readonly ThriftFooter _footer;
+      readonly ParquetOptions _parquetOptions;
+      readonly ReaderOptions _readerOptions;
+      readonly List<ParquetRowGroupReader> _groupReaders = new List<ParquetRowGroupReader>();
 
       /// <summary>
       /// Creates an instance from input stream
@@ -62,7 +64,7 @@ namespace Parquet
          return _groupReaders.GetEnumerator();
       }
 
-      private void InitRowGroupReaders()
+      void InitRowGroupReaders()
       {
          _groupReaders.Clear();
 

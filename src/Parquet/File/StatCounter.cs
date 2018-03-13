@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Parquet.File
+﻿namespace Parquet.File
 {
+   using System.Collections;
+
+   
    class StatCounter
    {
-      private readonly IList _list;
+      readonly IList _list;
 
       public StatCounter(IList list)
       {

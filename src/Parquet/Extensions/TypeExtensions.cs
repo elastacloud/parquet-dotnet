@@ -1,56 +1,55 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections;
-using System.Reflection;
-using Parquet.Data;
-
-namespace Parquet
+﻿namespace Parquet
 {
+   using System;
+   using System.Collections.Generic;
+   using System.Collections;
+   using System.Reflection;
+
+   
    static class TypeExtensions
    {
       /// <summary>
       /// Checks if this type implements generic IEnumerable or an array.
       /// </summary>
-      /// <param name="t"></param>
+      /// <param name="type"></param>
       /// <param name="baseType"></param>
       /// <returns></returns>
-      public static bool TryExtractEnumerableType(this Type t, out Type baseType)
+      public static bool TryExtractEnumerableType(this Type type, out Type baseType)
       {
-         if(typeof(byte[]) == t)
+         if (typeof(byte[]) == type)
          {
             //it's a special case to avoid confustion between byte arrays and repeatable bytes
             baseType = null;
             return false;
          }
 
-         TypeInfo ti = t.GetTypeInfo();
-         Type[] args = ti.GenericTypeArguments;
+         TypeInfo typeInfo = type.GetTypeInfo();
+         Type[] args = typeInfo.GenericTypeArguments;
 
          if (args.Length == 1)
          {
             //check derived interfaces
-            foreach (Type interfaceType in ti.ImplementedInterfaces)
+            foreach (Type interfaceType in typeInfo.ImplementedInterfaces)
             {
-               TypeInfo iti = interfaceType.GetTypeInfo();
-               if (iti.IsGenericType && iti.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-               {
-
-                  baseType = ti.GenericTypeArguments[0];
-                  return true;
-               }
+               TypeInfo interfaceTypeInfo = interfaceType.GetTypeInfo();
+               if (!interfaceTypeInfo.IsGenericType || interfaceTypeInfo.GetGenericTypeDefinition() != typeof(IEnumerable<>))
+                  continue;
+               
+               baseType = typeInfo.GenericTypeArguments[0];
+               return true;
             }
 
             //check if this is an IEnumerable<>
-            if (ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+            if (typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == typeof(IEnumerable<>))
             {
-               baseType = ti.GenericTypeArguments[0];
+               baseType = typeInfo.GenericTypeArguments[0];
                return true;
             }
          }
 
-         if(ti.IsArray)
+         if (typeInfo.IsArray)
          {
-            baseType = ti.GetElementType();
+            baseType = typeInfo.GetElementType();
             return true;
          }
 
@@ -58,14 +57,14 @@ namespace Parquet
          return false;
       }
 
-      public static bool TryExtractDictionaryType(this Type t, out Type keyType, out Type valueType)
+      public static bool TryExtractDictionaryType(this Type type, out Type keyType, out Type valueType)
       {
-         TypeInfo ti = t.GetTypeInfo();
+         TypeInfo typeInfo = type.GetTypeInfo();
 
-         if(ti.IsGenericType && ti.GetGenericTypeDefinition().GetTypeInfo().IsAssignableFrom(typeof(Dictionary<,>).GetTypeInfo()))
+         if (typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition().GetTypeInfo().IsAssignableFrom(typeof(Dictionary<,>).GetTypeInfo()))
          {
-            keyType = ti.GenericTypeArguments[0];
-            valueType = ti.GenericTypeArguments[1];
+            keyType = typeInfo.GenericTypeArguments[0];
+            valueType = typeInfo.GenericTypeArguments[1];
             return true;
          }
 
@@ -75,35 +74,26 @@ namespace Parquet
 
       public static bool IsNullable(this IList list)
       {
-         TypeInfo ti = list.GetType().GetTypeInfo();
+         TypeInfo typeInfo = list.GetType().GetTypeInfo();
 
-         Type t = ti.GenericTypeArguments[0];
-         Type gt = t.GetTypeInfo().IsGenericType ? t.GetTypeInfo().GetGenericTypeDefinition() : null;
+         Type type = typeInfo.GenericTypeArguments[0];
+         Type genericType = type.GetTypeInfo().IsGenericType ? type.GetTypeInfo().GetGenericTypeDefinition() : null;
 
-         return gt == typeof(Nullable<>) || t.GetTypeInfo().IsClass;
+         return genericType == typeof(Nullable<>) || type.GetTypeInfo().IsClass;
       }
 
       public static bool IsNullable(this Type t)
       {
-         TypeInfo ti = t.GetTypeInfo();
+         TypeInfo typeInfo = t.GetTypeInfo();
 
-         return
-            ti.IsClass ||
-            (ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(Nullable<>));
+         return typeInfo.IsClass || (typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == typeof(Nullable<>));
       }
 
-      public static Type GetNonNullable(this Type t)
+      public static Type GetNonNullable(this Type type)
       {
-         TypeInfo ti = t.GetTypeInfo();
+         TypeInfo typeInfo = type.GetTypeInfo();
 
-         if(ti.IsClass)
-         {
-            return t;
-         }
-         else
-         {
-            return ti.GenericTypeArguments[0];
-         }
+         return typeInfo.IsClass ? type : typeInfo.GenericTypeArguments[0];
       }
 
       public static bool IsSimple(this Type t)
@@ -129,6 +119,5 @@ namespace Parquet
             t == typeof(Guid) ||
             t == typeof(string);
       }
-
    }
 }

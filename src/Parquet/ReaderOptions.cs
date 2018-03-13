@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Parquet.Data;
-
-namespace Parquet
+﻿namespace Parquet
 {
    /// <summary>
    /// Reader options

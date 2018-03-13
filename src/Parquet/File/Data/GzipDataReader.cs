@@ -1,10 +1,12 @@
-﻿using System;
-using System.IO;
-using System.IO.Compression;
-
-namespace Parquet.File.Data
+﻿namespace Parquet.File.Data
 {
-   class GzipDataReader : IDataReader
+   using System;
+   using System.IO;
+   using System.IO.Compression;
+
+   
+   class GzipDataReader :
+      IDataReader
    {
       public byte[] Read(Stream source, int count)
       {
@@ -13,7 +15,7 @@ namespace Parquet.File.Data
          return Decompress(srcBytes);
       }
 
-      private static byte[] Decompress(byte[] source)
+      static byte[] Decompress(byte[] source)
       {
          using (var sourceStream = new MemoryStream(source))
          {
@@ -25,7 +27,7 @@ namespace Parquet.File.Data
          }
       }
 
-      private static void Decompress(Stream source, Stream destination)
+      static void Decompress(Stream source, Stream destination)
       {
          if (source == null) throw new ArgumentNullException(nameof(source));
          if (destination == null) throw new ArgumentNullException(nameof(destination));

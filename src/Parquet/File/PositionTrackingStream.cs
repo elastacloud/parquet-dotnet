@@ -1,12 +1,13 @@
-﻿using System;
-using System.IO;
-
-namespace Parquet.File
+﻿namespace Parquet.File
 {
-   class PositionTrackingStream : Stream
+   using System.IO;
+
+   
+   class PositionTrackingStream :
+      Stream
    {
-      private readonly Stream _parent;
-      private long _position;
+      readonly Stream _parent;
+      long _position;
 
       public PositionTrackingStream(Stream parent)
       {

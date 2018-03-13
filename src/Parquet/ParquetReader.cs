@@ -1,24 +1,28 @@
-﻿using Parquet.File;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using Parquet.Data;
-using System.Collections;
-using Parquet.Data.Predicates;
-using System.Linq;
-
-namespace Parquet
+﻿namespace Parquet
 {
+   using File;
+   using System;
+   using System.Collections.Generic;
+   using System.IO;
+   using Data;
+   using System.Collections;
+   using Data.Predicates;
+   using System.Linq;
+   using Thrift;
+
+
    /// <summary>
    /// Implements Apache Parquet format reader
    /// </summary>
-   public class ParquetReader : ParquetActor, IDisposable
+   public class ParquetReader :
+      ParquetActor,
+      IDisposable
    {
-      private readonly Stream _input;
-      private Thrift.FileMetaData _meta;
-      private readonly ParquetOptions _formatOptions;
-      private readonly ReaderOptions _readerOptions;
-      private readonly FieldPredicate[] _fieldPredicates;
+      readonly Stream _input;
+      FileMetaData _meta;
+      readonly ParquetOptions _formatOptions;
+      readonly ReaderOptions _readerOptions;
+      readonly FieldPredicate[] _fieldPredicates;
 
       /// <summary>
       /// Creates an instance from input stream

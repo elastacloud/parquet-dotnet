@@ -1,16 +1,17 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-
-namespace Parquet.Data
+﻿namespace Parquet.Data
 {
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+   using System.IO;
 
-   abstract class BasicDataTypeHandler<TSystemType> : IDataTypeHandler
+
+   abstract class BasicDataTypeHandler<TSystemType> :
+      IDataTypeHandler
    {
-      private readonly Thrift.Type _thriftType;
-      private readonly Thrift.ConvertedType? _convertedType;
-      private readonly int? _bitWidth;
+      readonly Thrift.Type _thriftType;
+      readonly Thrift.ConvertedType? _convertedType;
+      readonly int? _bitWidth;
 
       public BasicDataTypeHandler(DataType dataType, Thrift.Type thriftType, Thrift.ConvertedType? convertedType = null)
       {
@@ -99,8 +100,6 @@ namespace Parquet.Data
          parent.Num_children += 1;
       }
 
-      #region [ Reader / Writer Helpers ]
-
       protected virtual TSystemType ReadOne(BinaryReader reader)
       {
          throw new NotSupportedException();
@@ -110,8 +109,5 @@ namespace Parquet.Data
       {
          throw new NotSupportedException();
       }
-
-      #endregion
-
    }
 }

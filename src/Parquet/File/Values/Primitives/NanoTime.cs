@@ -1,12 +1,13 @@
-﻿using System;
-using System.IO;
-
-namespace Parquet.File.Values.Primitives
+﻿namespace Parquet.File.Values.Primitives
 {
+   using System;
+   using System.IO;
+
+   
    class NanoTime
    {
-      private readonly int _julianDay;
-      private readonly long _timeOfDayNanos;
+      readonly int _julianDay;
+      readonly long _timeOfDayNanos;
 
       public NanoTime(byte[] data, int offset)
       {

@@ -1,16 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using Parquet.Data;
-using Parquet.File.Data;
-
-namespace Parquet.File
+﻿namespace Parquet.File
 {
+   using System;
+   using System.Collections.Generic;
+   using System.IO;
+   using System.Linq;
+   using System.Reflection;
+   using Parquet.Data;
+   using Data;
+
+   
    class ThriftFooter
    {
-      private readonly Thrift.FileMetaData _fileMeta;
+      readonly Thrift.FileMetaData _fileMeta;
 
       public ThriftFooter(Thrift.FileMetaData fileMeta)
       {
@@ -50,7 +51,7 @@ namespace Parquet.File
          }
       }
 
-      private static Version FileVersion(Type t)
+      static Version FileVersion(Type t)
       {
          CustomAttributeData fva = t.GetTypeInfo()
             .Assembly
@@ -196,8 +197,6 @@ namespace Parquet.File
          return ph;
       }
 
-      #region [ Conversion to Model Schema ]
-
       public Schema CreateModelSchema(ParquetOptions formatOptions)
       {
          int si = 0;
@@ -209,7 +208,7 @@ namespace Parquet.File
          return new Schema(container);
       }
 
-      private void CreateModelSchema(string path, IList<Field> container, int childCount, ref int si, ParquetOptions formatOptions)
+      void CreateModelSchema(string path, IList<Field> container, int childCount, ref int si, ParquetOptions formatOptions)
       {
          for (int i = 0; i < childCount && si < _fileMeta.Schema.Count; i++)
          {
@@ -240,7 +239,7 @@ namespace Parquet.File
          }
       }
 
-      private void ThrowNoHandler(Thrift.SchemaElement tse)
+      void ThrowNoHandler(Thrift.SchemaElement tse)
       {
          string ct = tse.__isset.converted_type
             ? $" ({tse.Converted_type})"
@@ -252,10 +251,6 @@ namespace Parquet.File
 
          throw new NotSupportedException($"cannot find data type handler for schema element '{tse.Name}' (type: {t}{ct})");
       }
-
-      #endregion
-
-      #region [ Convertion from Model Schema ]
 
       public Thrift.FileMetaData CreateThriftSchema(Schema schema)
       {
@@ -269,14 +264,14 @@ namespace Parquet.File
          return meta;
       }
 
-      private Thrift.SchemaElement AddRoot(IList<Thrift.SchemaElement> container)
+      Thrift.SchemaElement AddRoot(IList<Thrift.SchemaElement> container)
       {
          var root = new Thrift.SchemaElement("parquet-dotnet-schema");
          container.Add(root);
          return root;
       }
 
-      private void CreateThriftSchema(IEnumerable<Field> ses, Thrift.SchemaElement parent, IList<Thrift.SchemaElement> container)
+      void CreateThriftSchema(IEnumerable<Field> ses, Thrift.SchemaElement parent, IList<Thrift.SchemaElement> container)
       {
          foreach(Field se in ses)
          {
@@ -287,10 +282,6 @@ namespace Parquet.File
             handler.CreateThrift(se, parent, container);
          }
       }
-
-      #endregion
-
-      #region [ Helpers ]
 
       class ThriftSchemaTree
       {
@@ -316,7 +307,7 @@ namespace Parquet.File
             return Find(root, tse);
          }
 
-         private Node Find(Node root, Thrift.SchemaElement tse)
+         Node Find(Node root, Thrift.SchemaElement tse)
          {
             foreach(Node child in root.children)
             {
@@ -332,7 +323,7 @@ namespace Parquet.File
             return null;
          }
 
-         private void BuildSchema(Node parent, List<Thrift.SchemaElement> schema, int count, ref int i)
+         void BuildSchema(Node parent, List<Thrift.SchemaElement> schema, int count, ref int i)
          {
             parent.children = new List<Node>();
             for(int ic = 0; ic < count; ic++)
@@ -347,7 +338,5 @@ namespace Parquet.File
             }
          }
       }
-
-      #endregion
    }
 }

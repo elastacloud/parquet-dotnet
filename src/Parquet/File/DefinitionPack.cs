@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Text;
-using Parquet.Data;
-
-namespace Parquet.File
+﻿namespace Parquet.File
 {
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+
+
    /// <summary>
    /// Packs/unpacks definition levels
    /// </summary>
    static class DefinitionPack
    {
-
       /// <summary>
       /// 
       /// </summary>

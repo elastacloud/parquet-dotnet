@@ -1,20 +1,23 @@
-﻿using System;
-using System.IO;
-using Parquet.Data;
-using Parquet.File;
-
-namespace Parquet
+﻿namespace Parquet
 {
+   using System;
+   using System.IO;
+   using Data;
+   using File;
+
+   
    /// <summary>
    /// vNext prototype
    /// </summary>
-   internal class ParquetWriter3 : ParquetActor, IDisposable
+   internal class ParquetWriter3 :
+      ParquetActor,
+      IDisposable
    {
-      private ThriftFooter _footer;
-      private readonly Schema _schema;
-      private readonly ParquetOptions _formatOptions;
-      private readonly WriterOptions _writerOptions;
-      private bool _dataWritten;
+      ThriftFooter _footer;
+      readonly Schema _schema;
+      readonly ParquetOptions _formatOptions;
+      readonly WriterOptions _writerOptions;
+      bool _dataWritten;
 
       /// <summary>
       /// Type of compression to use, defaults to <see cref="CompressionMethod.Snappy"/>
@@ -51,7 +54,7 @@ namespace Parquet
          return new ParquetRowGroupWriter(_schema, Stream, ThriftStream, _footer, CompressionMethod, _formatOptions, rowCount);
       }
 
-      private void PrepareFile(bool append)
+      void PrepareFile(bool append)
       {
          if (append)
          {
@@ -84,7 +87,7 @@ namespace Parquet
          }
       }
 
-      private void ValidateSchemasCompatible(ThriftFooter footer, Schema schema)
+      void ValidateSchemasCompatible(ThriftFooter footer, Schema schema)
       {
          Schema existingSchema = footer.CreateModelSchema(_formatOptions);
 
@@ -95,7 +98,7 @@ namespace Parquet
          }
       }
 
-      private void WriteMagic()
+      void WriteMagic()
       {
          Stream.Write(MagicBytes, 0, MagicBytes.Length);
       }

@@ -1,10 +1,11 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using Parquet.File;
-
-namespace Parquet
+﻿namespace Parquet
 {
+   using System;
+   using System.IO;
+   using System.Text;
+   using File;
+
+   
    /// <summary>
    /// Base class for reader and writer
    /// </summary>
@@ -15,10 +16,10 @@ namespace Parquet
       internal static readonly byte[] MagicBytes = Encoding.ASCII.GetBytes(MagicString);
 #pragma warning restore IDE1006
 
-      private readonly Stream _fileStream;
-      private BinaryReader _binaryReader;
-      private BinaryWriter _binaryWriter;
-      private ThriftStream _thriftStream;
+      readonly Stream _fileStream;
+      BinaryReader _binaryReader;
+      BinaryWriter _binaryWriter;
+      ThriftStream _thriftStream;
 
       internal ParquetActor(Stream fileStream)
       {

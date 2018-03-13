@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Parquet.Data.Concrete;
-
-namespace Parquet.Data
+﻿namespace Parquet.Data
 {
+   using System;
+   using System.Collections.Generic;
+   using System.Linq;
+   using Concrete;
+
+   
    static class DataTypeFactory
    {
-      private static readonly List<IDataTypeHandler> _allDataTypes = new List<IDataTypeHandler>
+      static readonly List<IDataTypeHandler> _allDataTypes = new List<IDataTypeHandler>
       {
          // special types
          new DateTimeOffsetDataTypeHandler(),

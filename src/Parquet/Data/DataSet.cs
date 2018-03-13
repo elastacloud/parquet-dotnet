@@ -1,21 +1,21 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Parquet.File;
-
-namespace Parquet.Data
+﻿namespace Parquet.Data
 {
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+   using System.Linq;
+   using System.Text;
+   
+
    /// <summary>
    /// Represents a data set
    /// </summary>
    public partial class DataSet
    {
-      private readonly Schema _schema;
-      private readonly Dictionary<string, IList> _columns;
-      private int _rowCount;
-      private readonly DataSetMetadata _metadata = new DataSetMetadata();
+      readonly Schema _schema;
+      readonly Dictionary<string, IList> _columns;
+      int _rowCount;
+      readonly DataSetMetadata _metadata = new DataSetMetadata();
 
       internal Thrift.FileMetaData Thrift { get; set; }
 
@@ -129,16 +129,14 @@ namespace Parquet.Data
          AddRow(new Row(values));
       }
 
-      #region [ Row Manipulation ]
-
-      private Row CreateRow(int index)
+      Row CreateRow(int index)
       {
          ValidateIndex(index);
 
          return RowExtractor.Extract(_schema.Fields, index, _columns);
       }
 
-      private void RemoveRow(int index)
+      void RemoveRow(int index)
       {
          ValidateIndex(index);
 
@@ -150,25 +148,20 @@ namespace Parquet.Data
          _rowCount -= 1;
       }
 
-      private void AddRow(Row row)
+      void AddRow(Row row)
       {
          RowAppender.Append(_columns, _schema.Fields, row);
 
          _rowCount += 1;
       }
 
-      private void ValidateIndex(int index)
+      void ValidateIndex(int index)
       {
          if(index < 0 || index >= _rowCount)
          {
             throw new IndexOutOfRangeException($"row index {index} is not within allowed range [0; {_rowCount})");
          }
       }
-
-
-      #endregion
-
-      #region [ Data Helpers ]
 
       /// <summary>
       /// Merges dataset into this dataset
@@ -193,8 +186,6 @@ namespace Parquet.Data
 
          _rowCount += source.RowCount;
       }
-
-      #endregion
 
       /// <summary>
       /// Displays some DataSet rows

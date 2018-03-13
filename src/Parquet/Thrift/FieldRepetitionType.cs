@@ -4,25 +4,26 @@
  * DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
  *  @generated
  */
-
 namespace Parquet.Thrift
 {
-  /// <summary>
-  /// Representation of Schemas
-  /// </summary>
-  enum FieldRepetitionType
-  {
-    /// <summary>
-    /// This field is required (can not be null) and each record has exactly 1 value.
-    /// </summary>
-    REQUIRED = 0,
-    /// <summary>
-    /// The field is optional (can be null) and each record has 0 or 1 values.
-    /// </summary>
-    OPTIONAL = 1,
-    /// <summary>
-    /// The field is repeated and can contain 0 or more values
-    /// </summary>
-    REPEATED = 2,
-  }
+   /// <summary>
+   /// Representation of Schemas
+   /// </summary>
+   enum FieldRepetitionType
+   {
+      /// <summary>
+      /// This field is required (can not be null) and each record has exactly 1 value.
+      /// </summary>
+      REQUIRED = 0,
+
+      /// <summary>
+      /// The field is optional (can be null) and each record has 0 or 1 values.
+      /// </summary>
+      OPTIONAL = 1,
+
+      /// <summary>
+      /// The field is repeated and can contain 0 or more values
+      /// </summary>
+      REPEATED = 2,
+   }
 }

@@ -1,8 +1,10 @@
-﻿using System.IO;
-
-namespace Parquet.File.Data
+﻿namespace Parquet.File.Data
 {
-   class UncompressedDataReader : IDataReader
+   using System.IO;
+
+   
+   class UncompressedDataReader :
+      IDataReader
    {
       public byte[] Read(Stream source, int count)
       {

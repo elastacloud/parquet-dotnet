@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using Snappy.Sharp;
-
-namespace Parquet.File.Data
+﻿namespace Parquet.File.Data
 {
-   class SnappyDataWriter : IDataWriter
+   using System.IO;
+   using Snappy.Sharp;
+
+   
+   class SnappyDataWriter :
+      IDataWriter
    {
-      private readonly SnappyCompressor _snappyCompressor = new SnappyCompressor();
+      readonly SnappyCompressor _snappyCompressor = new SnappyCompressor();
+      
       public void Write(byte[] buffer, Stream destination)
       {
          int uncompressedLength = buffer.Length;

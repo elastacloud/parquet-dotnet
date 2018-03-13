@@ -1,7 +1,8 @@
-﻿using System;
-
-namespace Parquet
+﻿namespace Parquet
 {
+   using System;
+
+   
    /// <summary>
    /// Parquet format specific
    /// </summary>

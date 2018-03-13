@@ -19,7 +19,7 @@
  */
 namespace Thrift.Protocol
 {
-    interface TBase : TAbstractBase
+   internal interface TBase : TAbstractBase
     {
         ///
         /// Reads the TObject from the given input protocol.

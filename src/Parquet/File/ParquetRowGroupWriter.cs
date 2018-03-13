@@ -1,30 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Parquet.Data;
-using Parquet.File.Values;
-
-namespace Parquet.File
+﻿namespace Parquet.File
 {
-   internal class ParquetRowGroupWriter : IDisposable
-   {
-      private readonly Schema _schema;
-      private readonly Stream _stream;
-      private readonly ThriftStream _thriftStream;
-      private readonly ThriftFooter _footer;
-      private readonly CompressionMethod _compressionMethod;
-      private readonly ParquetOptions _formatOptions;
-      private readonly int _rowCount;
-      private readonly Thrift.RowGroup _thriftRowGroup;
-      private readonly long _rgStartPos;
-      private readonly List<Thrift.SchemaElement> _thschema;
-      private int _colIdx;
+   using System;
+   using System.Collections.Generic;
+   using System.IO;
+   using System.Linq;
+   using Parquet.Data;
+   using Thrift;
+   using Values;
 
-      private struct PageTag
+   
+   internal class ParquetRowGroupWriter :
+      IDisposable
+   {
+      readonly Schema _schema;
+      readonly Stream _stream;
+      readonly ThriftStream _thriftStream;
+      readonly ThriftFooter _footer;
+      readonly CompressionMethod _compressionMethod;
+      readonly ParquetOptions _formatOptions;
+      readonly int _rowCount;
+      readonly RowGroup _thriftRowGroup;
+      readonly long _rgStartPos;
+      readonly List<SchemaElement> _thschema;
+      int _colIdx;
+
+      struct PageTag
       {
          public int HeaderSize;
-         public Thrift.PageHeader HeaderMeta;
+         public PageHeader HeaderMeta;
       }
 
       internal ParquetRowGroupWriter(Schema schema,
@@ -46,7 +49,7 @@ namespace Parquet.File
          _thriftRowGroup = _footer.AddRowGroup();
          _thriftRowGroup.Num_rows = _rowCount;
          _rgStartPos = _stream.Position;
-         _thriftRowGroup.Columns = new List<Thrift.ColumnChunk>();
+         _thriftRowGroup.Columns = new List<ColumnChunk>();
          _thschema = _footer.GetWriteableSchema().ToList();
       }
 
@@ -54,21 +57,20 @@ namespace Parquet.File
       {
          if (column == null) throw new ArgumentNullException(nameof(column));
 
-         Thrift.SchemaElement tse = _thschema[_colIdx++];
+         SchemaElement tse = _thschema[_colIdx++];
          IDataTypeHandler dataTypeHandler = DataTypeFactory.Match(tse, _formatOptions);
          //todo: check if the column is in the right order
 
-
          List<string> path = _footer.GetPath(tse);
 
-         Thrift.ColumnChunk chunk = WriteColumnChunk(tse, path, column, dataTypeHandler);
+         ColumnChunk chunk = WriteColumnChunk(tse, path, column, dataTypeHandler);
          _thriftRowGroup.Columns.Add(chunk);
       }
 
-      private Thrift.ColumnChunk WriteColumnChunk(Thrift.SchemaElement tse, List<string> path, DataColumn column, IDataTypeHandler dataTypeHandler)
+      ColumnChunk WriteColumnChunk(SchemaElement tse, List<string> path, DataColumn column, IDataTypeHandler dataTypeHandler)
       {
-         Thrift.ColumnChunk chunk = _footer.CreateColumnChunk(_compressionMethod, _stream, tse.Type, path, 0);
-         Thrift.PageHeader ph = _footer.CreateDataPage(_rowCount);
+         ColumnChunk chunk = _footer.CreateColumnChunk(_compressionMethod, _stream, tse.Type, path, 0);
+         var ph = _footer.CreateDataPage(_rowCount);
          _footer.GetLevels(chunk, out int maxRepetitionLevel, out int maxDefinitionLevel);
 
          List<PageTag> pages = WriteColumn(column, tse, dataTypeHandler, maxRepetitionLevel, maxDefinitionLevel);
@@ -82,8 +84,8 @@ namespace Parquet.File
          return chunk;
       }
 
-      private List<PageTag> WriteColumn(DataColumn column, 
-         Thrift.SchemaElement tse,
+      List<PageTag> WriteColumn(DataColumn column, 
+         SchemaElement tse,
          IDataTypeHandler dataTypeHandler,
          int maxRepetitionLevel,
          int maxDefinitionLevel)
@@ -96,10 +98,9 @@ namespace Parquet.File
           * the write efficiency.
           */
 
-
          using (var ms = new MemoryStream())
          {
-            Thrift.PageHeader dataPageHeader = _footer.CreateDataPage(column.TotalCount);
+            PageHeader dataPageHeader = _footer.CreateDataPage(column.TotalCount);
 
             //chain streams together so we have real streaming instead of wasting undefraggable LOH memory
             using (PositionTrackingStream pps = DataStreamFactory.CreateWriter(ms, _compressionMethod))
@@ -119,6 +120,7 @@ namespace Parquet.File
 
                dataPageHeader.Uncompressed_page_size = (int)pps.Position;
             }
+            
             dataPageHeader.Compressed_page_size = (int)ms.Position;
 
             //write the hader in
@@ -138,7 +140,7 @@ namespace Parquet.File
          return pages;
       }
 
-      private void WriteLevels(BinaryWriter writer, List<int> levels, int maxLevel)
+      void WriteLevels(BinaryWriter writer, List<int> levels, int maxLevel)
       {
          int bitWidth = maxLevel.GetBitWidth();
          RunLengthBitPackingHybridValuesWriter.WriteForwardOnly(writer, bitWidth, levels);

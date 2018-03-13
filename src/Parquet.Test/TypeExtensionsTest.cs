@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Parquet.File;
-using Xunit;
-
-namespace Parquet.Test
+﻿namespace Parquet.Test
 {
+   using System;
+   using System.Collections.Generic;
+   using Xunit;
+
+   
    public class TypeExtensionsTest
    {
       [Fact]

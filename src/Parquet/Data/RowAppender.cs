@@ -1,9 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-
-namespace Parquet.Data
+﻿namespace Parquet.Data
 {
+   using System;
+   using System.Collections;
+   using System.Collections.Generic;
+
+   
    static class RowAppender
    {
       public static void Append(
@@ -18,33 +19,39 @@ namespace Parquet.Data
             Field field = schema[i];
             object value = row[i];
 
-            if (field.SchemaType == SchemaType.Map)
+            switch (field.SchemaType)
             {
-               MapField mapField = (MapField)field;
+               case SchemaType.Map:
+               {
+                  MapField mapField = (MapField)field;
 
-               IList keys = GetValues(columns, mapField.Key, true, true);
-               IList values = GetValues(columns, mapField.Value, true, true);
+                  IList keys = GetValues(columns, mapField.Key, true, true);
+                  IList values = GetValues(columns, mapField.Value, true, true);
 
-               ((MapField)field).AddElement(keys, values, value as IDictionary);
-            }
-            else if (field.SchemaType == SchemaType.Struct)
-            {
-               AddStructure(columns, field as StructField, value as Row);
-            }
-            else if (field.SchemaType == SchemaType.List)
-            {
-               AddList(columns, field as ListField, value);
-            }
-            else
-            {
-               IList values = GetValues(columns, (DataField)field, true);
+                  ((MapField)field).AddElement(keys, values, value as IDictionary);
+                  break;
+               }
+               
+               case SchemaType.Struct:
+                  AddStructure(columns, field as StructField, value as Row);
+                  break;
+               
+               case SchemaType.List:
+                  AddList(columns, field as ListField, value);
+                  break;
+               
+               default:
+               {
+                  IList values = GetValues(columns, (DataField)field, true);
 
-               values.Add(value);
+                  values.Add(value);
+                  break;
+               }
             }
          }
       }
 
-      private static void AddStructure(Dictionary<string, IList> columns, StructField field, Row structRow)
+      static void AddStructure(Dictionary<string, IList> columns, StructField field, Row structRow)
       {
          if (structRow == null)
          {
@@ -54,7 +61,7 @@ namespace Parquet.Data
          Append(columns, field.Fields, structRow);
       }
 
-      private static void AddList(Dictionary<string, IList> columns, ListField listField, object value)
+      static void AddList(Dictionary<string, IList> columns, ListField listField, object value)
       {
          /*
            Value slicing can happen only when entering a list and in no other cases.
@@ -92,7 +99,7 @@ namespace Parquet.Data
          }
       }
 
-      private static IList GetValues(Dictionary<string, IList> columns, DataField field, bool createIfMissing, bool isNested = false)
+      static IList GetValues(Dictionary<string, IList> columns, DataField field, bool createIfMissing, bool isNested = false)
       {
          if (field.Path == null) throw new ArgumentNullException(nameof(field.Path));
 
@@ -117,7 +124,7 @@ namespace Parquet.Data
          return values;
       }
 
-      private static Dictionary<string, IList> SliceIn(Dictionary<string, IList> columns, Dictionary<string, IList> newColumns)
+      static Dictionary<string, IList> SliceIn(Dictionary<string, IList> columns, Dictionary<string, IList> newColumns)
       {
          var result = new Dictionary<string, IList>();
 

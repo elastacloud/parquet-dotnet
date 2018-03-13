@@ -1,13 +1,12 @@
-﻿using Parquet.Data;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
-
-namespace Parquet.File.Values
+﻿namespace Parquet.File.Values
 {
+   using System;
+   using System.Collections.Generic;
+   using System.IO;
+   using System.Linq;
+   using System.Runtime.CompilerServices;
+
+   
    //todo: this abstrtion is not useful and must die - create RLE encoding class instead for both reading and writing
    class RunLengthBitPackingHybridValuesReader
    {
@@ -59,7 +58,7 @@ namespace Parquet.File.Values
       /// Read run-length encoded run from the given header and bit length.
       /// </summary>
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      private static void ReadRle(int header, BinaryReader reader, int bitWidth, List<int> destination)
+      static void ReadRle(int header, BinaryReader reader, int bitWidth, List<int> destination)
       {
          // The count is determined from the header and the width is used to grab the
          // value that's repeated. Yields the value repeated count times.
@@ -73,7 +72,7 @@ namespace Parquet.File.Values
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      private static void ReadBitpacked(int header, BinaryReader reader, int bitWidth, List<int> destination)
+      static void ReadBitpacked(int header, BinaryReader reader, int bitWidth, List<int> destination)
       {
          int groupCount = header >> 1;
          int count = groupCount * 8;
@@ -119,7 +118,7 @@ namespace Parquet.File.Values
       /// Read a value using the unsigned, variable int encoding.
       /// </summary>
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      private static int ReadUnsignedVarInt(BinaryReader reader)
+      static int ReadUnsignedVarInt(BinaryReader reader)
       {
          int result = 0;
          int shift = 0;
@@ -136,7 +135,7 @@ namespace Parquet.File.Values
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      private static int ReadIntOnBytes(byte[] data)
+      static int ReadIntOnBytes(byte[] data)
       {
          switch (data.Length)
          {
@@ -156,13 +155,13 @@ namespace Parquet.File.Values
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      private static int MaskForBits(int width)
+      static int MaskForBits(int width)
       {
          return (1 << width) - 1;
       }
 
       [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      private static int GetRemainingLength(BinaryReader reader)
+      static int GetRemainingLength(BinaryReader reader)
       {
          return (int)(reader.BaseStream.Length - reader.BaseStream.Position);
       }
