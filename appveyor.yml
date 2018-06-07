@@ -7,8 +7,6 @@ configuration: Release
 platform: Any CPU
 before_build:
 - ps: >-
-    gci env:
-
     dotnet restore src/Parquet.sln
 
     cd src/Parquet
