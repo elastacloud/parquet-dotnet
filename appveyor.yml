@@ -19,6 +19,8 @@ before_build:
 
     dotnet housework author ..\SharpArrow\SharpArrow.csproj  ../../build.ini
 
+    dotnet housework substitute ThriftFooter.cs ../../build.ini -r
+
     cd ../..
 build:
   project: src/Parquet.sln
