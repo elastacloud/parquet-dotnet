@@ -11,7 +11,7 @@ before_build:
 
     cd src/Parquet
 
-    dotnet housework setbuildnumber %FileVersion%  ../../build.ini
+    dotnet housework setbuildnumber %CiVersion%  ../../build.ini
 
     dotnet housework author .\Parquet.csproj  ../../build.ini
 
