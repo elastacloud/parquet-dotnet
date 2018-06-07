@@ -27,7 +27,7 @@ namespace Parquet.File
          _fileMeta = CreateThriftSchema(schema);
          _fileMeta.Num_rows = totalRowCount;
 
-         _fileMeta.Created_by = $"Parquet.Net version %Version% (%Git.LongCommitHash%)";
+         _fileMeta.Created_by = $"Parquet.Net version %Version% (build %Git.LongCommitHash%)";
       }
 
       public Dictionary<string, string> CustomMetadata
