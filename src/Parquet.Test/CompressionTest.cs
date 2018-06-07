@@ -21,7 +21,7 @@ namespace Parquet.Test
          //write
          using (var writer = new ParquetWriter(ms))
          {
-            writer.Write(ds1, CompressionMethod.Gzip);
+            writer.Write(ds1, compressionMethod);
          }
 
          //read back
