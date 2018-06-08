@@ -34,9 +34,12 @@ namespace Parquet.Test
          Assert.Equal(5, ds2[0].GetInt(0));
 
          //v3
-         /*const int value = 5;
+         //looks like writing is not working in certain scenarios!
+         //broken length: 177
+         //correct length: 187
+         const int value = 5;
          object actual = WriteReadSingle(new DataField<int>("id"), value, compressionMethod);
-         Assert.Equal(5, (int)actual);*/
+         Assert.Equal(5, (int)actual);
       }
    }
 }
