@@ -61,7 +61,7 @@ namespace Parquet.Test
 
             data = ms.ToArray();
 
-            F.WriteAllBytes($"c:\\tmp\\{compressionMethod}.parquet", data);
+            //F.WriteAllBytes($"c:\\tmp\\{compressionMethod}.parquet", data);
          }
 
          using (var ms = new MemoryStream(data))
