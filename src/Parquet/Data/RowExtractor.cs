@@ -59,6 +59,9 @@ namespace Parquet.Data
                throw new ParquetException($"something terrible happened, there is no column by name '{field.Name}' and path '{field.Path}'");
             }
 
+	         if (values.Count <= index)
+		         return null;
+
             return values[index];
          }
       }
@@ -70,7 +73,7 @@ namespace Parquet.Data
       {
          var elementColumns = new Dictionary<string, IList>();
 
-         count = int.MaxValue;
+         count = 0;
 
          foreach (Field field in fields)
          {
@@ -81,21 +84,21 @@ namespace Parquet.Data
                case SchemaType.Data:
                   IList value = columns[key][index] as IList;
                   elementColumns[key] = value;
-                  if (value.Count < count) count = value.Count;
+	               count = Math.Max(count, value.Count);
                   break;
 
                case SchemaType.List:
                   var listField = (ListField)field;
                   Dictionary<string, IList> listColumns = CreateFieldColumns(new[] { listField.Item }, index, columns, out int listCount);
                   elementColumns.AddRange(listColumns);
-                  count = Math.Min(count, listColumns.Min(kvp => kvp.Value.Count));
+                  count = Math.Max(count, listColumns.Min(kvp => kvp.Value.Count));
                   break;
 
                case SchemaType.Struct:
                   var structField = (StructField)field;
                   Dictionary<string, IList> structColumns = CreateFieldColumns(structField.Fields, index, columns, out int structCount);
                   elementColumns.AddRange(structColumns);
-                  count = Math.Min(count, structColumns.Min(kvp => kvp.Value.Count));
+                  count = Math.Max(count, structColumns.Min(kvp => kvp.Value.Count));
                   break;
 
                default:
