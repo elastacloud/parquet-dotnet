@@ -90,7 +90,7 @@ namespace Parquet.Data
 
          //get count of nulls
          int nullCount = 0;
-         bool isNullable = Field.ClrType.IsNullable();
+         bool isNullable = Field.ClrType.IsNullable() || Data.GetType().GetElementType().IsNullable();
 
          TypedArrayWrapper typedData = _dataTypeHandler.CreateTypedArrayWrapper(Data, isNullable);
          for(int i = 0; i < Data.Length; i++)
@@ -107,8 +107,8 @@ namespace Parquet.Data
          }
 
          //pack
-         Array result = _dataTypeHandler.GetArray(Data.Length - nullCount, false, isNullable);
-         TypedArrayWrapper typedResult = _dataTypeHandler.CreateTypedArrayWrapper(result, isNullable);
+         Array result = _dataTypeHandler.GetArray(Data.Length - nullCount, false, false);
+         TypedArrayWrapper typedResult = _dataTypeHandler.CreateTypedArrayWrapper(result, false);
 
          int ir = 0;
          for(int i = 0; i < Data.Length; i++)
