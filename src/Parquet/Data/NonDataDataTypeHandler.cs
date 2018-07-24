@@ -57,7 +57,7 @@ namespace Parquet.Data
          throw new NotSupportedException();
       }
 
-      public TypedArrayWrapper CreateTypedArrayWrapper(Array array)
+      public TypedArrayWrapper CreateTypedArrayWrapper(Array array, bool isNullable)
       {
          throw new NotSupportedException();
       }

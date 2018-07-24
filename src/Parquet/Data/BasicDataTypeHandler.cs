@@ -113,7 +113,7 @@ namespace Parquet.Data
 
       public abstract Array UnpackDefinitions(Array src, int[] definitionLevels, int maxDefinitionLevel);
 
-      public TypedArrayWrapper CreateTypedArrayWrapper(Array array)
+      public virtual TypedArrayWrapper CreateTypedArrayWrapper(Array array, bool isNullable)
       {
          return TypedArrayWrapper.Create<TSystemType>(array);
       }

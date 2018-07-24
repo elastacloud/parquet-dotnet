@@ -37,6 +37,6 @@ namespace Parquet.Data
 
       Array UnpackDefinitions(Array src, int[] definitionLevels, int maxDefinitionLevel);
 
-      TypedArrayWrapper CreateTypedArrayWrapper(Array array);
+      TypedArrayWrapper CreateTypedArrayWrapper(Array array, bool isNullable);
    }
 }
