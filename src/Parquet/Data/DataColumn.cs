@@ -84,11 +84,7 @@ namespace Parquet.Data
 
          if (!Field.HasNulls)
          {
-            for(int i = 0; i < Data.Length; i++)
-            {
-               pooledDefinitionLevels[i] = maxDefinitionLevel;
-            }
-
+            SetPooledDefinitionLevels(maxDefinitionLevel, pooledDefinitionLevels);
             return Data;
          }
 
@@ -99,6 +95,13 @@ namespace Parquet.Data
          {
             bool isNull = typedData.GetValue(i) == null;
             if (isNull) nullCount += 1;
+         }
+
+         // if the field definition said there could be nulls, but weren't, don't incur the overhead of new array allocations and item copying
+         if (nullCount == 0)
+         {
+            SetPooledDefinitionLevels(maxDefinitionLevel, pooledDefinitionLevels);
+            return Data;
          }
 
          //pack
@@ -121,6 +124,14 @@ namespace Parquet.Data
             }
          }
          return result;
+      }
+
+      void SetPooledDefinitionLevels(int maxDefinitionLevel, int[] pooledDefinitionLevels)
+      {
+         for (int i = 0; i < Data.Length; i++)
+         {
+            pooledDefinitionLevels[i] = maxDefinitionLevel;
+         }
       }
    }
 }
