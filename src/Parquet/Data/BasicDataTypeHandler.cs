@@ -113,6 +113,11 @@ namespace Parquet.Data
 
       public abstract Array UnpackDefinitions(Array src, int[] definitionLevels, int maxDefinitionLevel);
 
+      public TypedArrayWrapper CreateTypedArrayWrapper(Array array)
+      {
+         return TypedArrayWrapper.Create<TSystemType>(array);
+      }
+
       protected T[] UnpackGenericDefinitions<T>(T[] src, int[] definitionLevels, int maxDefinitionLevel)
       {
          T[] result = (T[])GetArray(definitionLevels.Length, false, true);

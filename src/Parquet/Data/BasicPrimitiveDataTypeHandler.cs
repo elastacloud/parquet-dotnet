@@ -24,9 +24,11 @@ namespace Parquet.Data
                : ArrayPool<TSystemType?>.Shared.Rent(minCount);
          }
 
-         return isNullable
-            ? Array.CreateInstance(typeof(TSystemType?), minCount)
-            : Array.CreateInstance(typeof(TSystemType), minCount);
+         if (isNullable)
+         {
+            return new TSystemType?[minCount];
+         }
+         return new TSystemType[minCount];
       }
 
       public override void ReturnArray(Array array, bool isNullable)
