@@ -70,7 +70,9 @@ namespace Parquet.Data
 
       public virtual void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values)
       {
-         foreach(TSystemType one in values)
+         // casing to an array of TSystemType means we avoid Array.GetValue calls, which are slow
+         var typedArray = (TSystemType[]) values;
+         foreach(TSystemType one in typedArray)
          {
             WriteOne(writer, one);
          }
