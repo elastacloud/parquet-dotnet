@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Parquet.Data.Rows
 {
    /// <summary>
-   /// Represents a table or table chunk that stores data in row format
+   /// Represents a table or table chunk that stores data in row format.
    /// </summary>
-   public class Table : ICollection<Row>
+   public class Table : IList<Row>
    {
-      internal readonly Dictionary<string, IList> _fieldPathToValues = new Dictionary<string, IList>();
+      //dev: for reference from previous stable version see https://github.com/elastacloud/parquet-dotnet/tree/final-v2/src/Parquet/Data       
+
+      private readonly List<Row> _rows = new List<Row>();
 
       /// <summary>
       /// Creates an empty table with specified schema
@@ -26,50 +29,50 @@ namespace Parquet.Data.Rows
       /// </summary>
       public Schema Schema { get; }
 
-      private void AddRow(Row row)
-      {
-         RowMatrix.Append(this, row);
-
-         Count += 1;
-      }
-
-      internal DataColumn[] ExtractDataColunns()
-      {
-         throw new NotImplementedException();
-      }
-
-      #region [ ICollection members ]
+      #region [ IList members ]
 
       /// <summary>
-      /// Number of rows in this table
+      /// 
       /// </summary>
-      public int Count { get; private set; }
-
-      /// <summary>
-      /// It's not read only!
-      /// </summary>
-      public bool IsReadOnly => false;
-
-      /// <summary>
-      /// Adds a new row, expanding hierarchy when needed
-      /// </summary>
-      /// <param name="row"></param>
-      public void Add(Row row)
+      /// <param name="index"></param>
+      /// <returns></returns>
+      public Row this[int index]
       {
-         if (row == null)
+         get => _rows[index];
+         set
          {
-            throw new ArgumentNullException(nameof(row));
+            RowMatrix.Validate(value);
+            _rows[index] = value;
          }
-
-         AddRow(row);
       }
 
       /// <summary>
       /// 
       /// </summary>
+      public int Count => _rows.Count;
+
+      /// <summary>
+      /// 
+      /// </summary>
+      public bool IsReadOnly => false;
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="item"></param>
+      public void Add(Row item)
+      {
+         RowMatrix.Validate(item);
+
+         _rows.Add(item);
+      }
+
+      /// <summary>
+      /// /
+      /// </summary>
       public void Clear()
       {
-         throw new NotImplementedException();
+         _rows.Clear();
       }
 
       /// <summary>
@@ -79,7 +82,7 @@ namespace Parquet.Data.Rows
       /// <returns></returns>
       public bool Contains(Row item)
       {
-         throw new NotImplementedException();
+         return _rows.Contains(item);
       }
 
       /// <summary>
@@ -89,7 +92,7 @@ namespace Parquet.Data.Rows
       /// <param name="arrayIndex"></param>
       public void CopyTo(Row[] array, int arrayIndex)
       {
-         throw new NotImplementedException();
+         _rows.CopyTo(array, arrayIndex);
       }
 
       /// <summary>
@@ -98,7 +101,29 @@ namespace Parquet.Data.Rows
       /// <returns></returns>
       public IEnumerator<Row> GetEnumerator()
       {
-         throw new NotImplementedException();
+         return _rows.GetEnumerator();
+      }
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="item"></param>
+      /// <returns></returns>
+      public int IndexOf(Row item)
+      {
+         return _rows.IndexOf(item);
+      }
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="index"></param>
+      /// <param name="item"></param>
+      public void Insert(int index, Row item)
+      {
+         RowMatrix.Validate(item);
+
+         _rows.Insert(index, item);
       }
 
       /// <summary>
@@ -108,12 +133,21 @@ namespace Parquet.Data.Rows
       /// <returns></returns>
       public bool Remove(Row item)
       {
-         throw new NotImplementedException();
+         return _rows.Remove(item);
+      }
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="index"></param>
+      public void RemoveAt(int index)
+      {
+         _rows.RemoveAt(index);
       }
 
       IEnumerator IEnumerable.GetEnumerator()
       {
-         throw new NotImplementedException();
+         return _rows.GetEnumerator();
       }
 
       #endregion
