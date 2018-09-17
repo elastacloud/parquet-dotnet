@@ -42,6 +42,31 @@ namespace Parquet.Test
       }
 
       [Fact]
+      public void Validate_map_succeeds()
+      {
+         var table = new Table(new Schema(
+            new MapField("map", new DataField<string>("key"), new DataField<string>("value"))
+            ));
+
+         table.Add(new Row(
+            new Dictionary<string, string>
+            {
+               ["one"] = "v1",
+               ["two"] = "v2"
+            }));
+      }
+
+      [Fact]
+      public void Validate_map_fails()
+      {
+         var table = new Table(new Schema(
+            new MapField("map", new DataField<string>("key"), new DataField<string>("value"))
+            ));
+
+         Assert.Throws<ArgumentException>(() => table.Add(new Row(1)));
+      }
+
+      [Fact]
       public void Write_read_flat()
       {
          var table = new Table(new Schema(new DataField<int>("id"), new DataField<string>("city")));

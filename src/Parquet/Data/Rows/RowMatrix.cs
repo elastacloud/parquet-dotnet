@@ -22,9 +22,34 @@ namespace Parquet.Data.Rows
                case SchemaType.Data:
                   ValidatePrimitive((DataField)field, value);
                   break;
+               case SchemaType.Map:
+                  ValidateMap((MapField)field, value);
+                  break;
                default:
                   throw new NotImplementedException(field.SchemaType.ToString());
             }
+         }
+      }
+
+      private static void ValidateMap(MapField mf, object value)
+      {
+         DataField keyField = (DataField)mf.Key;
+         DataField valueField = (DataField)mf.Value;
+
+         if(!value.GetType().TryExtractDictionaryType(out Type keyType, out Type valueType) ||
+            keyType != keyField.ClrType || valueType != valueField.ClrType)
+         {
+            throw new ArgumentException($"expected dictionary of {keyField.ClrType}:{valueField.ClrType} but found {value.GetType()}");
+         }
+
+         IDictionary dictionary = (IDictionary)value;
+         foreach(object dkey in dictionary.Keys)
+         {
+            ValidatePrimitive(keyField, dkey);
+         }
+         foreach(object dvalue in dictionary.Values)
+         {
+            ValidatePrimitive(valueField, dvalue);
          }
       }
 
