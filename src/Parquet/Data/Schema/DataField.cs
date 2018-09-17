@@ -57,6 +57,9 @@ namespace Parquet.Data
          HasNulls = hasNulls;
          IsArray = isArray;
 
+         MaxRepetitionLevel = isArray ? 1 : 0;
+         MaxDefinitionLevel = hasNulls ? 1 : 0;
+
          IDataTypeHandler handler = DataTypeFactory.Match(dataType);
          if (handler != null)
          {

@@ -26,13 +26,23 @@ namespace Parquet.Data
       public string Path { get; internal set; }
 
       /// <summary>
+      /// Maximum repetition level, do not use, unstable!
+      /// </summary>
+      internal int MaxRepetitionLevel { get; set; }
+
+      /// <summary>
+      /// Maximum definition level, do not use, unstable!
+      /// </summary>
+      internal int MaxDefinitionLevel { get; set; }
+
+      /// <summary>
       /// Used internally for serialisation
       /// </summary>
       internal string ClrPropName { get; set; }
 
       internal virtual string PathPrefix { set { } }
 
-      // not in use
+      // not in use, to be exposed later
       internal Thrift.SchemaElement NativeSchema { get; set; }
 
       /// <summary>
