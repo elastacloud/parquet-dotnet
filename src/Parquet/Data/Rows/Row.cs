@@ -264,7 +264,6 @@ namespace Parquet.Data.Rows
                return v == null && ov == null;
             }
 
-
             if (!v.Equals(ov))
                return false;
          }

@@ -48,9 +48,9 @@ namespace Parquet.Data.Rows
       /// </summary>
       public Schema Schema { get; }
 
-      internal DataColumn ExtractDataColumn(DataField dataField)
+      internal DataColumn[] ExtractDataColumns()
       {
-         return RowMatrix.Extract(this, dataField);
+         return RowMatrix.Extract(Schema, _rows);
       }
 
       #region [ IList members ]
@@ -81,7 +81,7 @@ namespace Parquet.Data.Rows
       public bool IsReadOnly => false;
 
       /// <summary>
-      /// 
+      /// Adds a new row
       /// </summary>
       /// <param name="item"></param>
       public void Add(Row item)
@@ -89,6 +89,17 @@ namespace Parquet.Data.Rows
          RowMatrix.Validate(item, _dfs);
 
          _rows.Add(item);
+      }
+
+      /// <summary>
+      /// Adds a new row from passed cells
+      /// </summary>
+      /// <param name="rowCells"></param>
+      public void Add(params object[] rowCells)
+      {
+         var row = new Row(rowCells);
+
+         Add(row);
       }
 
       /// <summary>

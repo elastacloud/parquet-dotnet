@@ -7,6 +7,8 @@ namespace Parquet.Data.Rows
 {
    internal static class RowMatrix
    {
+      #region [ Validation ]
+
       public static void Validate(Row row, IReadOnlyList<Field> fields)
       {
          for (int i = 0; i < fields.Count; i++)
@@ -18,18 +20,7 @@ namespace Parquet.Data.Rows
             switch (field.SchemaType)
             {
                case SchemaType.Data:
-                  DataField df = (DataField)field;
-
-                  if(value == null && !df.HasNulls)
-                  {
-                     throw new ArgumentException($"no nulls allowed in {df}");
-                  }
-
-                  if(vt != df.ClrType)
-                  {
-                     throw new ArgumentException($"expected {df.ClrType} but found {vt} in {df}");
-                  }
-
+                  ValidatePrimitive((DataField)field, value);
                   break;
                default:
                   throw new NotImplementedException(field.SchemaType.ToString());
@@ -37,28 +28,113 @@ namespace Parquet.Data.Rows
          }
       }
 
+      private static void ValidatePrimitive(DataField df, object value)
+      {
+         if(value == null)
+         {
+            if (!df.HasNulls)
+               throw new ArgumentException($"element is null but column '{df.Name}' does not accept nulls");
+         }
+         else
+         {
+            Type vt = value.GetType();
+            Type st = df.ClrType;
+
+            if (vt.IsNullable())
+               vt = vt.GetNonNullable();
+
+            if(df.IsArray)
+            {
+               if(!vt.IsArray)
+               {
+                  throw new ArgumentException($"expected array but found {vt}");
+               }
+
+               if(vt.GetElementType() != st)
+               {
+                  throw new ArgumentException($"expected array element type {st} but found {vt.GetElementType()}");
+               }
+            }
+            else
+            {
+               if (vt != st)
+                  throw new ArgumentException($"expected {st} but found {vt}");
+            }
+         }
+      }
+
+      #endregion
+
       #region [ Table/Row packing ]
 
-      public static DataColumn Extract(Table table, DataField dataField)
+      public static DataColumn[] Extract(Schema schema, IReadOnlyCollection<Row> rows)
       {
-         int fieldIndex = table.Schema.GetFieldIndex(dataField);
+         var dcs = new List<DataColumn>();
 
-         var valueList = new List<object>();
+         Extract(schema.Fields, rows, dcs);
 
-         foreach(Row row in table)
+         return dcs.ToArray();
+      }
+
+      private static void Extract(IReadOnlyCollection<Field> fields, IReadOnlyCollection<Row> rows, List<DataColumn> dcs)
+      {
+         int i = 0;
+         foreach(Field field in fields)
          {
-            valueList.Add(row[fieldIndex]);
-         }
+            switch (field.SchemaType)
+            {
+               case SchemaType.Data:
+                  dcs.Add(
+                     Extract(
+                        (DataField)field,
+                        rows.Select(r => r[i]),
+                        rows.Count));
+                  break;
+            }
 
-         IDataTypeHandler handler = DataTypeFactory.Match(dataField);
-         Array columnData = handler.GetArray(valueList.Count, false, dataField.HasNulls);
-         
-         for(int i = 0; i < valueList.Count; i++)
+            i += 1;
+         }
+      }
+
+      private static DataColumn Extract(DataField dataField, IEnumerable<object> values, int? length)
+      {
+         if(dataField.IsArray)
          {
-            columnData.SetValue(valueList[i], i);
-         }
+            //don't know beforehand how many elements are in the target array, expand the array first!
+            var flatValues = new List<object>();
+            var repetitionLevels = new List<int>();
+            foreach(Array valueArray in values)
+            {
+               int rl = 0;
+               foreach(object value in valueArray)
+               {
+                  repetitionLevels.Add(rl);
+                  flatValues.Add(value);
+                  rl = 1;
+               }
+            }
 
-         return new DataColumn(dataField, columnData);
+            //allocate flat array for data column
+            Array data = Array.CreateInstance(dataField.ClrNullableIfHasNullsType, flatValues.Count);
+            for(int i = 0; i < flatValues.Count; i++)
+            {
+               data.SetValue(flatValues[i], i);
+            }
+
+            //return data column with valid repetition levels
+            return new DataColumn(dataField, data, repetitionLevels.ToArray());
+         }
+         else
+         {
+            Array data = Array.CreateInstance(dataField.ClrNullableIfHasNullsType, length.Value);
+            int i = 0;
+            foreach(object value in values)
+            {
+               data.SetValue(value, i++);
+            }
+
+            return new DataColumn(dataField, data);
+         }
       }
 
       public static List<Row> Compact(Schema schema, DataColumn[] columns, long rowCount)
@@ -74,18 +150,23 @@ namespace Parquet.Data.Rows
 
       private static void Compact(Field[] fields, DataColumn[] columns, List<Row> container, long rowCount)
       {
-         for (int ri = 0; ri < rowCount; ri++)
+         int[] walkIndexes = new int[columns.Length];
+
+         for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
          {
-            int ci = 0;
+            int dataColumnIndex = 0;
             var row = new List<object>();
-            for (int fi = 0; fi < fields.Length; fi++)
+            for (int fieldIndex = 0; fieldIndex < fields.Length; fieldIndex++)
             {
-               Field f = fields[fi];
+               Field f = fields[fieldIndex];
 
                switch (f.SchemaType)
                {
                   case SchemaType.Data:
-                     row.Add(CompactDataCell((DataField)f, columns[ci++], ri));
+                     int walkIndex = walkIndexes[dataColumnIndex];
+                     row.Add(CompactDataCell((DataField)f, columns[dataColumnIndex], rowIndex, ref walkIndex));
+                     walkIndexes[dataColumnIndex] = walkIndex;
+                     dataColumnIndex += 1;
                      break;
                   default:
                      throw new NotImplementedException(f.SchemaType.ToString());
@@ -96,11 +177,32 @@ namespace Parquet.Data.Rows
          }
       }
 
-      private static object CompactDataCell(DataField dataField, DataColumn dataColumn, int rowIndex)
+      private static object CompactDataCell(DataField dataField, DataColumn dataColumn, int rowIndex, ref int walkIndex)
       {
-         object value = dataColumn.Data.GetValue(rowIndex);
+         if (dataField.IsArray)
+         {
+            var cell = new List<object>();
 
-         return value;
+            while (walkIndex < dataColumn.Data.Length)
+            {
+               int rl = dataColumn.RepetitionLevels[walkIndex];
+
+               if (cell.Count > 0 && rl == 0)
+                  break;
+
+               object value = dataColumn.Data.GetValue(walkIndex);
+               cell.Add(value);
+               walkIndex += 1;
+            }
+
+            Array cellArray = Array.CreateInstance(dataField.ClrNullableIfHasNullsType, cell.Count);
+            Array.Copy(cell.ToArray(), cellArray, cell.Count);
+            return cellArray;
+         }
+         else
+         {
+            return dataColumn.Data.GetValue(rowIndex);
+         }
       }
 
       private static void ValidateColumnsAreInSchema(Schema schema, DataColumn[] columns)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Parquet.Data;
 using Parquet.Data.Rows;
@@ -24,7 +25,24 @@ namespace Parquet.Test
       }
 
       [Fact]
-      public void Read_write_flat_table()
+      public void Validate_array_succeeds()
+      {
+         var table = new Table(new Schema(new DataField<IEnumerable<int>>("ids")));
+
+         table.Add(new Row(new[] { 1, 2, 3 }));
+         table.Add(new Row(new[] { 4, 5, 6 }));
+      }
+
+      [Fact]
+      public void Validate_array_fails()
+      {
+         var table = new Table(new Schema(new DataField<IEnumerable<int>>("ids")));
+
+         Assert.Throws<ArgumentException>(() => table.Add(new Row(1)));
+      }
+
+      [Fact]
+      public void Write_read_flat()
       {
          var table = new Table(new Schema(new DataField<int>("id"), new DataField<string>("city")));
          var ms = new MemoryStream();
@@ -51,6 +69,38 @@ namespace Parquet.Test
 
          //validate data
          Assert.True(table.Equals(table2, true));
+      }
+
+      [Fact]
+      public void Write_read_array()
+      {
+         var table = new Table(
+            new Schema(
+               new DataField<int>("id"),
+               new DataField<string[]>("categories")     //array field
+               )
+            );
+         var ms = new MemoryStream();
+
+         table.Add(1, new[] { "1", "2", "3" });
+         table.Add(3, new[] { "3", "3", "3" });
+
+         //write to stream
+         using (var writer = new ParquetWriter(table.Schema, ms))
+         {
+            writer.Write(table);
+         }
+
+         //read back into table
+         ms.Position = 0;
+         Table table2;
+         using (var reader = new ParquetReader(ms))
+         {
+            table2 = reader.ReadAsTable();
+         }
+
+         //validate data
+         Assert.Equal(table.ToString(), table2.ToString());
       }
    }
 }

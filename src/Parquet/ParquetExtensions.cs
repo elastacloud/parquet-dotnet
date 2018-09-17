@@ -97,10 +97,8 @@ namespace Parquet
       /// <param name="table"></param>
       public static void Write(this ParquetRowGroupWriter writer, Table table)
       {
-         foreach (DataField dataField in table.Schema.GetDataFields())
+         foreach (DataColumn dc in table.ExtractDataColumns())
          {
-            DataColumn dc = table.ExtractDataColumn(dataField);
-
             writer.WriteColumn(dc);
          }
       }
