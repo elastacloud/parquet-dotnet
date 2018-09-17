@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Parquet.Data;
 using Parquet.Data.Rows;
@@ -70,16 +71,37 @@ namespace Parquet
       }
 
       /// <summary>
+      /// Reads the first row group as a table
+      /// </summary>
+      /// <param name="reader">Open reader</param>
+      /// <returns></returns>
+      public static Table ReadAsTable(this ParquetReader reader)
+      {
+         if (reader.RowGroupCount > 1)
+         {
+            throw new NotImplementedException("current implementation supports only single row group files");
+         }
+
+         using (ParquetRowGroupReader rowGroupReader = reader.OpenRowGroupReader(0))
+         {
+            DataColumn[] allData = reader.Schema.GetDataFields().Select(df => rowGroupReader.ReadColumn(df)).ToArray();
+
+            return new Table(reader.Schema, allData, rowGroupReader.RowCount);
+         }
+      }
+
+      /// <summary>
       /// Writes table to this row group
       /// </summary>
       /// <param name="writer"></param>
       /// <param name="table"></param>
       public static void Write(this ParquetRowGroupWriter writer, Table table)
       {
-         DataColumn[] columns = table.ExtractDataColunns();
-         for (int i = 0; i < columns.Length; i++)
+         foreach (DataField dataField in table.Schema.GetDataFields())
          {
-            writer.WriteColumn(columns[i]);
+            DataColumn dc = table.ExtractDataColumn(dataField);
+
+            writer.WriteColumn(dc);
          }
       }
    }

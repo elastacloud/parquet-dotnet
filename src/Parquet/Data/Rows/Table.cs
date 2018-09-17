@@ -9,25 +9,49 @@ namespace Parquet.Data.Rows
    /// <summary>
    /// Represents a table or table chunk that stores data in row format.
    /// </summary>
-   public class Table : IList<Row>
+   public class Table : IList<Row>, IEquatable<Table>
    {
       //dev: for reference from previous stable version see https://github.com/elastacloud/parquet-dotnet/tree/final-v2/src/Parquet/Data       
 
       private readonly List<Row> _rows = new List<Row>();
+      private readonly Field[] _dfs;
 
       /// <summary>
       /// Creates an empty table with specified schema
       /// </summary>
-      /// <param name="schema"></param>
+      /// <param name="schema">Parquet file schema.</param>
       public Table(Schema schema)
       {
          Schema = schema ?? throw new ArgumentNullException(nameof(schema));
+         _dfs = schema.Fields.ToArray();
+      }
+
+      /// <summary>
+      /// Creates a table with specified schema
+      /// </summary>
+      /// <param name="schema">Parquet file schema.</param>
+      /// <param name="tableData">Optionally initialise this table with data columns that correspond to the passed <paramref name="schema"/></param>
+      /// <param name="rowCount"></param>
+      internal Table(Schema schema, DataColumn[] tableData, long rowCount) : this(schema)
+      {
+         Schema = schema ?? throw new ArgumentNullException(nameof(schema));
+         _dfs = schema.Fields.ToArray();
+
+         if(tableData != null)
+         {
+            _rows.AddRange(RowMatrix.Compact(schema, tableData, rowCount));
+         }
       }
 
       /// <summary>
       /// Table schema
       /// </summary>
       public Schema Schema { get; }
+
+      internal DataColumn ExtractDataColumn(DataField dataField)
+      {
+         return RowMatrix.Extract(this, dataField);
+      }
 
       #region [ IList members ]
 
@@ -41,7 +65,7 @@ namespace Parquet.Data.Rows
          get => _rows[index];
          set
          {
-            RowMatrix.Validate(value);
+            RowMatrix.Validate(value, _dfs);
             _rows[index] = value;
          }
       }
@@ -62,7 +86,7 @@ namespace Parquet.Data.Rows
       /// <param name="item"></param>
       public void Add(Row item)
       {
-         RowMatrix.Validate(item);
+         RowMatrix.Validate(item, _dfs);
 
          _rows.Add(item);
       }
@@ -121,7 +145,7 @@ namespace Parquet.Data.Rows
       /// <param name="item"></param>
       public void Insert(int index, Row item)
       {
-         RowMatrix.Validate(item);
+         RowMatrix.Validate(item, _dfs);
 
          _rows.Insert(index, item);
       }
@@ -148,6 +172,68 @@ namespace Parquet.Data.Rows
       IEnumerator IEnumerable.GetEnumerator()
       {
          return _rows.GetEnumerator();
+      }
+
+      /// <summary>
+      /// Compares tables for equality, including:
+      /// - schema equality
+      /// - row count
+      /// - row values equality
+      /// </summary>
+      /// <param name="other"></param>
+      /// <returns></returns>
+      public bool Equals(Table other)
+      {
+         return Equals(other, false);
+      }
+
+      /// <summary>
+      /// Compares tables for equality, including:
+      /// - schema equality
+      /// - row count
+      /// - row values equality
+      /// </summary>
+      /// <param name="other"></param>
+      /// <param name="throwExceptions"></param>
+      /// <returns></returns>
+      public bool Equals(Table other, bool throwExceptions)
+      {
+         if (ReferenceEquals(other, null))
+         {
+            if (throwExceptions)
+               throw new ArgumentNullException(nameof(other));
+
+            return false;
+         }
+
+         if (!other.Schema.Equals(Schema))
+         {
+            if(throwExceptions)
+               throw new ArgumentException(Schema.GetNotEqualsMessage(other.Schema, "this", "other"));
+
+            return false;
+         }
+
+         if (other.Count != Count)
+         {
+            if (throwExceptions)
+               throw new ArgumentException($"expected {Count} rows but found {other.Count}");
+
+            return false;
+         }
+
+         for(int i = 0; i < Count; i++)
+         {
+            if (!this[i].Equals(other[i]))
+            {
+               if (throwExceptions)
+                  throw new ArgumentException($"rows are different at row {i}. this: {this[i]}, other: {other[i]}");
+
+               return false;
+            }
+         }
+
+         return true;
       }
 
       #endregion

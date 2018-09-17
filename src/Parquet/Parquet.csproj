@@ -46,4 +46,8 @@ the first release of a major rewrite</PackageReleaseNotes>
     <DotNetCliToolReference Include="dotnet-housework" Version="0.0.9" />
   </ItemGroup>
 
+   <ItemGroup>
+     <Folder Include="Data\Nested\" />
+   </ItemGroup>
+
 </Project>

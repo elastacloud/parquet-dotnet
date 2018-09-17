@@ -8,7 +8,7 @@ namespace Parquet.Data.Rows
    /// <summary>
    /// Represents a tabular row
    /// </summary>
-   public class Row
+   public class Row : IEquatable<Row>
    {
       /// <summary>
       /// Initializes a new instance of the <see cref="Row"/> class which has only one single column.
@@ -242,6 +242,34 @@ namespace Parquet.Data.Rows
             sb.Append(v.ToString());
          }
 
+      }
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="other"></param>
+      /// <returns></returns>
+      public bool Equals(Row other)
+      {
+         if (Values.Length != other.Values.Length)
+            return false;
+
+         for(int i = 0; i < Values.Length; i++)
+         {
+            object v = Values[i];
+            object ov = other.Values[i];
+
+            if(v == null || ov == null)
+            {
+               return v == null && ov == null;
+            }
+
+
+            if (!v.Equals(ov))
+               return false;
+         }
+
+         return true;
       }
    }
 }
