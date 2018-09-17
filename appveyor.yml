@@ -9,17 +9,15 @@ before_build:
 - ps: >-
     dotnet restore src/Parquet.sln
 
-    cd src/Parquet
+    dotnet tool install dotnet-housework -g
 
-    dotnet housework setbuildnumber %CiVersion%  ../../build.ini
+    dotnet housework setbuildnumber %CiVersion% build.ini
 
-    dotnet housework author .\Parquet.csproj  ../../build.ini
+    dotnet housework author ./src/Parquet/Parquet.csproj  build.ini
 
-    dotnet housework author ..\SharpArrow\SharpArrow.csproj  ../../build.ini
+    dotnet housework author ./src/SharpArrow/SharpArrow.csproj build.ini
 
-    dotnet housework substitute ThriftFooter.cs ../../build.ini -r
-
-    cd ../..
+    dotnet housework substitute ./src/Parquet/ThriftFooter.cs build.ini -r
 build:
   project: src/Parquet.sln
   verbosity: minimal
