@@ -67,6 +67,20 @@ namespace Parquet.Data
       }
 
       /// <summary>
+      /// Creates an empty dictionary to keep values for this map field. Only works when both key and value are <see cref="DataField"/>
+      /// </summary>
+      /// <returns></returns>
+      internal IDictionary CreateSimpleDictionary()
+      {
+         Type genericType = typeof(Dictionary<,>);
+         Type concreteType = genericType.MakeGenericType(
+            ((DataField)Key).ClrNullableIfHasNullsType,
+            ((DataField)Value).ClrNullableIfHasNullsType);
+
+         return (IDictionary)Activator.CreateInstance(concreteType);
+      }
+
+      /// <summary>
       /// <see cref="Equals(object)"/>
       /// </summary>
       public override bool Equals(object obj)

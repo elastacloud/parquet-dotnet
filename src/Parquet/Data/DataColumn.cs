@@ -16,7 +16,6 @@ namespace Parquet.Data
          Field = field ?? throw new ArgumentNullException(nameof(field));
 
          _dataTypeHandler = DataTypeFactory.Match(field.DataType);
-         HasRepetitions = field.IsArray;
       }
 
       /// <summary>
@@ -73,9 +72,10 @@ namespace Parquet.Data
       public DataField Field { get; private set; }
 
       /// <summary>
-      /// 
+      /// When true, this field has repetitions. It doesn't mean that it's an array though. This property simply checks that
+      /// repetition levels are present on this column.
       /// </summary>
-      public bool HasRepetitions { get; private set; }
+      public bool HasRepetitions => RepetitionLevels != null;
 
       internal Array PackDefinitions(int maxDefinitionLevel, out int[] pooledDefinitionLevels, out int definitionLevelCount)
       {

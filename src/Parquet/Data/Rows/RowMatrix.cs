@@ -200,8 +200,10 @@ namespace Parquet.Data.Rows
                         throw new NotImplementedException();
 
                      DataColumnEnumerator dceKey = columns[dataColumnIndex];
-                     DataColumnEnumerator dceValue = columns[dataColumnIndex];
-                     row.Add(CompactDictionary(dceKey, dceValue));
+                     DataColumnEnumerator dceValue = columns[dataColumnIndex + 1];
+                     IDictionary dc = mapField.CreateSimpleDictionary();
+                     CompactDictionary(dc, dceKey, dceValue);
+                     row.Add(dc);
                      dataColumnIndex += 2;
                      break;
                   default:
@@ -213,7 +215,7 @@ namespace Parquet.Data.Rows
          }
       }
 
-      private static IDictionary CompactDictionary(DataColumnEnumerator keyColumn, DataColumnEnumerator valueColumn)
+      private static void CompactDictionary(IDictionary container, DataColumnEnumerator keyColumn, DataColumnEnumerator valueColumn)
       {
          keyColumn.MoveNext();
          valueColumn.MoveNext();
@@ -221,7 +223,10 @@ namespace Parquet.Data.Rows
          Array keys = (Array)keyColumn.Current;
          Array values = (Array)valueColumn.Current;
 
-         return null;
+         for(int i = 0; i < keys.Length; i++)
+         {
+            container.Add(keys.GetValue(i), values.GetValue(i));
+         }
       }
 
       private static void ValidateColumnsAreInSchema(Schema schema, DataColumn[] columns)
