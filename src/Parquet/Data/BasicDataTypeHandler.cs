@@ -42,6 +42,7 @@ namespace Parquet.Data
          bool isArray = (tse.Repetition_type == Thrift.FieldRepetitionType.REPEATED);
 
          Field simple = CreateSimple(tse, hasNulls, isArray);
+         simple.NativeSchema = tse;
          ownedChildCount = 0;
          return simple;
       }

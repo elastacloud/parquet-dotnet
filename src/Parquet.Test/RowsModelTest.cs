@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Parquet.Test
 {
-   public class RowsModelTest
+   public class RowsModelTest : TestBase
    {
       [Fact]
       public void Add_valid_row_succeeds()
@@ -64,6 +64,21 @@ namespace Parquet.Test
             ));
 
          Assert.Throws<ArgumentException>(() => table.Add(new Row(1)));
+      }
+
+      [Fact]
+      public void Read_map_file_from_Apache_Spark()
+      {
+         Table t;
+         using (Stream stream = OpenTestFile("map.parquet"))
+         {
+            using (var reader = new ParquetReader(stream))
+            {
+               t = reader.ReadAsTable();
+            }
+         }
+
+
       }
 
       [Fact]

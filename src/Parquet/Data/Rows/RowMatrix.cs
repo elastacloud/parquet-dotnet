@@ -168,15 +168,15 @@ namespace Parquet.Data.Rows
 
          var result = new List<Row>();
 
-         Compact(schema.Fields.ToArray(), columns, result, rowCount);
+         DataColumnEnumerator[] iterated = columns.Select(c => new DataColumnEnumerator(c)).ToArray();
+
+         Compact(schema.Fields.ToArray(), iterated, result, rowCount);
 
          return result;
       }
 
-      private static void Compact(Field[] fields, DataColumn[] columns, List<Row> container, long rowCount)
+      private static void Compact(Field[] fields, DataColumnEnumerator[] columns, List<Row> container, long rowCount)
       {
-         int[] walkIndexes = new int[columns.Length];
-
          for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
          {
             int dataColumnIndex = 0;
@@ -188,10 +188,21 @@ namespace Parquet.Data.Rows
                switch (f.SchemaType)
                {
                   case SchemaType.Data:
-                     int walkIndex = walkIndexes[dataColumnIndex];
-                     row.Add(CompactDataCell((DataField)f, columns[dataColumnIndex], rowIndex, ref walkIndex));
-                     walkIndexes[dataColumnIndex] = walkIndex;
+                     DataColumnEnumerator dce = columns[dataColumnIndex];
+                     dce.MoveNext();
+                     row.Add(dce.Current);
                      dataColumnIndex += 1;
+                     break;
+                  case SchemaType.Map:
+                     MapField mapField = (MapField)f;
+
+                     if (!((mapField.Key is DataField) && (mapField.Value is DataField)))
+                        throw new NotImplementedException();
+
+                     DataColumnEnumerator dceKey = columns[dataColumnIndex];
+                     DataColumnEnumerator dceValue = columns[dataColumnIndex];
+                     row.Add(CompactDictionary(dceKey, dceValue));
+                     dataColumnIndex += 2;
                      break;
                   default:
                      throw new NotImplementedException(f.SchemaType.ToString());
@@ -202,32 +213,15 @@ namespace Parquet.Data.Rows
          }
       }
 
-      private static object CompactDataCell(DataField dataField, DataColumn dataColumn, int rowIndex, ref int walkIndex)
+      private static IDictionary CompactDictionary(DataColumnEnumerator keyColumn, DataColumnEnumerator valueColumn)
       {
-         if (dataField.IsArray)
-         {
-            var cell = new List<object>();
+         keyColumn.MoveNext();
+         valueColumn.MoveNext();
 
-            while (walkIndex < dataColumn.Data.Length)
-            {
-               int rl = dataColumn.RepetitionLevels[walkIndex];
+         Array keys = (Array)keyColumn.Current;
+         Array values = (Array)valueColumn.Current;
 
-               if (cell.Count > 0 && rl == 0)
-                  break;
-
-               object value = dataColumn.Data.GetValue(walkIndex);
-               cell.Add(value);
-               walkIndex += 1;
-            }
-
-            Array cellArray = Array.CreateInstance(dataField.ClrNullableIfHasNullsType, cell.Count);
-            Array.Copy(cell.ToArray(), cellArray, cell.Count);
-            return cellArray;
-         }
-         else
-         {
-            return dataColumn.Data.GetValue(rowIndex);
-         }
+         return null;
       }
 
       private static void ValidateColumnsAreInSchema(Schema schema, DataColumn[] columns)

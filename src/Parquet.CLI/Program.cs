@@ -1,4 +1,6 @@
 ﻿using System;
+using Cpf.App;
+using Parquet.CLI.Commands;
 
 namespace Parquet.CLI
 {
@@ -8,9 +10,23 @@ namespace Parquet.CLI
    /// </summary>
    class Program
    {
-      static void Main(string[] args)
+      static int Main(string[] args)
       {
-         Console.WriteLine("Hello World!");
+         var app = new Application("Parquet CLI");
+
+         app.Command("schema", cmd =>
+         {
+            cmd.Description = "Displays Parquet file schema";
+
+            Argument<string> path = cmd.Argument<string>("path").IsRequired();
+
+            cmd.OnExecute(pc =>
+            {
+               new SchemaCommand(pc, path.Value).Execute();
+            });
+         });
+
+         return app.Execute();
       }
    }
 }
