@@ -17,7 +17,7 @@ namespace Parquet.Data.Concrete
          throw new NotImplementedException();
       }
 
-      public override Array MergeDictionary(Array dictionary, int[] indexes)
+      public override Array MergeDictionary(Array src, Array dictionary, int[] indexes, int indexLength)
       {
          throw new NotImplementedException();
       }

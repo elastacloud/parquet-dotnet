@@ -94,13 +94,12 @@ namespace Parquet.Data
          parent.Num_children += 1;
       }
 
-      public virtual Array MergeDictionary(Array untypedDictionary, int[] indexes)
+      public virtual Array MergeDictionary(Array src, Array untypedDictionary, int[] indexes, int indexLength)
       {
          TSystemType[] dictionary = (TSystemType[])untypedDictionary;
-         int length = indexes.Length;
-         TSystemType[] result = new TSystemType[length];
+         TSystemType[] result = (TSystemType[])src ?? new TSystemType[indexes.Length];
 
-         for (int i = 0; i < length; i++)
+         for (int i = 0; i < indexLength; i++)
          {
             int index = indexes[i];
             TSystemType value = dictionary[index];

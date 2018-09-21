@@ -31,7 +31,7 @@ namespace Parquet.Data
 
       Array GetArray(int minCount, bool rent, bool isNullable);
 
-      Array MergeDictionary(Array dictionary, int[] indexes);
+      Array MergeDictionary(Array src, Array dictionary, int[] indexes, int indexLength);
 
       Array PackDefinitions(Array data, int maxDefinitionLevel, out int[] definitions, out int defiintionsLength);
 

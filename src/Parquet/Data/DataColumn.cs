@@ -37,14 +37,14 @@ namespace Parquet.Data
          int[] definitionLevels, int maxDefinitionLevel,
          int[] repetitionLevels, int maxRepetitionLevel,
          Array dictionary,
-         int[] dictionaryIndexes) : this(field)
+         int[] dictionaryIndexes, int indexOffset) : this(field)
       {
          Data = definedData;
 
          // 1. Dictionary merge
          if (dictionary != null)
          {
-            Data = _dataTypeHandler.MergeDictionary(dictionary, dictionaryIndexes);
+            Data = _dataTypeHandler.MergeDictionary(Data, dictionary, dictionaryIndexes, indexOffset);
          }
 
          // 2. Apply definitions

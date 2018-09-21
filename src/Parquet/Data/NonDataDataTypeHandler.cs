@@ -42,12 +42,12 @@ namespace Parquet.Data
          throw new NotSupportedException();
       }
 
-      public Array MergeDictionary(Array dictionary, int[] indexes)
+      public Array MergeDictionary(Array src, Array dictionary, int[] indexes, int indexLength)
       {
          throw new NotSupportedException();
       }
 
-      public Array PackDefinitions(Array data,  int maxDefiniionLevel, out int[] definitions, out int defiintionsLength)
+      public Array PackDefinitions(Array data, int maxDefiniionLevel, out int[] definitions, out int defiintionsLength)
       {
          throw new NotImplementedException();
       }
