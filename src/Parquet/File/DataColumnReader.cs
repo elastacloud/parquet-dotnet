@@ -84,7 +84,7 @@ namespace Parquet.File
 
          while (true)
          {
-            ReadDataPage(ph, colData, maxValues, ph.Data_page_header.Num_values);
+            ReadDataPage(ph, colData, maxValues);
 
             pagesRead++;
 
@@ -152,7 +152,7 @@ namespace Parquet.File
             .Min();
       }
 
-      private void ReadDataPage(Thrift.PageHeader ph, ColumnRawData cd, long maxValues, int actualValues)
+      private void ReadDataPage(Thrift.PageHeader ph, ColumnRawData cd, long maxValues)
       {
          using (Stream pageStream = OpenDataPageStream(ph))
          {
@@ -175,7 +175,7 @@ namespace Parquet.File
                   cd.definitionsOffset += ReadLevels(reader, _maxDefinitionLevel, cd.definitions, cd.definitionsOffset);
                }
 
-               ReadColumn(reader, ph.Data_page_header.Encoding, maxValues, actualValues,
+               ReadColumn(reader, ph.Data_page_header.Encoding, maxValues, ph.Data_page_header.Num_values,
                   ref cd.values, ref cd.valuesOffset,
                   ref cd.indexes, ref cd.indexesOffset);
             }
