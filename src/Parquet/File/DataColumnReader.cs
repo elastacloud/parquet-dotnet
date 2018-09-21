@@ -210,7 +210,7 @@ namespace Parquet.File
 
             case Thrift.Encoding.PLAIN_DICTIONARY:
                if (indexes == null) indexes = new int[(int)maxValues];
-               ReadPlainDictionary(reader, maxValues, indexes, indexesOffset);
+               ReadPlainDictionary(reader, actualValues, indexes, indexesOffset);
                indexesOffset += actualValues;
                break;
 
