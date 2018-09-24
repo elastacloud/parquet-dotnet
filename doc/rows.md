@@ -1,25 +1,68 @@
 # Row Based Access
 
-> *v3 originally completely killed row-based access, however that also killed some use cases associated with the ease of use.*
+Of course Parquet is columnar format, and doesn't store data in rows. However, sometimes accessing data by rows is essential in many processing algorithms and simply to display to a user. We as humans better understand rows rather than columns.
 
-> *Comparing to v2, v3 doesn't expand/contract rows added to the `Table` because most of the use cases with row based access is around processing data before it's written to parquet. v3 however agressively validates rows added to the tables before accepting those changes.*
+Parquet.Net provides out-of-the-box helpers to represent data in row format, however before using it consider the following:
 
+- Can you avoid using row based access? If yes, don't use row based access. 
+- Row based helpers add a lot of overhead on top of parquet data as it needs to be transformed on the fly from columns to rows internally, and this cannot be done in performant way.
+- If your data access code is slow, this is probably because you are using row based access which is relatively slow.
 
 ## Table
 
-Table is at the root of row-based hierarchy. A table is simply a collection of `Row`s, and by itself implements `IList<Row>` interface. 
+Table is at the root of row-based hierarchy. A table is simply a collection of `Row`s, and by itself implements `IList<Row>` interface. This means that you can perform any operations you normally do with `IList<T>` in .NET. A row is just a collection of untyped objects:
+
+![Rows General](img/rows-general.png)
 
 ## Row
 
 Row is a central structure to hold data during row-based access. Essentially a row is an array of untyped objects. The fact that the row holds untyped objects *adds a performance penalty on working with rows and tables* throught parquet, because all of the data cells needs to be boxed/unboxed for reading and writing. If you can work with *column-based data* please don't use row-based access at all. However, if you absolutely need row-based access, these helper classes are still better than writing your own helper classes.
 
+**Everything in parquet file can be represented as a set of Rows** including plain flat data, arrays, maps, lists and structures.
+
 ## Flat Data
 
-todo
+Representing flat data is the most obvious case, you would simply create a row where each element is a value of a row. For instance let's say you need to store a list of cities with their ids looking similar to this:
+
+|id|city|
+|--|----|
+|1|London|
+|2|New York|
+
+The corresponding code to create a table with rows is:
+
+```csharp
+var table = new Table(
+   new Schema(
+      new DataField<int>("id"),
+      new DataField<string>("city")));
+
+table.Add(new Row(1, "London"));
+table.Add(new Row(2, "New York"));
+```
+
+Both `ParquetReader` and `ParquetWriter` has plenty of extension methods to read and write tables.
 
 ## Arrays (Repeatable fields)
 
-todo
+Parquet has an option to store an array of values in a single cell, which is sometimes called a *repeatable field*. With row-based access you can simply add an array to each cell. For instance let's say you need to create the following table:
+
+|ids|
+|---|
+|1,2,3|
+|4,5,6|
+
+The corresponding code to populate this table is:
+
+```csharp
+var table = new Table(
+   new Schema(
+      new DataField<IEnumerable<int>>("ids")));
+
+table.Add(new Row(new[] { 1, 2, 3 }));
+table.Add(new Row(new[] { 4, 5, 6 }));
+
+```
 
 ## Dictionaries (Maps)
 
@@ -46,10 +89,10 @@ where the last cell is the data for your map. As w're in the row-based world, th
 |**Row 0**|234|100|
 |**Row 1**|235|110|
 
-## Lists
+## Structures
 
 todo
 
-## Structures
+## Lists
 
 todo
