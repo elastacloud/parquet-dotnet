@@ -123,7 +123,7 @@ namespace Parquet.Test
             new MapField("map", new DataField<string>("key"), new DataField<string>("value"))
             ));
 
-         table.Add(new Row(
+         table.Add(Row.SingleCell(
             new List<Row>
             {
                new Row("one", "v1"),
@@ -153,7 +153,7 @@ namespace Parquet.Test
             }
          }
 
-         Assert.Equal("{{1;[{1;one};{2;two};{3;three}]}}", t.ToString());
+         Assert.Equal("[{1;[{1;one};{2;two};{3;three}]}]", t.ToString());
       }
 
       [Fact]
@@ -220,7 +220,7 @@ namespace Parquet.Test
             }
          }
 
-         Assert.Equal("{{1;[{1;one};{2;two};{3;three}]}}", t.ToString());
+         Assert.Equal("[{12345-6;{Ivan;Gavryliuk}},{12345-7;{Richard;Conway}}]", t.ToString());
       }
 
       #endregion

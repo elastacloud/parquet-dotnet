@@ -38,12 +38,12 @@ namespace Parquet.Data.Rows
       {
          if(!value.GetType().TryExtractEnumerableType(out Type elementType))
          {
-            throw new ArgumentException($"map must be a collection of rows");
+            throw new ArgumentException($"map must be a collection, but found {value.GetType()}");
          }
 
          if(elementType != typeof(Row))
          {
-            throw new ArgumentException($"map must be a collection of rows, but found a collection of {elementType}");
+            throw new ArgumentException($"map element must be a collection of rows, but found a collection of {elementType}");
          }
 
          foreach(Row row in (IEnumerable)value)

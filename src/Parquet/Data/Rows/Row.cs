@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 using Parquet.Extensions;
@@ -14,16 +16,30 @@ namespace Parquet.Data.Rows
       /// <summary>
       /// Initializes a new instance of the <see cref="Row"/> class which has only one single column.
       /// </summary>
-      /// <param name="value">The value.</param>
       public Row(object value) : this(new[] { value })
       {
 
       }
 
       /// <summary>
+      /// Creates a single cell row. Use this method to avoid overloading confusion.
+      /// </summary>
+      public static Row SingleCell(object value)
+      {
+         return new Row(value);
+      }
+
+      /// <summary>
       /// Initializes a new instance of the <see cref="Row"/> class.
       /// </summary>
-      /// <param name="values">The values.</param>
+      public Row(IEnumerable<object> values)
+      {
+         Values = values.ToArray();
+      }
+
+      /// <summary>
+      /// Initializes a new instance of the <see cref="Row"/> class.
+      /// </summary>
       public Row(params object[] values)
       {
          Values = values;

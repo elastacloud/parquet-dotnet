@@ -28,61 +28,72 @@ namespace Parquet.Data.Rows
       {
          var result = new List<Row>();
 
-         ColumnsToRows(_schema.Fields.ToArray(), result, _totalRowRount);
+         ColumnsToRows(_schema.Fields, result, _totalRowRount);
 
          return result;
       }
 
-      private void ColumnsToRows(Field[] fields, List<Row> result, long rowCount)
+      private void ColumnsToRows(IEnumerable<Field> fields, List<Row> result, long rowCount)
       {
-         int rowIndex = 0;
-
-         while (rowCount == -1 || rowIndex < rowCount)
+         for(int rowIndex = 0; rowCount == -1 || rowIndex < rowCount; rowIndex++)
          {
-            var row = new List<object>();
-            for (int fieldIndex = 0; fieldIndex < fields.Length; fieldIndex++)
-            {
-               Field f = fields[fieldIndex];
+            Row row = BuildNextRow(fields);
 
-               switch (f.SchemaType)
-               {
-                  case SchemaType.Data:
-                     DataColumnEnumerator dce = _pathToColumn[f.Path];
-                     if (!dce.MoveNext())
-                     {
-                        return;
-                     }
-                     row.Add(dce.Current);
-                     break;
+            if (row == null)
+               return;
 
-                  case SchemaType.Map:
-                     row.Add(CreateMapCell((MapField)f));
-                     break;
-
-                  case SchemaType.Struct:
-                     //struct is just a row in a cell
-                     throw new NotImplementedException();
-
-                  default:
-                     throw OtherExtensions.NotImplemented(f.SchemaType.ToString());
-               }
-            }
-
-            result.Add(new Row(row.ToArray()));
-
-            rowIndex += 1;
+            result.Add(row);
          }
       }
 
-      private object CreateMapCell(MapField mapField)
+      private Row BuildNextRow(IEnumerable<Field> fields)
       {
-         if (!((mapField.Key is DataField) && (mapField.Value is DataField)))
+         var row = new List<object>();
+         foreach(Field f in fields)
+         {
+            switch (f.SchemaType)
+            {
+               case SchemaType.Data:
+                  DataColumnEnumerator dce = _pathToColumn[f.Path];
+                  if (!dce.MoveNext())
+                  {
+                     return null;
+                  }
+                  row.Add(dce.Current);
+                  break;
+
+               case SchemaType.Map:
+                  row.Add(CreateMapCell((MapField)f));
+                  break;
+
+               case SchemaType.Struct:
+                  row.Add(CreateStructCell((StructField)f));
+                  break;
+
+               default:
+                  throw OtherExtensions.NotImplemented(f.SchemaType.ToString());
+            }
+         }
+
+         return new Row(row);
+      }
+
+      private object CreateStructCell(StructField sf)
+      {
+         Row row = BuildNextRow(sf.Fields);
+
+         return row;
+      }
+
+      private object CreateMapCell(MapField mf)
+      {
+         if (!((mf.Key is DataField) && (mf.Value is DataField)))
             throw OtherExtensions.NotImplemented("complex maps");
 
          var mapRows = new List<Row>();
 
-         DataColumnEnumerator dceKey = _pathToColumn[mapField.Key.Path];
-         DataColumnEnumerator dceValue = _pathToColumn[mapField.Value.Path];
+         DataColumnEnumerator dceKey = _pathToColumn[mf.Key.Path];
+         DataColumnEnumerator dceValue = _pathToColumn[mf.Value.Path];
 
          ColumnsToRows(
             new[] { dceKey.DataColumn.Field, dceValue.DataColumn.Field },

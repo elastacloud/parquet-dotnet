@@ -298,28 +298,28 @@ namespace Parquet.Data.Rows
          int nestLevel = format == "mjn" ? 0 : -1;
 
          var sb = new StringBuilder();
-         sb.OpenBrace(nestLevel);
+         sb.OpenBrace(nestLevel, "[");
 
          bool first = true;
          foreach (Row row in _rows)
          {
-            row.ToString(sb, nestLevel == -1 ? -1 : 1);
-
-            if(first)
+            if (first)
             {
                first = false;
             }
             else
             {
                sb.Append(",");
-               if(nestLevel != -1)
+               if (nestLevel != -1)
                {
                   sb.AppendLine();
                }
             }
+
+            row.ToString(sb, nestLevel == -1 ? -1 : 1);
          }
 
-         sb.CloseBrace(nestLevel);
+         sb.CloseBrace(nestLevel, "]");
 
          return sb.ToString();
       }
