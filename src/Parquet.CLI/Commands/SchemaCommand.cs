@@ -88,6 +88,13 @@ namespace Parquet.CLI.Commands
                }
                break;
 
+            case SchemaType.List:
+               var lf = (ListField)field;
+               Write(" (list)", ConsoleColor.Yellow);
+               WriteLine();
+               PrintField(lf.Item, nesting + 1);
+               break;
+
             default:
                WriteLine(field.SchemaType.ToString() + "?", ConsoleColor.Yellow);
                break;
