@@ -47,6 +47,10 @@ namespace Parquet.Data
          }
       }
 
+      internal override void PropagateLevels(int parentRepetitionLevel, int parentDefinitionLevel)
+      {
+      }
+
       private StructField(string name) : base(name, SchemaType.Struct)
       {
 

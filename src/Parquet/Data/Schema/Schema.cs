@@ -26,18 +26,40 @@ namespace Parquet.Data
       /// Initializes a new instance of the <see cref="Schema"/> class from schema elements.
       /// </summary>
       /// <param name="fields">The elements.</param>
-      public Schema(IEnumerable<Field> fields)
+      public Schema(IReadOnlyCollection<Field> fields) : this(fields.ToList())
       {
-         _fields = fields.ToList();
+         if (fields == null)
+         {
+            throw new ArgumentNullException(nameof(fields));
+         }
       }
 
       /// <summary>
       /// Initializes a new instance of the <see cref="Schema"/> class.
       /// </summary>
       /// <param name="fields">The elements.</param>
-      public Schema(params Field[] fields)
+      public Schema(params Field[] fields) : this(fields.ToList())
       {
-         _fields = fields.ToList();
+         if (fields == null)
+         {
+            throw new ArgumentNullException(nameof(fields));
+         }
+      }
+
+      private Schema(List<Field> fields)
+      {
+         if(fields.Count == 0)
+         {
+            throw new ArgumentException("at least one field is required", nameof(fields));
+         }
+
+         _fields = fields;
+
+         //set levels now, after schema is constructeds
+         foreach(Field field in fields)
+         {
+            field.PropagateLevels(0, 0);
+         }
       }
 
       /// <summary>

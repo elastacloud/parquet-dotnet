@@ -27,7 +27,6 @@ namespace Parquet.Data.Concrete
 
          var map = new MapField(tseRoot.Name);
          map.Path = tseRoot.Name + Schema.PathSeparator + tseContainer.Name;
-         map.NativeSchema = tseRoot;
 
          index += 1;
          ownedChildCount = 2;

@@ -15,7 +15,6 @@ namespace Parquet.Data.Concrete
 
          ownedChildCount = container.Num_children; //make then owned to receive in .Assign()
          Field f = StructField.CreateWithNoElements(container.Name);
-         f.NativeSchema = container;
          return f;
       }
 

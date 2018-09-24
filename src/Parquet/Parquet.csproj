@@ -45,8 +45,4 @@ the first release of a major rewrite</PackageReleaseNotes>
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
   </ItemGroup>
 
-   <ItemGroup>
-     <Folder Include="Data\Nested\" />
-   </ItemGroup>
-
 </Project>

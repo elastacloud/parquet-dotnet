@@ -39,6 +39,11 @@ namespace Parquet.Data
          }
       }
 
+      internal override void PropagateLevels(int parentRepetitionLevel, int parentDefinitionLevel)
+      {
+         
+      }
+
       /// <summary>
       /// </summary>
       public override string ToString()

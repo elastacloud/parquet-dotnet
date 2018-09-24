@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using Parquet.File;
 
 namespace Parquet.Data
 {
@@ -58,7 +59,6 @@ namespace Parquet.Data
          IsArray = isArray;
 
          MaxRepetitionLevel = isArray ? 1 : 0;
-         MaxDefinitionLevel = hasNulls ? 1 : 0;
 
          IDataTypeHandler handler = DataTypeFactory.Match(dataType);
          if (handler != null)
@@ -74,6 +74,18 @@ namespace Parquet.Data
          {
             Path = value.AddPath(Name);
          }
+      }
+
+      /// <summary>
+      /// see
+      /// <see cref="ThriftFooter.GetLevels(Thrift.ColumnChunk, out int, out int)"/>
+      /// and
+      /// <see cref="BasicDataTypeHandler{TSystemType}.CreateSchemaElement(System.Collections.Generic.IList{Thrift.SchemaElement}, ref int, out int)"/>
+      /// </summary>
+      internal override void PropagateLevels(int parentRepetitionLevel, int parentDefinitionLevel)
+      {
+         MaxRepetitionLevel = parentRepetitionLevel + (IsArray ? 1 : 0);
+         MaxDefinitionLevel = parentDefinitionLevel + (HasNulls ? 1 : 0);
       }
 
       /// <summary>

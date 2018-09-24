@@ -16,7 +16,6 @@ namespace Parquet.Data.Concrete
          ListField listField = ListField.CreateWithNoItem(tseList.Name);
          //as we are skipping elements set path hint
          listField.Path = $"{tseList.Name}{Schema.PathSeparator}{schema[index + 1].Name}";
-         listField.NativeSchema = tseList;
          index += 2;          //skip this element and child container
          ownedChildCount = 1; //we should get this element assigned back
          return listField;

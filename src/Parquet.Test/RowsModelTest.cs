@@ -49,10 +49,10 @@ namespace Parquet.Test
             ));
 
          table.Add(new Row(
-            new Dictionary<string, string>
+            new List<Row>
             {
-               ["one"] = "v1",
-               ["two"] = "v2"
+               new Row("one", "v1"),
+               new Row("two", "v2")
             }));
       }
 
@@ -92,11 +92,12 @@ namespace Parquet.Test
                   new DataField<long>("count"))));
          var ms = new MemoryStream();
 
-         table.Add("London", new Dictionary<int, long>
-         {
-            [234] = 100,
-            [235] = 110
-         });
+         table.Add("London",
+            new List<Row>
+            {
+               new Row(234, 100L),
+               new Row(235, 110L)
+            });
 
          //write as table
          using (var writer = new ParquetWriter(table.Schema, ms))
@@ -113,7 +114,7 @@ namespace Parquet.Test
          }
 
          //validate data
-         Assert.True(table.Equals(table2, true));
+         Assert.Equal(table.ToString(), table2.ToString());
       }
 
       [Fact]

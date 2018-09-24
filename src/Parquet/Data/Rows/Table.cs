@@ -240,7 +240,16 @@ namespace Parquet.Data.Rows
             if (!this[i].Equals(other[i]))
             {
                if (throwExceptions)
-                  throw new ArgumentException($"rows are different at row {i}. this: {this[i]}, other: {other[i]}");
+               {
+                  try
+                  {
+                     this[i].Equals(other[i], true);
+                  }
+                  catch (ArgumentException ex)
+                  {
+                     throw new ArgumentException($"tables are different at row {i}. this: {this[i]}, other: {other[i]}", ex);
+                  }
+               }
 
                return false;
             }

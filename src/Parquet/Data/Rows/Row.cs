@@ -231,12 +231,25 @@ namespace Parquet.Data.Rows
       /// <summary>
       /// 
       /// </summary>
-      /// <param name="other"></param>
-      /// <returns></returns>
       public bool Equals(Row other)
       {
+         return Equals(other, false);
+      }
+
+      /// <summary>
+      /// 
+      /// </summary>
+      public bool Equals(Row other, bool throwException)
+      {
          if (Values.Length != other.Values.Length)
+         {
+            if(throwException)
+            {
+               throw new ArgumentException($"values count is different ({Values.Length} != {other.Values.Length})");
+            }
+
             return false;
+         }
 
          for(int i = 0; i < Values.Length; i++)
          {
@@ -245,11 +258,25 @@ namespace Parquet.Data.Rows
 
             if(v == null || ov == null)
             {
-               return v == null && ov == null;
+               bool equal = v == null && ov == null;
+
+               if(!equal && throwException)
+               {
+                  throw new ArgumentException($"only one of the values is null at position {i}");
+               }
+
+               return equal;
             }
 
             if (!v.Equals(ov))
+            {
+               if(throwException)
+               {
+                  throw new ArgumentException($"values are not equal at position {i} ({v} != {ov})");
+               }
+
                return false;
+            }
          }
 
          return true;

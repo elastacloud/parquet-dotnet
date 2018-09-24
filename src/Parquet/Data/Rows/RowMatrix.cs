@@ -36,23 +36,19 @@ namespace Parquet.Data.Rows
 
       private static void ValidateMap(MapField mf, object value)
       {
-         DataField keyField = (DataField)mf.Key;
-         DataField valueField = (DataField)mf.Value;
-
-         if(!value.GetType().TryExtractDictionaryType(out Type keyType, out Type valueType) ||
-            keyType != keyField.ClrType || valueType != valueField.ClrType)
+         if(!value.GetType().TryExtractEnumerableType(out Type elementType))
          {
-            throw new ArgumentException($"expected dictionary of {keyField.ClrType}:{valueField.ClrType} but found {value.GetType()}");
+            throw new ArgumentException($"map must be a collection of rows");
          }
 
-         IDictionary dictionary = (IDictionary)value;
-         foreach(object dkey in dictionary.Keys)
+         if(elementType != typeof(Row))
          {
-            ValidatePrimitive(keyField, dkey);
+            throw new ArgumentException($"map must be a collection of rows, but found a collection of {elementType}");
          }
-         foreach(object dvalue in dictionary.Values)
+
+         foreach(Row row in (IEnumerable)value)
          {
-            ValidatePrimitive(valueField, dvalue);
+            Validate(row, new[] { mf.Key, mf.Value });
          }
       }
 
@@ -93,14 +89,19 @@ namespace Parquet.Data.Rows
 
       #endregion
 
-      #region [ Table/Row packing ]
+      #region [ Conversion: Rows => DataColumns ]
 
       public static DataColumn[] RowsToColumns(Schema schema, IReadOnlyCollection<Row> rows)
+      {
+         return RowsToColumns(schema.Fields.ToArray(), rows);
+      }
+
+      private static DataColumn[] RowsToColumns(Field[] fields, IReadOnlyCollection<Row> rows)
       {
          var dcs = new List<DataColumn>();
 
          int i = 0;
-         foreach(Field f in schema.Fields)
+         foreach(Field f in fields)
          {
             List<object> values = rows.Select(r => r[i]).ToList();
 
@@ -133,11 +134,33 @@ namespace Parquet.Data.Rows
          DataField keyField = (DataField)mapField.Key;
          DataField valueField = (DataField)mapField.Value;
 
-         //values are instances of IDictionary
+         //values are instances of Row collections
 
-         //ICollection[] keys = values.Cast<IDictionary>().Select(d => d.Keys).ToArray();
-         throw new NotImplementedException();
+         DataColumn[] columns = null;
 
+         foreach(IReadOnlyCollection<Row> rows in values)
+         {
+            DataColumn[] rowsColumns = RowsToColumns(new Field[] { mapField.Key, mapField.Value }, rows);
+
+            //add correct repetition levels
+            rowsColumns = rowsColumns.Select(rc => new DataColumn(rc.Field, rc.Data, rc.Field.GenerateRepetitions(rc.Data.Length))).ToArray();
+            
+            if(columns == null)
+            {
+               columns = rowsColumns;
+            }
+            else
+            {
+               //columns = rowsColumns.Select((dc, i) => )
+               throw new NotImplementedException();
+            }
+
+         }
+
+         foreach(DataColumn column in columns)
+         {
+            resultColumns.Add(column);
+         }
       }
 
       private static DataColumn RowToDataColumn(DataField dataField, IReadOnlyCollection<object> values)
@@ -180,6 +203,10 @@ namespace Parquet.Data.Rows
             return new DataColumn(dataField, data);
          }
       }
+
+      #endregion
+
+      #region [ Conversion: DataColumns => Rows ]
 
       public static List<Row> ColumnsToRows(Schema schema, DataColumn[] columns, long rowCount)
       {
