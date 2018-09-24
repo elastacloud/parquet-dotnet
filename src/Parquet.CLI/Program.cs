@@ -40,6 +40,16 @@ namespace Parquet.CLI
             });
          });
 
+         app.Command("to-json", cmd =>
+         {
+            Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
+
+            cmd.OnExecute(() =>
+            {
+               new ConvertToJsonCommand(path).Execute();
+            });
+         });
+
          return app.Execute();
       }
    }

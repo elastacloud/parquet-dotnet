@@ -6,14 +6,12 @@ using static Cpf.PoshConsole;
 
 namespace Parquet.CLI.Commands
 {
-   class HeadCommand
+   class HeadCommand : FileInputCommand
    {
-      private readonly string _path;
       private readonly int _max;
 
-      public HeadCommand(string path, int max)
+      public HeadCommand(string path, int max) : base(path)
       {
-         _path = path;
          _max = max;
 
          if (_max > 100)
@@ -30,12 +28,9 @@ namespace Parquet.CLI.Commands
          Write(" records...");
          WriteLine();
 
-         using (var reader = ParquetReader.OpenFromFile(_path, new ParquetOptions { TreatByteArrayAsString = true }))
-         {
-            Table table = reader.ReadAsTable();
+         Table table = ReadTable();
 
-            WriteLine(table.ToString("mjn"));
-         }
+         WriteLine(table.ToString("mjn"));
 
          WriteLine("work in progress!!!!", T.ErrorTextColor);
       }
