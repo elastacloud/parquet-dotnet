@@ -14,11 +14,27 @@
    </PropertyGroup>
 
    <ItemGroup>
-     <PackageReference Include="Cpf.Core" Version="0.0.0-preview-22" />
+     <PackageReference Include="Cpf.Core" Version="1.0.0" />
+     <PackageReference Include="LogMagic" Version="2.16.0" />
    </ItemGroup>
 
    <ItemGroup>
      <ProjectReference Include="..\Parquet\Parquet.csproj" />
+   </ItemGroup>
+
+   <ItemGroup>
+     <Compile Update="Help.Designer.cs">
+       <DesignTime>True</DesignTime>
+       <AutoGen>True</AutoGen>
+       <DependentUpon>Help.resx</DependentUpon>
+     </Compile>
+   </ItemGroup>
+
+   <ItemGroup>
+     <EmbeddedResource Update="Help.resx">
+       <Generator>ResXFileCodeGenerator</Generator>
+       <LastGenOutput>Help.Designer.cs</LastGenOutput>
+     </EmbeddedResource>
    </ItemGroup>
 
 

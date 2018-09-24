@@ -12,17 +12,17 @@ namespace Parquet.CLI
    {
       static int Main(string[] args)
       {
-         var app = new Application("Parquet CLI");
+         var app = new Application("Parquet CLI (https://github.com/elastacloud/parquet-dotnet)");
 
          app.Command("schema", cmd =>
          {
-            cmd.Description = "Displays Parquet file schema";
+            cmd.Description = Help.Command_Schema_Description;
 
-            Argument<string> path = cmd.Argument<string>("path").IsRequired();
+            Argument<string> path = cmd.Argument<string>("path", Help.Command_Schema_Path).Required();
 
-            cmd.OnExecute(pc =>
+            cmd.OnExecute(() =>
             {
-               new SchemaCommand(pc, path.Value).Execute();
+               new SchemaCommand(path.Value).Execute();
             });
          });
 
