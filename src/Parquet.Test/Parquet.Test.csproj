@@ -54,6 +54,7 @@
     <None Remove="data\simplerepeated.json" />
     <None Remove="data\simplerepeated.parquet" />
     <None Remove="data\snappy-nation.impala.parquet" />
+    <None Remove="data\struct_plain.parquet" />
     <None Remove="data\test-converted-type-null.parquet" />
     <None Remove="data\test-null-dictionary.parquet" />
     <None Remove="data\test-null.parquet" />
@@ -185,6 +186,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="data\snappy-nation.impala.parquet">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="data\struct_plain.parquet">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="data\test-converted-type-null.parquet">

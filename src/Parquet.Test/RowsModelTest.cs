@@ -196,7 +196,32 @@ namespace Parquet.Test
 
       #region [ Struct ]
 
+      /*[Fact]
+      public void List_validate_succeeds()
+      {
+         var table = new Table(new Schema(
+            new DataField<int>("id"),
+            new ListField("cities", new DataField<string>("item"))
+            ));
 
+         table.Add(new Row(1, new List<Row> { new Row("London"), new Row("New York") }));
+         table.Add(new Row(2, new List<Row> { new Row("Birmingham"), new Row("Camden Town") }));
+      }*/
+
+      [Fact]
+      public void Struct_read_plain_structs_from_Apache_Spark()
+      {
+         Table t;
+         using (Stream stream = OpenTestFile("struct_plain.parquet"))
+         {
+            using (var reader = new ParquetReader(stream))
+            {
+               t = reader.ReadAsTable();
+            }
+         }
+
+         Assert.Equal("{{1;[{1;one};{2;two};{3;three}]}}", t.ToString());
+      }
 
       #endregion
    }

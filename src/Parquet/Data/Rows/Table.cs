@@ -41,7 +41,8 @@ namespace Parquet.Data.Rows
 
          if(tableData != null)
          {
-            _rows.AddRange(RowMatrix.ColumnsToRows(schema, tableData, rowCount));
+            var converter = new DataColumnsToRowsConverter(schema, tableData, rowCount);
+            _rows.AddRange(converter.Convert());
          }
       }
 
