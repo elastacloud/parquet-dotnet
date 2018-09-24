@@ -248,5 +248,26 @@ namespace Parquet.Data.Rows
       }
 
       #endregion
+
+      /// <summary>
+      /// Formats rows
+      /// </summary>
+      /// <returns></returns>
+      public override string ToString()
+      {
+         var sb = new StringBuilder();
+
+         foreach(Row row in _rows)
+         {
+            if(sb.Length > 0)
+            {
+               sb.AppendLine();
+            }
+
+            sb.Append(row.ToString());
+         }
+
+         return sb.ToString();
+      }
    }
 }

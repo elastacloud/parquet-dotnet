@@ -78,7 +78,7 @@ namespace Parquet.Test
             }
          }
 
-
+         Assert.Equal("{1;[1=>one;2=>two;3=>three]}", t.ToString());
       }
 
       [Fact]
@@ -130,6 +130,8 @@ namespace Parquet.Test
          {
             writer.Write(table);
          }
+
+         //System.IO.File.WriteAllBytes("c:\\tmp\\1.parquet", ms.ToArray());
 
          //read back into table
          ms.Position = 0;

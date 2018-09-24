@@ -44,7 +44,10 @@ namespace Parquet.Data.Rows
                int rl = _rls[_position];
 
                if (cell.Count > 0 && rl == 0)
+               {
+                  _position -= 1;   //rewind back as this doesn't belong to you
                   break;
+               }
 
                object value = _data.GetValue(_position);
                cell.Add(value);
