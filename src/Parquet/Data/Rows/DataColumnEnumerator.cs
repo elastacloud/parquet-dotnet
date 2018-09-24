@@ -19,7 +19,8 @@ namespace Parquet.Data.Rows
 
       public DataColumnEnumerator(DataColumn dataColumn)
       {
-         _isRepeated = dataColumn.HasRepetitions;
+         //_isRepeated = dataColumn.HasRepetitions;
+         _isRepeated = dataColumn.Field.IsArray;
          _data = dataColumn.Data;
          _rls = dataColumn.RepetitionLevels;
          _field = dataColumn.Field;

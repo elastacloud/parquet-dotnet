@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
+using Parquet.Extensions;
 
 namespace Parquet.Data.Rows
 {
    /// <summary>
    /// Represents a table or table chunk that stores data in row format.
    /// </summary>
-   public class Table : IList<Row>, IEquatable<Table>
+   public class Table : IList<Row>, IEquatable<Table>, IFormattable
    {
       //dev: for reference from previous stable version see https://github.com/elastacloud/parquet-dotnet/tree/final-v2/src/Parquet/Data       
 
@@ -39,7 +41,7 @@ namespace Parquet.Data.Rows
 
          if(tableData != null)
          {
-            _rows.AddRange(RowMatrix.Compact(schema, tableData, rowCount));
+            _rows.AddRange(RowMatrix.ColumnsToRows(schema, tableData, rowCount));
          }
       }
 
@@ -50,7 +52,7 @@ namespace Parquet.Data.Rows
 
       internal DataColumn[] ExtractDataColumns()
       {
-         return RowMatrix.Extract(Schema, _rows);
+         return RowMatrix.RowsToColumns(Schema, _rows);
       }
 
       #region [ IList members ]
@@ -255,17 +257,59 @@ namespace Parquet.Data.Rows
       /// <returns></returns>
       public override string ToString()
       {
+         return ToString(null, CultureInfo.CurrentCulture);
+      }
+
+      /// <summary>
+      /// Converts to string with optional formatting
+      /// </summary>
+      /// <param name="format">jn - json with nesting, jo - json one-line</param>
+      /// <returns></returns>
+      public string ToString(string format)
+      {
+         return ToString(format, CultureInfo.CurrentCulture);
+      }
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="format"></param>
+      /// <param name="formatProvider"></param>
+      /// <returns></returns>
+      public string ToString(string format, IFormatProvider formatProvider)
+      {
+         //todo: (code purity) can be moved out into separate IFormattable class
+         if (string.IsNullOrEmpty(format))
+            format = "mjo";
+
+         if (formatProvider == null)
+            formatProvider = CultureInfo.CurrentCulture;
+
+         int nestLevel = format == "mjn" ? 0 : -1;
+
          var sb = new StringBuilder();
+         sb.OpenBrace(nestLevel);
 
-         foreach(Row row in _rows)
+         bool first = true;
+         foreach (Row row in _rows)
          {
-            if(sb.Length > 0)
-            {
-               sb.AppendLine();
-            }
+            row.ToString(sb, nestLevel == -1 ? -1 : 1);
 
-            sb.Append(row.ToString());
+            if(first)
+            {
+               first = false;
+            }
+            else
+            {
+               sb.Append(",");
+               if(nestLevel != -1)
+               {
+                  sb.AppendLine();
+               }
+            }
          }
+
+         sb.CloseBrace(nestLevel);
 
          return sb.ToString();
       }

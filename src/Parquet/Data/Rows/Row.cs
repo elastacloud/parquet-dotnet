@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Numerics;
 using System.Text;
+using Parquet.Extensions;
 
 namespace Parquet.Data.Rows
 {
@@ -158,65 +159,48 @@ namespace Parquet.Data.Rows
       }
 
       /// <summary>
-      /// Returns a <see cref="string" /> that represents this instance.
+      /// 
       /// </summary>
-      /// <returns>
-      /// A <see cref="string" /> that represents this instance.
-      /// </returns>
+      /// <returns></returns>
       public override string ToString()
       {
          var sb = new StringBuilder();
+         
+         ToString(sb, -1);
 
-         bool isFirst = true;
-         sb.Append("{");
+         return sb.ToString();
+      }
+
+      internal void ToString(StringBuilder sb, int nestLevel)
+      {
+         sb.OpenBrace(nestLevel);
+
+         bool first = true;
          foreach (object v in Values)
          {
-            if (isFirst)
+            if (first)
             {
-               isFirst = false;
+               first = false;
             }
             else
             {
                sb.Append(";");
             }
 
-            FormatValue(v, sb);
+            FormatValue(v, sb, nestLevel == -1 ? -1 : nestLevel + 1);
          }
-         sb.Append("}");
-
-         return sb.ToString();
+         sb.CloseBrace(nestLevel);
       }
 
-      private static void FormatValue(object v, StringBuilder sb)
+      private static void FormatValue(object v, StringBuilder sb, int nestLevel)
       {
          if (v == null)
          {
-            sb.Append("<null>");
-         }
-         else if (v is IDictionary dic)
-         {
-            sb.Append("[");
-            bool first = true;
-            foreach (DictionaryEntry pair in dic)
-            {
-               if (first)
-               {
-                  first = false;
-               }
-               else
-               {
-                  sb.Append(";");
-               }
-
-               FormatValue(pair.Key, sb);
-               sb.Append("=>");
-               FormatValue(pair.Value, sb);
-            }
-            sb.Append("]");
+            sb.Append("null");
          }
          else if (v is Row row)
          {
-            sb.Append(row.ToString());
+            row.ToString(sb, nestLevel == -1 ? -1 : nestLevel + 1);
          }
          else if ((!v.GetType().IsSimple()) && v is IEnumerable ien)
          {
@@ -233,7 +217,7 @@ namespace Parquet.Data.Rows
                   sb.Append(";");
                }
 
-               FormatValue(cv, sb);
+               FormatValue(cv, sb, nestLevel == -1 ? -1 : nestLevel + 1);
             }
             sb.Append("]");
          }

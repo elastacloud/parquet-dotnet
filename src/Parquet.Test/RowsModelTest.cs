@@ -78,7 +78,42 @@ namespace Parquet.Test
             }
          }
 
-         Assert.Equal("{1;[1=>one;2=>two;3=>three]}", t.ToString());
+         Assert.Equal("{{1;[{1;one};{2;two};{3;three}]}}", t.ToString());
+      }
+
+      [Fact]
+      public void Write_read_map()
+      {
+         var table = new Table(
+            new Schema(
+               new DataField<string>("city"),
+               new MapField("population",
+                  new DataField<int>("areaId"),
+                  new DataField<long>("count"))));
+         var ms = new MemoryStream();
+
+         table.Add("London", new Dictionary<int, long>
+         {
+            [234] = 100,
+            [235] = 110
+         });
+
+         //write as table
+         using (var writer = new ParquetWriter(table.Schema, ms))
+         {
+            writer.Write(table);
+         }
+
+         //read back into table
+         ms.Position = 0;
+         Table table2;
+         using (var reader = new ParquetReader(ms))
+         {
+            table2 = reader.ReadAsTable();
+         }
+
+         //validate data
+         Assert.True(table.Equals(table2, true));
       }
 
       [Fact]

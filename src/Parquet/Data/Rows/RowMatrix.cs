@@ -5,6 +5,9 @@ using System.Linq;
 
 namespace Parquet.Data.Rows
 {
+   /// <summary>
+   /// Everything is rows!!! Not dealing with dictionaries etc. seems like a brilliant idea!!!
+   /// </summary>
    internal static class RowMatrix
    {
       #region [ Validation ]
@@ -92,36 +95,52 @@ namespace Parquet.Data.Rows
 
       #region [ Table/Row packing ]
 
-      public static DataColumn[] Extract(Schema schema, IReadOnlyCollection<Row> rows)
+      public static DataColumn[] RowsToColumns(Schema schema, IReadOnlyCollection<Row> rows)
       {
          var dcs = new List<DataColumn>();
 
-         Extract(schema.Fields, rows, dcs);
+         int i = 0;
+         foreach(Field f in schema.Fields)
+         {
+            List<object> values = rows.Select(r => r[i]).ToList();
+
+            RowsToColumn(f, values, dcs);
+
+            i += 1;
+         }
 
          return dcs.ToArray();
       }
 
-      private static void Extract(IReadOnlyCollection<Field> fields, IReadOnlyCollection<Row> rows, List<DataColumn> dcs)
+      private static void RowsToColumn(Field field, IReadOnlyCollection<object> values, IList<DataColumn> result)
       {
-         int i = 0;
-         foreach(Field field in fields)
+         switch (field.SchemaType)
          {
-            switch (field.SchemaType)
-            {
-               case SchemaType.Data:
-                  dcs.Add(
-                     Extract(
-                        (DataField)field,
-                        rows.Select(r => r[i]),
-                        rows.Count));
-                  break;
-            }
-
-            i += 1;
+            case SchemaType.Data:
+               //always maps to a single column
+               result.Add(RowToDataColumn((DataField)field, values));
+               break;
+            case SchemaType.Map:
+               RowToColumns((MapField)field, values, result);
+               break;
+            default:
+               throw new NotImplementedException(field.SchemaType.ToString());
          }
       }
 
-      private static DataColumn Extract(DataField dataField, IEnumerable<object> values, int? length)
+      private static void RowToColumns(MapField mapField, IEnumerable<object> values, IList<DataColumn> resultColumns)
+      {
+         DataField keyField = (DataField)mapField.Key;
+         DataField valueField = (DataField)mapField.Value;
+
+         //values are instances of IDictionary
+
+         //ICollection[] keys = values.Cast<IDictionary>().Select(d => d.Keys).ToArray();
+         throw new NotImplementedException();
+
+      }
+
+      private static DataColumn RowToDataColumn(DataField dataField, IReadOnlyCollection<object> values)
       {
          if(dataField.IsArray)
          {
@@ -151,7 +170,7 @@ namespace Parquet.Data.Rows
          }
          else
          {
-            Array data = Array.CreateInstance(dataField.ClrNullableIfHasNullsType, length.Value);
+            Array data = Array.CreateInstance(dataField.ClrNullableIfHasNullsType, values.Count);
             int i = 0;
             foreach(object value in values)
             {
@@ -162,7 +181,7 @@ namespace Parquet.Data.Rows
          }
       }
 
-      public static List<Row> Compact(Schema schema, DataColumn[] columns, long rowCount)
+      public static List<Row> ColumnsToRows(Schema schema, DataColumn[] columns, long rowCount)
       {
          ValidateColumnsAreInSchema(schema, columns);
 
@@ -170,14 +189,16 @@ namespace Parquet.Data.Rows
 
          DataColumnEnumerator[] iterated = columns.Select(c => new DataColumnEnumerator(c)).ToArray();
 
-         Compact(schema.Fields.ToArray(), iterated, result, rowCount);
+         ColumnsToRows(schema.Fields.ToArray(), iterated, result, rowCount);
 
          return result;
       }
 
-      private static void Compact(Field[] fields, DataColumnEnumerator[] columns, List<Row> container, long rowCount)
+      private static void ColumnsToRows(Field[] fields, DataColumnEnumerator[] columns, List<Row> result, long rowCount)
       {
-         for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
+         int rowIndex = 0;
+
+         while(rowCount == -1 || rowIndex < rowCount)
          {
             int dataColumnIndex = 0;
             var row = new List<object>();
@@ -189,44 +210,47 @@ namespace Parquet.Data.Rows
                {
                   case SchemaType.Data:
                      DataColumnEnumerator dce = columns[dataColumnIndex];
-                     dce.MoveNext();
+                     if(!dce.MoveNext())
+                     {
+                        return;
+                     }
                      row.Add(dce.Current);
                      dataColumnIndex += 1;
                      break;
+
                   case SchemaType.Map:
-                     MapField mapField = (MapField)f;
-
-                     if (!((mapField.Key is DataField) && (mapField.Value is DataField)))
-                        throw new NotImplementedException();
-
-                     DataColumnEnumerator dceKey = columns[dataColumnIndex];
-                     DataColumnEnumerator dceValue = columns[dataColumnIndex + 1];
-                     IDictionary dc = mapField.CreateSimpleDictionary();
-                     CompactDictionary(dc, dceKey, dceValue);
-                     row.Add(dc);
-                     dataColumnIndex += 2;
+                     row.Add(CreateMapCell((MapField)f, columns, ref dataColumnIndex));
                      break;
+
                   default:
-                     throw new NotImplementedException(f.SchemaType.ToString());
+                     throw OtherExtensions.NotImplemented(f.SchemaType.ToString());
                }
             }
 
-            container.Add(new Row(row.ToArray()));
+            result.Add(new Row(row.ToArray()));
+
+            rowIndex += 1;
          }
       }
 
-      private static void CompactDictionary(IDictionary container, DataColumnEnumerator keyColumn, DataColumnEnumerator valueColumn)
+      private static object CreateMapCell(MapField mapField, DataColumnEnumerator[] columns, ref int dataColumnIndex)
       {
-         keyColumn.MoveNext();
-         valueColumn.MoveNext();
+         if (!((mapField.Key is DataField) && (mapField.Value is DataField)))
+            throw OtherExtensions.NotImplemented("complex maps");
 
-         Array keys = (Array)keyColumn.Current;
-         Array values = (Array)valueColumn.Current;
+         var mapRows = new List<Row>();
 
-         for(int i = 0; i < keys.Length; i++)
-         {
-            container.Add(keys.GetValue(i), values.GetValue(i));
-         }
+         DataColumnEnumerator dceKey = columns[dataColumnIndex];
+         DataColumnEnumerator dceValue = columns[dataColumnIndex + 1];
+
+         ColumnsToRows(
+            new[] { dceKey.DataColumn.Field, dceValue.DataColumn.Field },
+            new[] { dceKey, dceValue },
+            mapRows, -1);
+
+         dataColumnIndex += 2;
+
+         return mapRows;
       }
 
       private static void ValidateColumnsAreInSchema(Schema schema, DataColumn[] columns)
