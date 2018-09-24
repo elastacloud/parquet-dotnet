@@ -61,20 +61,38 @@ namespace Parquet.CLI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Path to parquet file..
+        /// </summary>
+        internal static string Argument_Path {
+            get {
+                return ResourceManager.GetString("Argument_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Displays first N rows of a parquet file..
+        /// </summary>
+        internal static string Command_Head_Description {
+            get {
+                return ResourceManager.GetString("Command_Head_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum number of rows to display. Hard limit is 100..
+        /// </summary>
+        internal static string Command_Head_Max {
+            get {
+                return ResourceManager.GetString("Command_Head_Max", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Displays parquet file schema as Parquet.Net sees it. Note that this is a simplified, human-readable version of the schema..
         /// </summary>
         internal static string Command_Schema_Description {
             get {
                 return ResourceManager.GetString("Command_Schema_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Path to parquet file..
-        /// </summary>
-        internal static string Command_Schema_Path {
-            get {
-                return ResourceManager.GetString("Command_Schema_Path", resourceCulture);
             }
         }
     }

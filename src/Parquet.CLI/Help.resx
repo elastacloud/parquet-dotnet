@@ -117,10 +117,16 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Argument_Path" xml:space="preserve">
+    <value>Path to parquet file.</value>
+  </data>
+  <data name="Command_Head_Description" xml:space="preserve">
+    <value>Displays first N rows of a parquet file.</value>
+  </data>
+  <data name="Command_Head_Max" xml:space="preserve">
+    <value>Maximum number of rows to display. Hard limit is 100.</value>
+  </data>
   <data name="Command_Schema_Description" xml:space="preserve">
     <value>Displays parquet file schema as Parquet.Net sees it. Note that this is a simplified, human-readable version of the schema.</value>
-  </data>
-  <data name="Command_Schema_Path" xml:space="preserve">
-    <value>Path to parquet file.</value>
   </data>
 </root>

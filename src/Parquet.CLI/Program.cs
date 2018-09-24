@@ -18,11 +18,24 @@ namespace Parquet.CLI
          {
             cmd.Description = Help.Command_Schema_Description;
 
-            Argument<string> path = cmd.Argument<string>("path", Help.Command_Schema_Path).Required();
+            Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
 
             cmd.OnExecute(() =>
             {
                new SchemaCommand(path.Value).Execute();
+            });
+         });
+
+         app.Command("head", cmd =>
+         {
+            cmd.Description = Help.Command_Head_Description;
+
+            Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
+            Option<int> max = cmd.Option<int>("-m|--max", Help.Command_Head_Max, 100);
+
+            cmd.OnExecute(() =>
+            {
+               new HeadCommand(path, max).Execute();
             });
          });
 
