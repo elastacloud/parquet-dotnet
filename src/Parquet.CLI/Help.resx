@@ -123,6 +123,9 @@
   <data name="Command_Head_Description" xml:space="preserve">
     <value>Displays first N rows of a parquet file.</value>
   </data>
+  <data name="Command_Head_Format" xml:space="preserve">
+    <value>Output format.</value>
+  </data>
   <data name="Command_Head_Max" xml:space="preserve">
     <value>Maximum number of rows to display. Hard limit is 100.</value>
   </data>

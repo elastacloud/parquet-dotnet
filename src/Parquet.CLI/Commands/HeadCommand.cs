@@ -23,7 +23,7 @@ namespace Parquet.CLI.Commands
             _max = 1;
       }
 
-      public void Execute()
+      public void Execute(string format)
       {
          Write("displaying first ");
          Write(_max.ToString(), T.ActiveTextColor);
@@ -34,10 +34,7 @@ namespace Parquet.CLI.Commands
          {
             Table table = reader.ReadAsTable();
 
-            for(int i = 0; i < _max && i < table.Count; i++)
-            {
-               WriteLine(table[i].ToString());
-            }
+            WriteLine(table.ToString("mjn"));
          }
 
          WriteLine("work in progress!!!!", T.ErrorTextColor);

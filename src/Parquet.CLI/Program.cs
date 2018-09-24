@@ -31,11 +31,12 @@ namespace Parquet.CLI
             cmd.Description = Help.Command_Head_Description;
 
             Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
+            Option<string> format = cmd.Option<string>("-f|--format", Help.Command_Head_Format);
             Option<int> max = cmd.Option<int>("-m|--max", Help.Command_Head_Max, 100);
 
             cmd.OnExecute(() =>
             {
-               new HeadCommand(path, max).Execute();
+               new HeadCommand(path, max).Execute(format);
             });
          });
 

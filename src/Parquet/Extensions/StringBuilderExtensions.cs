@@ -10,6 +10,22 @@ namespace Parquet.Extensions
       private const string BraceOpen = "{";
       private const string BraceClose = "}";
 
+      public static void Ident(this StringBuilder sb, int level)
+      {
+         if (level == -1)
+            return;
+
+         sb.Append(new string(' ', level * NL));
+      }
+
+      public static void StartEntity(this StringBuilder sb, int level)
+      {
+         if (level == -1)
+            return;
+
+         sb.AppendLine();
+      }
+
       public static void OpenBrace(this StringBuilder sb, int level, string brace = BraceOpen)
       {
          if(level == -1)
@@ -19,7 +35,8 @@ namespace Parquet.Extensions
          else
          {
             sb.Append(new string(' ', level * NL));
-            sb.AppendLine(brace);
+            sb.Append(brace);
+            sb.AppendLine();
          }
       }
 
@@ -32,7 +49,7 @@ namespace Parquet.Extensions
          else
          {
             sb.Append(new string(' ', level * NL));
-            sb.AppendLine(brace);
+            sb.Append(brace);
          }
       }
    }

@@ -200,10 +200,22 @@ namespace Parquet.Data.Rows
             }
             else
             {
-               sb.Append(";");
+               if (nestLevel == -1)
+               {
+                  sb.Append(";");
+               }
+               else
+               {
+                  sb.AppendLine();
+               }
             }
 
             FormatValue(v, sb, nestLevel == -1 ? -1 : nestLevel + 1);
+         }
+
+         if(nestLevel != -1)
+         {
+            sb.AppendLine();
          }
          sb.CloseBrace(nestLevel);
       }
@@ -212,11 +224,12 @@ namespace Parquet.Data.Rows
       {
          if (v == null)
          {
+            sb.Ident(nestLevel);
             sb.Append("null");
          }
          else if (v is Row row)
          {
-            row.ToString(sb, nestLevel == -1 ? -1 : nestLevel + 1);
+            row.ToString(sb, nestLevel);
          }
          else if ((!v.GetType().IsSimple()) && v is IEnumerable ien)
          {
@@ -239,6 +252,7 @@ namespace Parquet.Data.Rows
          }
          else
          {
+            sb.Ident(nestLevel);
             sb.Append(v.ToString());
          }
 

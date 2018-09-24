@@ -79,6 +79,15 @@ namespace Parquet.CLI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Output format..
+        /// </summary>
+        internal static string Command_Head_Format {
+            get {
+                return ResourceManager.GetString("Command_Head_Format", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Maximum number of rows to display. Hard limit is 100..
         /// </summary>
         internal static string Command_Head_Max {

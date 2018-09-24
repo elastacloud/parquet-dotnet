@@ -273,7 +273,7 @@ namespace Parquet.Data.Rows
       /// <summary>
       /// Converts to string with optional formatting
       /// </summary>
-      /// <param name="format">jn - json with nesting, jo - json one-line</param>
+      /// <param name="format">mjo - mini json one-liner, mjn - mini json with nesting</param>
       /// <returns></returns>
       public string ToString(string format)
       {
@@ -296,6 +296,7 @@ namespace Parquet.Data.Rows
             formatProvider = CultureInfo.CurrentCulture;
 
          int nestLevel = format == "mjn" ? 0 : -1;
+         int nextNest = nestLevel == -1 ? -1 : 1;
 
          var sb = new StringBuilder();
          sb.OpenBrace(nestLevel, "[");
@@ -309,6 +310,7 @@ namespace Parquet.Data.Rows
             }
             else
             {
+               //sb.Ident(nextNest);
                sb.Append(",");
                if (nestLevel != -1)
                {
@@ -316,9 +318,13 @@ namespace Parquet.Data.Rows
                }
             }
 
-            row.ToString(sb, nestLevel == -1 ? -1 : 1);
+            row.ToString(sb, nextNest);
          }
 
+         if (nestLevel != -1)
+         {
+            sb.AppendLine();
+         }
          sb.CloseBrace(nestLevel, "]");
 
          return sb.ToString();
