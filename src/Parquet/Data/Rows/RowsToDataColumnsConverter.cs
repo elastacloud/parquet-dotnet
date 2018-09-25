@@ -21,7 +21,7 @@ namespace Parquet.Data.Rows
          return RowsToColumns(_schema.Fields, _rows);
       }
 
-      private static DataColumn[] RowsToColumns(IReadOnlyCollection<Field> fields, IReadOnlyCollection<Row> rows)
+      private static IReadOnlyCollection<DataColumn> RowsToColumns(IReadOnlyCollection<Field> fields, IReadOnlyCollection<Row> rows)
       {
          var dcs = new List<DataColumn>();
 
@@ -35,19 +35,26 @@ namespace Parquet.Data.Rows
             i += 1;
          }
 
-         return dcs.ToArray();
+         return dcs;
       }
 
-      private static void RowsToColumn(Field field, IReadOnlyCollection<object> values, IList<DataColumn> result)
+      private static void RowsToColumn(Field field, IReadOnlyCollection<object> columnValues, IList<DataColumn> result)
       {
          switch (field.SchemaType)
          {
             case SchemaType.Data:
                //always maps to a single column
-               result.Add(RowToDataColumn((DataField)field, values));
+               result.Add(RowToDataColumn((DataField)field, columnValues));
                break;
             case SchemaType.Map:
-               RowToColumns((MapField)field, values, result);
+               RowToColumns((MapField)field, columnValues, result);
+               break;
+            case SchemaType.Struct:
+               IReadOnlyCollection<DataColumn> structColumns = RowsToColumns(((StructField)field).Fields, columnValues.Cast<Row>().ToList());
+               foreach(DataColumn sc in structColumns)
+               {
+                  result.Add(sc);
+               }
                break;
             default:
                throw new NotImplementedException(field.SchemaType.ToString());
@@ -61,11 +68,11 @@ namespace Parquet.Data.Rows
 
          //values are instances of Row collections
 
-         DataColumn[] columns = null;
+         IReadOnlyCollection<DataColumn> columns = null;
 
          foreach (IReadOnlyCollection<Row> rows in values)
          {
-            DataColumn[] rowsColumns = RowsToColumns(new Field[] { mapField.Key, mapField.Value }, rows);
+            IReadOnlyCollection<DataColumn> rowsColumns = RowsToColumns(new Field[] { mapField.Key, mapField.Value }, rows);
 
             //add correct repetition levels
             rowsColumns = rowsColumns.Select(rc => new DataColumn(rc.Field, rc.Data, rc.Field.GenerateRepetitions(rc.Data.Length))).ToArray();

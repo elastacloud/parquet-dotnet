@@ -217,23 +217,21 @@ namespace Parquet.Test
          var table = new Table(
             new Schema(
                new DataField<string>("isbn"),
-               new MapField("population",
-                  new DataField<int>("areaId"),
-                  new DataField<long>("count"))));
+               new StructField("author",
+                  new DataField<string>("firstName"),
+                  new DataField<string>("lastName"))));
          var ms = new MemoryStream();
 
-         table.Add("London",
-            new List<Row>
-            {
-               new Row(234, 100L),
-               new Row(235, 110L)
-            });
+         table.Add("12345-6", new Row("Ivan", "Gavryliuk"));
+         table.Add("12345-7", new Row("Richard", "Conway"));
 
          //write as table
          using (var writer = new ParquetWriter(table.Schema, ms))
          {
             writer.Write(table);
          }
+
+         System.IO.File.WriteAllBytes("c:\\tmp\\sc.parquet", ms.ToArray());
 
          //read back into table
          ms.Position = 0;

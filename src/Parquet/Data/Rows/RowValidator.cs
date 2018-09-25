@@ -26,6 +26,9 @@ namespace Parquet.Data.Rows
                case SchemaType.Map:
                   ValidateMap((MapField)field, value);
                   break;
+               case SchemaType.Struct:
+                  Validate((Row)value, ((StructField)field).Fields);
+                  break;
                default:
                   throw new NotImplementedException(field.SchemaType.ToString());
             }
