@@ -51,34 +51,7 @@ namespace Parquet.Data.Rows
          var row = new List<object>();
          foreach(Field f in fields)
          {
-            object cell;
-
-            switch (f.SchemaType)
-            {
-               case SchemaType.Data:
-                  DataColumnEnumerator dce = _pathToColumn[f.Path];
-                  if (!dce.MoveNext())
-                  {
-                     return null;
-                  }
-                  cell = dce.Current;
-                  break;
-
-               case SchemaType.Map:
-                  cell = CreateMapCell((MapField)f);
-                  break;
-
-               case SchemaType.Struct:
-                  cell = CreateStructCell((StructField)f);
-                  break;
-
-               case SchemaType.List:
-                  cell = CreateListCell((ListField)f);
-                  break;
-
-               default:
-                  throw OtherExtensions.NotImplemented(f.SchemaType.ToString());
-            }
+            object cell = BuildNextCell(f);
 
             if(cell == null)
             {
@@ -89,6 +62,40 @@ namespace Parquet.Data.Rows
          }
 
          return new Row(row);
+      }
+
+      private object BuildNextCell(Field f)
+      {
+         object cell;
+
+         switch (f.SchemaType)
+         {
+            case SchemaType.Data:
+               DataColumnEnumerator dce = _pathToColumn[f.Path];
+               if (!dce.MoveNext())
+               {
+                  return null;
+               }
+               cell = dce.Current;
+               break;
+
+            case SchemaType.Map:
+               cell = CreateMapCell((MapField)f);
+               break;
+
+            case SchemaType.Struct:
+               cell = CreateStructCell((StructField)f);
+               break;
+
+            case SchemaType.List:
+               cell = CreateListCell((ListField)f);
+               break;
+
+            default:
+               throw OtherExtensions.NotImplemented(f.SchemaType.ToString());
+         }
+
+         return cell;
       }
 
       private object CreateListCell(ListField lf)
