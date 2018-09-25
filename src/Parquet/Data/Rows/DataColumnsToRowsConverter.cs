@@ -51,6 +51,8 @@ namespace Parquet.Data.Rows
          var row = new List<object>();
          foreach(Field f in fields)
          {
+            object cell;
+
             switch (f.SchemaType)
             {
                case SchemaType.Data:
@@ -59,23 +61,53 @@ namespace Parquet.Data.Rows
                   {
                      return null;
                   }
-                  row.Add(dce.Current);
+                  cell = dce.Current;
                   break;
 
                case SchemaType.Map:
-                  row.Add(CreateMapCell((MapField)f));
+                  cell = CreateMapCell((MapField)f);
                   break;
 
                case SchemaType.Struct:
-                  row.Add(CreateStructCell((StructField)f));
+                  cell = CreateStructCell((StructField)f);
+                  break;
+
+               case SchemaType.List:
+                  cell = CreateListCell((ListField)f);
                   break;
 
                default:
                   throw OtherExtensions.NotImplemented(f.SchemaType.ToString());
             }
+
+            if(cell == null)
+            {
+               return null;
+            }
+
+            row.Add(cell);
          }
 
          return new Row(row);
+      }
+
+      private object CreateListCell(ListField lf)
+      {
+         var rows = new List<Row>();
+         var fields = new Field[] { lf.Item };
+         Row row;
+         while((row = BuildNextRow(fields)) != null)
+         {
+            rows.Add(row);
+         }
+
+         if(lf.Item.SchemaType == SchemaType.Data)
+         {
+            //remap from first column
+            return rows.Select(r => r[0]).ToArray();
+         }
+
+         return rows;
       }
 
       private object CreateStructCell(StructField sf)

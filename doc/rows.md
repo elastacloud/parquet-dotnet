@@ -118,4 +118,9 @@ table.Add(new Row("12345-7", new Row("Richard", "Conway")));
 
 ## Lists
 
-todo
+Lists are easy to get confused with repeatable fields, because they essentially repeat some data in a cell. This is true for a simple data type like a string, int etc., however lists are special in a way that a list item can be anything else, not just a plain data type. In general, *when repeated data can be represented as a plain type, always use repeatable field*. Repeatable fields are lighter and faster than lists which have extra overhead on serialisation and performance.
+
+In simple cases, when a list contains a single data element, it will be mapped to a collection of those elements, for instance in the following schema
+
+```csharp
+```

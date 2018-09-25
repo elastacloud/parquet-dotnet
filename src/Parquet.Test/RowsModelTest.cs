@@ -246,5 +246,39 @@ namespace Parquet.Test
       }
 
       #endregion
+
+      #region [ List ]
+
+      [Fact]
+      public void List_read_simple_element_from_Apache_Spark()
+      {
+         Table t;
+         using (Stream stream = OpenTestFile("simplerepeated.parquet"))
+         {
+            using (var reader = new ParquetReader(stream))
+            {
+               t = reader.ReadAsTable();
+            }
+         }
+
+         Assert.Equal("[{[London;Derby;Paris;New York];1}]", t.ToString());
+      }
+
+      [Fact]
+      public void List_read_structures_from_Apache_Spark()
+      {
+         Table t;
+         using (Stream stream = OpenTestFile("repeatedstruct.parquet"))
+         {
+            using (var reader = new ParquetReader(stream))
+            {
+               t = reader.ReadAsTable();
+            }
+         }
+
+         Assert.Equal("[{[{{UK;London}};{{US;New York}}];1}]", t.ToString());
+      }
+
+      #endregion
    }
 }
