@@ -1,6 +1,6 @@
 # Row Based Access
 
-Of course Parquet is columnar format, and doesn't store data in rows. However, sometimes accessing data by rows is essential in many processing algorithms and simply to display to a user. We as humans better understand rows rather than columns.
+Parquet, of course, is columnar format, and doesn't store data in rows. However, sometimes accessing data in a row-wise fashion is essential in processing algorithms and to display to a user. We as humans better understand rows rather than columns.
 
 Parquet.Net provides out-of-the-box helpers to represent data in row format, however before using it consider the following:
 
@@ -82,7 +82,7 @@ The table should look like:
 |---------|--------|--------|
 |**Row 0**|London|`List<Row>`|
 
-where the last cell is the data for your map. As w're in the row-based world, this needs to be represented as a list of rows as well:
+where the last cell is the data for your map. As we're in the row-based world, this needs to be represented as a list of rows as well:
 
 |         |Column 0|Column 1|
 |---------|--------|--------|
@@ -91,7 +91,7 @@ where the last cell is the data for your map. As w're in the row-based world, th
 
 ## Structures
 
-Structures are represented again as `Row` objects. When you read of write a structure it is embedded into another row's value as a row. To demonstrate, the following schema
+Structures are represented again as `Row` objects. When you read or write a structure it is embedded into another row's value as a row. To demonstrate, the following schema
 
 ```csharp
 var table = new Table(
