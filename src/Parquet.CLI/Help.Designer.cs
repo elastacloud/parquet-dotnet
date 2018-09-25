@@ -104,5 +104,32 @@ namespace Parquet.CLI {
                 return ResourceManager.GetString("Command_Schema_Description", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expand Cells based on value length. Defaults to false..
+        /// </summary>
+        internal static string Command_ViewAll_Expand {
+            get {
+                return ResourceManager.GetString("Command_ViewAll_Expand", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum column width. Defaults to 5..
+        /// </summary>
+        internal static string Command_ViewAll_Min {
+            get {
+                return ResourceManager.GetString("Command_ViewAll_Min", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Display Null Values. Defaults to true..
+        /// </summary>
+        internal static string Command_ViewAll_Nulls {
+            get {
+                return ResourceManager.GetString("Command_ViewAll_Nulls", resourceCulture);
+            }
+        }
     }
 }
