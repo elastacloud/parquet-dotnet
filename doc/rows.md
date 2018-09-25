@@ -91,7 +91,30 @@ where the last cell is the data for your map. As w're in the row-based world, th
 
 ## Structures
 
-Structures are represented again as `Row` objects.
+Structures are represented again as `Row` objects. When you read of write a structure it is embedded into another row's value as a row. To demonstrate, the following schema
+
+```csharp
+var table = new Table(
+   new Schema(
+      new DataField<string>("isbn"),
+      new StructField("author",
+         new DataField<string>("firstName"),
+         new DataField<string>("lastName"))));
+```
+
+represents a table with two columns - *isbn* and *author*, however *author* is a structure of two fields - *firstName* and *lastName*. To add the following data into the table
+
+|isbn|author|
+|----|------|
+|12345-6|Ivan; Gavryliuk|
+|12345-8|Richard; Conway|
+
+you would write:
+
+```csharp
+table.Add(new Row("12345-6", new Row("Ivan", "Gavryliuk")));
+table.Add(new Row("12345-7", new Row("Richard", "Conway")));
+```
 
 ## Lists
 
