@@ -1,5 +1,6 @@
 ﻿using System;
 using Cpf.App;
+using LogMagic;
 using Parquet.CLI.Commands;
 
 namespace Parquet.CLI
@@ -10,9 +11,16 @@ namespace Parquet.CLI
    /// </summary>
    class Program
    {
+      private static readonly ILog log = L.G(typeof(Program));
+
       static int Main(string[] args)
       {
          var app = new Application("Parquet CLI (https://github.com/elastacloud/parquet-dotnet)");
+
+         L.Config.WriteTo.AzureApplicationInsights("");
+
+         log.Event("launch",
+            "Arguments", string.Join(",", args));
 
          app.Command("schema", cmd =>
          {

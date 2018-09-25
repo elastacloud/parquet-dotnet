@@ -16,6 +16,7 @@
    <ItemGroup>
      <PackageReference Include="Cpf.Core" Version="1.0.0" />
      <PackageReference Include="LogMagic" Version="2.16.0" />
+     <PackageReference Include="LogMagic.Microsoft.Azure.ApplicationInsights" Version="2.16.0" />
    </ItemGroup>
 
    <ItemGroup>
