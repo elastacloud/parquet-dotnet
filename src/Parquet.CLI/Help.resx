@@ -132,4 +132,13 @@
   <data name="Command_Schema_Description" xml:space="preserve">
     <value>Displays parquet file schema as Parquet.Net sees it. Note that this is a simplified, human-readable version of the schema.</value>
   </data>
+  <data name="Command_ViewAll_Expand" xml:space="preserve">
+    <value>Expand Cells based on value length. Defaults to false.</value>
+  </data>
+  <data name="Command_ViewAll_Min" xml:space="preserve">
+    <value>Minimum column width. Defaults to 5.</value>
+  </data>
+  <data name="Command_ViewAll_Nulls" xml:space="preserve">
+    <value>Display Null Values. Defaults to true.</value>
+  </data>
 </root>

@@ -50,6 +50,19 @@ namespace Parquet.CLI
             });
          });
 
+         app.Command("view-all", cmd =>
+         {
+            Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
+            Option<bool> expandCells = cmd.Option<bool>("-e|--expand", Help.Command_ViewAll_Expand, false);
+            Option<int> displayMinWidth = cmd.Option<int>("-m|--min", Help.Command_ViewAll_Min, 5);
+            Option<bool> displayNulls = cmd.Option<bool>("-n|--nulls", Help.Command_ViewAll_Nulls, false);
+
+            cmd.OnExecute(() =>
+            {
+               new DisplayFullCommand(path).Execute(expandCells, displayMinWidth, displayNulls);
+            });
+         });
+
          return app.Execute();
       }
    }
