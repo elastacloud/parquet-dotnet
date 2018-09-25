@@ -91,7 +91,7 @@ where the last cell is the data for your map. As w're in the row-based world, th
 
 ## Structures
 
-todo
+Structures are represented again as `Row` objects.
 
 ## Lists
 
