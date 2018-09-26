@@ -280,5 +280,26 @@ namespace Parquet.Test
       }
 
       #endregion
+
+      #region [ And the Big Fat One!!! ]
+
+      [Fact]
+      public void BigFatOne_variations_from_Apache_Spark()
+      {
+         Table t;
+         using (Stream stream = OpenTestFile("nested.parquet"))
+         {
+            using (var reader = new ParquetReader(stream))
+            {
+               t = reader.ReadAsTable();
+            }
+         }
+
+         Assert.Equal(2, t.Count);
+         Assert.Equal("", t[0].ToString());
+         Assert.Equal("", t[1].ToString());
+      }
+
+      #endregion
    }
 }
