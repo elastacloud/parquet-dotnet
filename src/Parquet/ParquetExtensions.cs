@@ -79,7 +79,7 @@ namespace Parquet
       {
          if (reader.RowGroupCount > 1)
          {
-            throw new NotImplementedException("current implementation supports only single row group files");
+            throw OtherExtensions.NotImplemented("reading to table from files with more than one row group");
          }
 
          using (ParquetRowGroupReader rowGroupReader = reader.OpenRowGroupReader(0))
