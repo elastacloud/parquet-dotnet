@@ -1,8 +1,10 @@
 ﻿using System;
+using Cpf;
 using Cpf.App;
 using LogMagic;
 using LogMagic.Enrichers;
 using Parquet.CLI.Commands;
+using static Cpf.PoshConsole;
 
 namespace Parquet.CLI
 {
@@ -18,7 +20,7 @@ namespace Parquet.CLI
       {
          var app = new Application("Parquet CLI (https://github.com/elastacloud/parquet-dotnet)");
 
-         L.Config.WriteTo.AzureApplicationInsights("0a310ae1-0f93-43fc-bfa1-62e92fc869b9", flushOnWrite: true);
+         L.Config.WriteTo.AzureApplicationInsights("0a310ae1-0f93-43fc-bfa1-62e92fc869b9");
 
          using (L.Context(KnownProperty.OperationId, Guid.NewGuid().ToString()))
          {
@@ -73,7 +75,7 @@ namespace Parquet.CLI
                   new DisplayFullCommand(path).Execute(expandCells, displayMinWidth, displayNulls);
                });
             });
-
+            
             return app.Execute();
          }
       }
