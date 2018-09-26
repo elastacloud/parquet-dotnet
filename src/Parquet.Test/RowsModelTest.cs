@@ -264,7 +264,7 @@ namespace Parquet.Test
          Assert.Equal("[{[London;Derby;Paris;New York];1}]", t.ToString());
       }
 
-      //[Fact]
+      [Fact]
       public void List_read_structures_from_Apache_Spark()
       {
          Table t;

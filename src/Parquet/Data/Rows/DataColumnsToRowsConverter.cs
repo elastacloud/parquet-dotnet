@@ -37,7 +37,8 @@ namespace Parquet.Data.Rows
       {
          for(int rowIndex = 0; rowCount == -1 || rowIndex < rowCount; rowIndex++)
          {
-            Row row = BuildNextRow(fields);
+            if (!BuildNextRow(fields, out Row row))
+               break;
 
             if (row == null)
                return;
@@ -46,20 +47,22 @@ namespace Parquet.Data.Rows
          }
       }
 
-      private Row BuildNextRow(IEnumerable<Field> fields)
+      private bool BuildNextRow(IEnumerable<Field> fields, out Row row)
       {
-         var row = new List<object>();
+         var rowList = new List<object>();
          foreach(Field f in fields)
          {
             if(!BuildNextCell(f, out object cell))
             {
-               return null;
+               row = null;
+               return false;
             }
 
-            row.Add(cell);
+            rowList.Add(cell);
          }
 
-         return new Row(row);
+         row = new Row(rowList);
+         return true;
       }
 
       private bool BuildNextCell(Field f, out object cell)
@@ -77,16 +80,17 @@ namespace Parquet.Data.Rows
                break;
 
             case SchemaType.Map:
-               cell = CreateMapCell((MapField)f);
-               break;
+               bool mcok = CreateMapCell((MapField)f, out IList<Row> mcRows);
+               cell = mcRows;
+               return mcok;
 
             case SchemaType.Struct:
-               cell = CreateStructCell((StructField)f);
-               break;
+               bool scok = CreateStructCell((StructField)f, out Row scRow);
+               cell = scRow;
+               return scok;
 
             case SchemaType.List:
-               cell = CreateListCell((ListField)f);
-               break;
+               return CreateListCell((ListField)f, out cell);
 
             default:
                throw OtherExtensions.NotImplemented(f.SchemaType.ToString());
@@ -95,12 +99,11 @@ namespace Parquet.Data.Rows
          return true;
       }
 
-      private object CreateListCell(ListField lf)
+      private bool CreateListCell(ListField lf, out object cell)
       {
          var rows = new List<Row>();
          var fields = new Field[] { lf.Item };
-         Row row;
-         while((row = BuildNextRow(fields)) != null)
+         while(BuildNextRow(fields, out Row row))
          {
             rows.Add(row);
          }
@@ -108,20 +111,20 @@ namespace Parquet.Data.Rows
          if(lf.Item.SchemaType == SchemaType.Data)
          {
             //remap from first column
-            return rows.Select(r => r[0]).ToArray();
+            cell = rows.Select(r => r[0]).ToArray();
+            return true;
          }
 
-         return rows;
+         cell = rows;
+         return true;
       }
 
-      private object CreateStructCell(StructField sf)
+      private bool CreateStructCell(StructField sf, out Row cell)
       {
-         Row row = BuildNextRow(sf.Fields);
-
-         return row;
+         return BuildNextRow(sf.Fields, out cell);
       }
 
-      private object CreateMapCell(MapField mf)
+      private bool CreateMapCell(MapField mf, out IList<Row> rows)
       {
          if (!((mf.Key is DataField) && (mf.Value is DataField)))
             throw OtherExtensions.NotImplemented("complex maps");
@@ -135,7 +138,8 @@ namespace Parquet.Data.Rows
             new[] { dceKey.DataColumn.Field, dceValue.DataColumn.Field },
             mapRows, -1);
 
-         return mapRows;
+         rows = mapRows;
+         return true;
       }
 
       private static void ValidateColumnsAreInSchema(Schema schema, DataColumn[] columns)
