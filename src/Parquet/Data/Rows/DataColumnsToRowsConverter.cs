@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Parquet.Data.Rows
 {
@@ -98,22 +98,46 @@ namespace Parquet.Data.Rows
 
       private bool TryBuildListCell(ListField lf, out object cell)
       {
-         var rows = new List<Row>();
-         var fields = new Field[] { lf.Item };
-         while(TryBuildNextRow(fields, out Row row))
+         if(!TryBuildNextCell(lf.Item, out cell))
          {
-            rows.Add(row);
+            cell = null;
+            return false;
          }
 
-         if(lf.Item.SchemaType == SchemaType.Data)
+         switch (lf.Item.SchemaType)
          {
-            //remap from first column
-            cell = rows.Select(r => r[0]).ToArray();
-            return true;
+            case SchemaType.Data:
+               //data element doesn't need to be sliced
+               break;
+
+            case SchemaType.Struct:
+               //slicing is not yet working properly
+               //cell = Slice((StructField)lf.Item, (Row)cell);
+               break;
+
+            default:
+               throw OtherExtensions.NotImplemented("slicing " + lf.Item.SchemaType);
          }
 
-         cell = rows;
          return true;
+      }
+
+      private List<Row> Slice(StructField sf, Row nativeRow)
+      {
+         var rows = new List<Row>();
+
+         //columns of the row represent elements in the struct
+         IEnumerator[] columnEnumerators = nativeRow.Values
+            .Select(v => (IEnumerable)v)
+            .Select(i => i.GetEnumerator())
+            .ToArray();
+
+         while(columnEnumerators.All(i => i.MoveNext()))
+         {
+            rows.Add(new Row(columnEnumerators.Select(i => i.Current).ToArray()));
+         }
+
+         return rows;
       }
 
       private bool TryBuildStructCell(StructField sf, out Row cell)
@@ -126,16 +150,31 @@ namespace Parquet.Data.Rows
          if (!((mf.Key is DataField) && (mf.Value is DataField)))
             throw OtherExtensions.NotImplemented("complex maps");
 
-         var mapRows = new List<Row>();
-
          DataColumnEnumerator dceKey = _pathToColumn[mf.Key.Path];
          DataColumnEnumerator dceValue = _pathToColumn[mf.Value.Path];
 
-         ColumnsToRows(
+         if(!TryBuildNextRow(
             new[] { dceKey.DataColumn.Field, dceValue.DataColumn.Field },
-            mapRows, -1);
+            out Row mapRow))
+         {
+            throw new ParquetException("a map has no corresponding row");
+         }
 
-         rows = mapRows;
+         /*
+          * mapRow contains exactly two cells - list of keys and list of values.
+          * 
+          * We want to rotate this matrix so that result rows contain key-value pairs because it's more
+          * human friendly than parquet format (which was the whole point of building row based utils).
+          */
+
+         IEnumerator keys = ((IEnumerable)mapRow[0]).GetEnumerator();
+         IEnumerator values = ((IEnumerable)mapRow[1]).GetEnumerator();
+
+         rows = new List<Row>();
+         while(keys.MoveNext() && values.MoveNext())
+         {
+            rows.Add(new Row(keys.Current, values.Current));
+         }
          return true;
       }
 

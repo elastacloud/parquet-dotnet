@@ -56,16 +56,6 @@ namespace Parquet.Data
 
       }
 
-      /// <summary>
-      /// String representation
-      /// </summary>
-      public override string ToString()
-      {
-         string fields = string.Join(", ", Fields.Select(f => f.ToString()));
-
-         return $"{Name}: [{fields}]";
-      }
-
       internal static StructField CreateWithNoElements(string name)
       {
          return new StructField(name);

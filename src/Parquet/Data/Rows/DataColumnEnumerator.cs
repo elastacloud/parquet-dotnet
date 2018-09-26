@@ -19,8 +19,7 @@ namespace Parquet.Data.Rows
 
       public DataColumnEnumerator(DataColumn dataColumn)
       {
-         //_isRepeated = dataColumn.HasRepetitions;
-         _isRepeated = dataColumn.Field.IsArray;
+         _isRepeated = dataColumn.HasRepetitions;
          _data = dataColumn.Data;
          _rls = dataColumn.RepetitionLevels;
          _field = dataColumn.Field;
@@ -39,12 +38,14 @@ namespace Parquet.Data.Rows
          if(_isRepeated)
          {
             var cell = new List<object>();
+            int prevRl = 0;
 
             while (_position < _data.Length)
             {
                int rl = _rls[_position];
 
-               if (cell.Count > 0 && rl == 0)
+               //as soon as RL decreases the element is ended
+               if (cell.Count > 0 && rl < prevRl)
                {
                   _position -= 1;   //rewind back as this doesn't belong to you
                   break;
@@ -52,6 +53,7 @@ namespace Parquet.Data.Rows
 
                object value = _data.GetValue(_position);
                cell.Add(value);
+               prevRl = rl;
                _position += 1;
             }
 

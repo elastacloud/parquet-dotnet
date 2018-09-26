@@ -153,7 +153,7 @@ namespace Parquet.Test
             }
          }
 
-         Assert.Equal("[{1;[{1;one};{2;two};{3;three}]}]", t.ToString());
+         Assert.Equal("{1;[{1;one};{2;two};{3;three}]}", t[0].ToString());
       }
 
       [Fact]
@@ -261,7 +261,7 @@ namespace Parquet.Test
             }
          }
 
-         Assert.Equal("[{[London;Derby;Paris;New York];1}]", t.ToString());
+         Assert.Equal("{[London;Derby;Paris;New York];1}", t[0].ToString());
       }
 
       [Fact]
@@ -276,7 +276,7 @@ namespace Parquet.Test
             }
          }
 
-         Assert.Equal("[{[{{UK;London}};{{US;New York}}];1}]", t.ToString());
+         Assert.Equal("{[{UK;London};{US;New York}];1}", t[0].ToString());
       }
 
       #endregion
@@ -296,8 +296,7 @@ namespace Parquet.Test
          }
 
          Assert.Equal(2, t.Count);
-         Assert.Equal("", t[0].ToString());
-         Assert.Equal("", t[1].ToString());
+         Assert.Equal("{[{Dante Road;Head Office;9;SE11};{Somewhere Else;Small Office;10;TN19}];[London;Derby];this file contains all the permunations for nested structures and arrays to test Parquet parser;1;{51.2;66.3};{{2;1}}}", t[0].ToString());
       }
 
       #endregion

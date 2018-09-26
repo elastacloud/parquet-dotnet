@@ -44,13 +44,6 @@ namespace Parquet.Data
          
       }
 
-      /// <summary>
-      /// </summary>
-      public override string ToString()
-      {
-         return $"{Name}: ({Item})";
-      }
-
       internal static ListField CreateWithNoItem(string name)
       {
          return new ListField(name);

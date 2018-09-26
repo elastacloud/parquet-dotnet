@@ -99,5 +99,13 @@ namespace Parquet.Data
       }
 
       #endregion
+
+      /// <summary>
+      /// pretty prints
+      /// </summary>
+      public override string ToString()
+      {
+         return $"{SchemaType} {Path}";
+      }
    }
 }
