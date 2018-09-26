@@ -20,11 +20,19 @@ namespace Parquet.CLI.Commands
       {
          using (var message = new ProgressMessage($"reading {Path.GetFileName(_path)}"))
          {
-            using (var reader = ParquetReader.OpenFromFile(_path, new ParquetOptions { TreatByteArrayAsString = true }))
+            try
             {
-               Table table = reader.ReadAsTable();
+               using (var reader = ParquetReader.OpenFromFile(_path, new ParquetOptions { TreatByteArrayAsString = true }))
+               {
+                  Table table = reader.ReadAsTable();
 
-               return table;
+                  return table;
+               }
+            }
+            catch(FileNotFoundException)
+            {
+               message.Fail("not found: " + _path);
+               throw;
             }
          }
       }

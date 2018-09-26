@@ -20,6 +20,11 @@ namespace Parquet.CLI
       {
          var app = new Application("Parquet CLI (https://github.com/elastacloud/parquet-dotnet)");
 
+         app.OnError((cmd, err) =>
+         {
+            log.Trace("error in command {command}", cmd.Name, err);
+         });
+
          L.Config.WriteTo.AzureApplicationInsights("0a310ae1-0f93-43fc-bfa1-62e92fc869b9");
 
          using (L.Context(KnownProperty.OperationId, Guid.NewGuid().ToString()))
@@ -39,7 +44,7 @@ namespace Parquet.CLI
                });
             });
 
-            app.Command("head", cmd =>
+            /*app.Command("head", cmd =>
             {
                cmd.Description = Help.Command_Head_Description;
 
@@ -75,8 +80,15 @@ namespace Parquet.CLI
                   new DisplayFullCommand(path).Execute(expandCells, displayMinWidth, displayNulls);
                });
             });
+            */
             
-            return app.Execute();
+            int exitCode = app.Execute();
+
+#if DEBUG
+            Console.ReadKey();
+#endif
+
+            return exitCode;
          }
       }
    }

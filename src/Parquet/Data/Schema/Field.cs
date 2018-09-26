@@ -25,9 +25,15 @@ namespace Parquet.Data
       /// </summary>
       public string Path { get; internal set; }
 
-      internal int MaxRepetitionLevel { get; set; }
+      /// <summary>
+      /// Max repetition level
+      /// </summary>
+      public int MaxRepetitionLevel { get; internal set; }
 
-      internal int MaxDefinitionLevel { get; set; }
+      /// <summary>
+      /// Max definition level
+      /// </summary>
+      public int MaxDefinitionLevel { get; internal set; }
 
       /// <summary>
       /// Used internally for serialisation
