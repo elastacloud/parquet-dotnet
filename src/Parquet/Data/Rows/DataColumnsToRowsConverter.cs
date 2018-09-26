@@ -51,9 +51,7 @@ namespace Parquet.Data.Rows
          var row = new List<object>();
          foreach(Field f in fields)
          {
-            object cell = BuildNextCell(f);
-
-            if(cell == null)
+            if(!BuildNextCell(f, out object cell))
             {
                return null;
             }
@@ -64,17 +62,16 @@ namespace Parquet.Data.Rows
          return new Row(row);
       }
 
-      private object BuildNextCell(Field f)
+      private bool BuildNextCell(Field f, out object cell)
       {
-         object cell;
-
          switch (f.SchemaType)
          {
             case SchemaType.Data:
                DataColumnEnumerator dce = _pathToColumn[f.Path];
                if (!dce.MoveNext())
                {
-                  return null;
+                  cell = null;
+                  return false;
                }
                cell = dce.Current;
                break;
@@ -95,7 +92,7 @@ namespace Parquet.Data.Rows
                throw OtherExtensions.NotImplemented(f.SchemaType.ToString());
          }
 
-         return cell;
+         return true;
       }
 
       private object CreateListCell(ListField lf)
