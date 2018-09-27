@@ -66,6 +66,7 @@ namespace Parquet.CLI.Commands
                }
                Write(" ");
                Write(df.Path, ConsoleColor.DarkGray);
+               //WriteBasics(field);
                
                WriteLine();
                break;
@@ -99,6 +100,13 @@ namespace Parquet.CLI.Commands
                WriteLine(field.SchemaType.ToString() + "?", ConsoleColor.Yellow);
                break;
          }
+      }
+
+      private void WriteBasics(Field f)
+      {
+         PoshWrite($" {{RL}}{{{f.MaxRepetitionLevel}}} {{DL}}{{{f.MaxDefinitionLevel}}}",
+            ConsoleColor.DarkGray, T.ActiveTextColor,
+            ConsoleColor.DarkGray, T.ActiveTextColor);
       }
    }
 }

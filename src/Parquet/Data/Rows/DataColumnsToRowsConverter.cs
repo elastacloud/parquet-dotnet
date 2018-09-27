@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Parquet.Data.Rows
 {
@@ -37,69 +37,145 @@ namespace Parquet.Data.Rows
       {
          for(int rowIndex = 0; rowCount == -1 || rowIndex < rowCount; rowIndex++)
          {
-            Row row = BuildNextRow(fields);
-
-            if (row == null)
-               return;
+            if (!TryBuildNextRow(fields, out Row row))
+               break;
 
             result.Add(row);
          }
       }
 
-      private Row BuildNextRow(IEnumerable<Field> fields)
+      private bool TryBuildNextRow(IEnumerable<Field> fields, out Row row)
       {
-         var row = new List<object>();
+         var rowList = new List<object>();
          foreach(Field f in fields)
          {
-            switch (f.SchemaType)
+            if(!TryBuildNextCell(f, out object cell))
             {
-               case SchemaType.Data:
-                  DataColumnEnumerator dce = _pathToColumn[f.Path];
-                  if (!dce.MoveNext())
-                  {
-                     return null;
-                  }
-                  row.Add(dce.Current);
-                  break;
-
-               case SchemaType.Map:
-                  row.Add(CreateMapCell((MapField)f));
-                  break;
-
-               case SchemaType.Struct:
-                  row.Add(CreateStructCell((StructField)f));
-                  break;
-
-               default:
-                  throw OtherExtensions.NotImplemented(f.SchemaType.ToString());
+               row = null;
+               return false;
             }
+
+            rowList.Add(cell);
          }
 
-         return new Row(row);
+         row = new Row(rowList);
+         return true;
       }
 
-      private object CreateStructCell(StructField sf)
+      private bool TryBuildNextCell(Field f, out object cell)
       {
-         Row row = BuildNextRow(sf.Fields);
+         switch (f.SchemaType)
+         {
+            case SchemaType.Data:
+               DataColumnEnumerator dce = _pathToColumn[f.Path];
+               if (!dce.MoveNext())
+               {
+                  cell = null;
+                  return false;
+               }
+               cell = dce.Current;
+               break;
 
-         return row;
+            case SchemaType.Map:
+               bool mcok = TryBuildMapCell((MapField)f, out IList<Row> mcRows);
+               cell = mcRows;
+               return mcok;
+
+            case SchemaType.Struct:
+               bool scok = TryBuildStructCell((StructField)f, out Row scRow);
+               cell = scRow;
+               return scok;
+
+            case SchemaType.List:
+               return TryBuildListCell((ListField)f, out cell);
+
+            default:
+               throw OtherExtensions.NotImplemented(f.SchemaType.ToString());
+         }
+
+         return true;
       }
 
-      private object CreateMapCell(MapField mf)
+      private bool TryBuildListCell(ListField lf, out object cell)
+      {
+         if(!TryBuildNextCell(lf.Item, out cell))
+         {
+            cell = null;
+            return false;
+         }
+
+         switch (lf.Item.SchemaType)
+         {
+            case SchemaType.Data:
+               //data element doesn't need to be sliced
+               break;
+
+            case SchemaType.Struct:
+               //slicing is not yet working properly
+               //cell = Slice((StructField)lf.Item, (Row)cell);
+               break;
+
+            default:
+               throw OtherExtensions.NotImplemented("slicing " + lf.Item.SchemaType);
+         }
+
+         return true;
+      }
+
+      private List<Row> Slice(StructField sf, Row nativeRow)
+      {
+         var rows = new List<Row>();
+
+         //columns of the row represent elements in the struct
+         IEnumerator[] columnEnumerators = nativeRow.Values
+            .Select(v => (IEnumerable)v)
+            .Select(i => i.GetEnumerator())
+            .ToArray();
+
+         while(columnEnumerators.All(i => i.MoveNext()))
+         {
+            rows.Add(new Row(columnEnumerators.Select(i => i.Current).ToArray()));
+         }
+
+         return rows;
+      }
+
+      private bool TryBuildStructCell(StructField sf, out Row cell)
+      {
+         return TryBuildNextRow(sf.Fields, out cell);
+      }
+
+      private bool TryBuildMapCell(MapField mf, out IList<Row> rows)
       {
          if (!((mf.Key is DataField) && (mf.Value is DataField)))
             throw OtherExtensions.NotImplemented("complex maps");
 
-         var mapRows = new List<Row>();
-
          DataColumnEnumerator dceKey = _pathToColumn[mf.Key.Path];
          DataColumnEnumerator dceValue = _pathToColumn[mf.Value.Path];
 
-         ColumnsToRows(
+         if(!TryBuildNextRow(
             new[] { dceKey.DataColumn.Field, dceValue.DataColumn.Field },
-            mapRows, -1);
+            out Row mapRow))
+         {
+            throw new ParquetException("a map has no corresponding row");
+         }
 
-         return mapRows;
+         /*
+          * mapRow contains exactly two cells - list of keys and list of values.
+          * 
+          * We want to rotate this matrix so that result rows contain key-value pairs because it's more
+          * human friendly than parquet format (which was the whole point of building row based utils).
+          */
+
+         IEnumerator keys = ((IEnumerable)mapRow[0]).GetEnumerator();
+         IEnumerator values = ((IEnumerable)mapRow[1]).GetEnumerator();
+
+         rows = new List<Row>();
+         while(keys.MoveNext() && values.MoveNext())
+         {
+            rows.Add(new Row(keys.Current, values.Current));
+         }
+         return true;
       }
 
       private static void ValidateColumnsAreInSchema(Schema schema, DataColumn[] columns)

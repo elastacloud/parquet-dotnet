@@ -68,16 +68,6 @@ namespace Parquet.Data
       public IReadOnlyList<Field> Fields => _fields;
 
       /// <summary>
-      /// Gets the number of elements in the schema
-      /// </summary>
-      public int Length => _fields.Count;
-
-      /// <summary>
-      /// Gets the column names as string array
-      /// </summary>
-      public string[] FieldNames => _fields.Select(e => e.Name).ToArray();
-
-      /// <summary>
       /// Get schema element by index
       /// </summary>
       /// <param name="i">Index of schema element</param>
@@ -85,50 +75,6 @@ namespace Parquet.Data
       public Field this[int i]
       {
          get { return _fields[i]; }
-      }
-
-      /// <summary>
-      /// Get schema element by name
-      /// </summary>
-      /// <param name="name">Schema element name</param>
-      /// <returns>Schema element</returns>
-      public Field this[string name]
-      {
-         get
-         {
-            Field result = _fields.FirstOrDefault(e => e.Name == name);
-
-            if (result == null) throw new ArgumentException($"schema element '{name}' not found", nameof(name));
-
-            return result;
-         }
-      }
-
-      /// <summary>
-      /// Gets <see cref="DataField"/> at specified position
-      /// </summary>
-      /// <param name="index">Position</param>
-      /// <returns><see cref="DataField"/></returns>
-      /// <exception cref="ArgumentException">Thrown when field at position is not a <see cref="DataField"/></exception>
-      public DataField DataFieldAt(int index)
-      {
-         DataField result = _fields[index] as DataField;
-
-         if (result == null) throw new ArgumentException($"field at position {index} is not a {typeof(DataField).Name}");
-
-         return result;
-      }
-
-      /// <summary>
-      /// Gets the column index by schema element
-      /// </summary>
-      /// <returns>Element index or -1 if not found</returns>
-      public int GetFieldIndex(Field field)
-      {
-         for (int i = 0; i < _fields.Count; i++)
-            if (field.Equals(_fields[i])) return i;
-
-         return -1;
       }
 
       /// <summary>

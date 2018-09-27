@@ -1,7 +1,11 @@
 ﻿using System;
+using Cpf;
 using Cpf.App;
+using LogMagic;
+using LogMagic.Enrichers;
 using Parquet.CLI.Commands;
 using Parquet.CLI.Models;
+using static Cpf.PoshConsole;
 
 namespace Parquet.CLI
 {
@@ -11,94 +15,129 @@ namespace Parquet.CLI
    /// </summary>
    class Program
    {
+      private static readonly ILog log = L.G(typeof(Program));
+
       static int Main(string[] args)
       {
          var app = new Application("Parquet CLI (https://github.com/elastacloud/parquet-dotnet)");
 
-         app.Command("schema", cmd =>
+         app.OnError((cmd, err) =>
          {
-            cmd.Description = Help.Command_Schema_Description;
-
-            Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
-
-            cmd.OnExecute(() =>
-            {
-               new SchemaCommand(path.Value).Execute();
-            });
+            log.Trace("error in command {command}", cmd.Name, err);
          });
 
-         app.Command("head", cmd =>
+         L.Config.WriteTo.AzureApplicationInsights("0a310ae1-0f93-43fc-bfa1-62e92fc869b9");
+
+         using (L.Context(KnownProperty.OperationId, Guid.NewGuid().ToString()))
          {
-            cmd.Description = Help.Command_Head_Description;
+            log.Event("Launch",
+               "Arguments", string.Join(",", args));
 
-            Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
-            Option<string> format = cmd.Option<string>("-f|--format", Help.Command_Head_Format);
-            Option<int> max = cmd.Option<int>("-m|--max", Help.Command_Head_Max, 100);
-
-            cmd.OnExecute(() =>
+            app.Command("schema", cmd =>
             {
-               new HeadCommand(path, max).Execute(format);
+               cmd.Description = Help.Command_Schema_Description;
+
+               Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
+
+               cmd.OnExecute(() =>
+               {
+                  new SchemaCommand(path.Value).Execute();
+               });
             });
-         });
 
-         app.Command("to-json", cmd =>
-         {
-            Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
-
-            cmd.OnExecute(() =>
+            /*app.Command("head", cmd =>
             {
-               new ConvertToJsonCommand(path).Execute();
-            });
-         });
+               cmd.Description = Help.Command_Head_Description;
 
-         app.Command("view-all", cmd =>
-         {
-            Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
-            Option<bool> expandCells = cmd.Option<bool>("-e|--expand", Help.Command_ViewAll_Expand, false);
-            Option<int> displayMinWidth = cmd.Option<int>("-m|--min", Help.Command_ViewAll_Min, 5);
-            Option<bool> displayNulls = cmd.Option<bool>("-n|--nulls", Help.Command_ViewAll_Nulls, false);
+               Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
+               Option<string> format = cmd.Option<string>("-f|--format", Help.Command_Head_Format);
+               Option<int> max = cmd.Option<int>("-m|--max", Help.Command_Head_Max, 100);
+
+               cmd.OnExecute(() =>
+               {
+                  new HeadCommand(path, max).Execute(format);
+               });
+            });
+
+            app.Command("to-json", cmd =>
+            {
+               Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
+
+               cmd.OnExecute(() =>
+               {
+                  new ConvertToJsonCommand(path).Execute();
+               });
+            });
+
+            app.Command("view-all", cmd =>
+            {
+               Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
+               Option<bool> expandCells = cmd.Option<bool>("-e|--expand", Help.Command_ViewAll_Expand, false);
+               Option<int> displayMinWidth = cmd.Option<int>("-m|--min", Help.Command_ViewAll_Min, 5);
+               Option<bool> displayNulls = cmd.Option<bool>("-n|--nulls", Help.Command_ViewAll_Nulls, false);
+
+               cmd.OnExecute(() =>
+               {
+                  new DisplayFullCommand(path).Execute(expandCells, displayMinWidth, displayNulls);
+               });
+            });
+            */
+
+            app.Command("view-all", cmd =>
+            {
+               Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
+               Option<bool> expandCells = cmd.Option<bool>("-e|--expand", Help.Command_ViewAll_Expand, false);
+               Option<int> displayMinWidth = cmd.Option<int>("-m|--min", Help.Command_ViewAll_Min, 5);
+               Option<bool> displayNulls = cmd.Option<bool>("-n|--nulls", Help.Command_ViewAll_Nulls, false);
+
+               cmd.OnExecute(() =>
+               {
+                  ViewSettings settings = new ViewSettings
+                  {
+                     displayMinWidth = displayMinWidth,
+                     displayNulls = displayNulls,
+                     displayTypes = false,
+                     expandCells = expandCells,
+                     truncationIdentifier = string.Empty
+                  };
+
+                  new DisplayFullCommand<Views.FullConsoleView>(path).Execute(settings);
+               });
+            });
+
+            app.Command("view", cmd =>
+            {
+               Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
+               Option<bool> expandCells = cmd.Option<bool>("-e|--expand", Help.Command_ViewAll_Expand, false);
+               Option<int> displayMinWidth = cmd.Option<int>("-m|--min", Help.Command_ViewAll_Min, 5);
+               Option<bool> displayNulls = cmd.Option<bool>("-n|--nulls", Help.Command_ViewAll_Nulls, true);
+               Option<bool> displayTypes = cmd.Option<bool>("-t|--types", Help.Command_ViewAll_Types, false);
+               Option<string> truncationIdentifier = cmd.Option<string>("-u|--truncate", Help.Command_ViewAll_Types, "...");
+
+               cmd.OnExecute(() =>
+               {
+
+                  ViewSettings settings = new ViewSettings
+                  {
+                     displayMinWidth = displayMinWidth,
+                     displayNulls = displayNulls,
+                     displayTypes = displayTypes,
+                     expandCells = expandCells,
+                     truncationIdentifier = truncationIdentifier
+                  };
+
+                  new DisplayFullCommand<Views.InteractiveConsoleView>(path).Execute(settings);
+               });
+            });
             
-            cmd.OnExecute(() =>
-            {
+            int exitCode = app.Execute();
 
-               ViewSettings settings = new ViewSettings
-               {
-                  displayMinWidth = displayMinWidth,
-                  displayNulls = displayNulls,
-                  displayTypes = false,
-                  expandCells = expandCells,
-                  truncationIdentifier = string.Empty
-               };
+#if DEBUG
+            Console.ReadKey();
+#endif
 
-               new DisplayFullCommand<Views.FullConsoleView>(path).Execute(settings);
-            });
-         });
-
-         app.Command("xview", cmd =>
-         {
-            Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
-            Option<bool> expandCells = cmd.Option<bool>("-e|--expand", Help.Command_ViewAll_Expand, false);
-            Option<int> displayMinWidth = cmd.Option<int>("-m|--min", Help.Command_ViewAll_Min, 5);
-            Option<bool> displayNulls = cmd.Option<bool>("-n|--nulls", Help.Command_ViewAll_Nulls, true);
-            Option<bool> displayTypes= cmd.Option<bool>("-t|--types", Help.Command_ViewAll_Types, false);
-            Option<string> truncationIdentifier = cmd.Option<string>("-u|--truncate", Help.Command_ViewAll_Types, "...");
-
-            cmd.OnExecute(() =>
-            {
-               ViewSettings settings = new ViewSettings
-               {
-                  displayMinWidth = displayMinWidth,
-                  displayNulls = displayNulls,
-                  displayTypes = displayTypes,
-                  expandCells = expandCells,
-                  truncationIdentifier = truncationIdentifier
-               };
-
-               new DisplayFullCommand<Views.InteractiveConsoleView>(path).Execute(settings);
-            });
-         });
-
-         return app.Execute();
+            return exitCode;
+         }
       }
    }
 }

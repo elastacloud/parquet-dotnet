@@ -300,7 +300,18 @@ namespace Parquet.CLI.Views
                   }
                }
                Console.ForegroundColor = ConsoleColor.Blue;
-               Console.Write(column.type.ToString());
+
+               if (column.columnWidth > column.type.ToString().Length + (verticalSeparator.Length * 2))
+               {
+                  Console.Write(column.type.ToString());
+               }
+               else
+               {
+                  int howMuchSpaceDoWeHave = column.isNullable ? column.columnWidth - 1 : column.columnWidth;
+                  Console.Write(column.type.ToString().Substring(0, howMuchSpaceDoWeHave));
+               }
+
+
                if (column.isNullable)
                {
                   Console.ForegroundColor = ConsoleColor.Cyan;

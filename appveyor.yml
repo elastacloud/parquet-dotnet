@@ -7,17 +7,17 @@ configuration: Release
 platform: Any CPU
 before_build:
 - ps: >-
-    dotnet tool install dotnet-housework -g
+    dotnet tool install -g housework -g
 
-    dotnet housework setbuildnumber %CiVersion% build.ini
+    housework setbuildnumber %CiVersion% -s build.ini
 
-    dotnet housework author ./src/Parquet/Parquet.csproj  build.ini
+    housework author ./src/Parquet/Parquet.csproj -s build.ini
 
-    dotnet housework author ./src/SharpArrow/SharpArrow.csproj build.ini
+    housework author ./src/SharpArrow/SharpArrow.csproj -s build.ini
 
-    dotnet housework author ./src/Parquet.CLI/Parquet.CLI.csproj build.ini
+    housework author ./src/Parquet.CLI/Parquet.CLI.csproj -s build.ini
 
-    dotnet housework substitute ./src/Parquet/ThriftFooter.cs build.ini -r
+    housework substitute ./src/Parquet/ThriftFooter.cs -s build.ini -r
 
     dotnet restore src/Parquet.sln
 build:

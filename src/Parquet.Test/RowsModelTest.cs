@@ -153,7 +153,7 @@ namespace Parquet.Test
             }
          }
 
-         Assert.Equal("[{1;[{1;one};{2;two};{3;three}]}]", t.ToString());
+         Assert.Equal("{1;[{1;one};{2;two};{3;three}]}", t[0].ToString());
       }
 
       [Fact]
@@ -196,18 +196,6 @@ namespace Parquet.Test
 
       #region [ Struct ]
 
-      /*[Fact]
-      public void List_validate_succeeds()
-      {
-         var table = new Table(new Schema(
-            new DataField<int>("id"),
-            new ListField("cities", new DataField<string>("item"))
-            ));
-
-         table.Add(new Row(1, new List<Row> { new Row("London"), new Row("New York") }));
-         table.Add(new Row(2, new List<Row> { new Row("Birmingham"), new Row("Camden Town") }));
-      }*/
-
       [Fact]
       public void Struct_read_plain_structs_from_Apache_Spark()
       {
@@ -221,6 +209,94 @@ namespace Parquet.Test
          }
 
          Assert.Equal("[{12345-6;{Ivan;Gavryliuk}},{12345-7;{Richard;Conway}}]", t.ToString());
+      }
+
+      [Fact]
+      public void Struct_write_read()
+      {
+         var table = new Table(
+            new Schema(
+               new DataField<string>("isbn"),
+               new StructField("author",
+                  new DataField<string>("firstName"),
+                  new DataField<string>("lastName"))));
+         var ms = new MemoryStream();
+
+         table.Add("12345-6", new Row("Ivan", "Gavryliuk"));
+         table.Add("12345-7", new Row("Richard", "Conway"));
+
+         //write as table
+         using (var writer = new ParquetWriter(table.Schema, ms))
+         {
+            writer.Write(table);
+         }
+
+         //System.IO.File.WriteAllBytes("c:\\tmp\\sc.parquet", ms.ToArray());
+
+         //read back into table
+         ms.Position = 0;
+         Table table2;
+         using (var reader = new ParquetReader(ms))
+         {
+            table2 = reader.ReadAsTable();
+         }
+
+         //validate data
+         Assert.Equal(table.ToString(), table2.ToString());
+      }
+
+      #endregion
+
+      #region [ List ]
+
+      [Fact]
+      public void List_read_simple_element_from_Apache_Spark()
+      {
+         Table t;
+         using (Stream stream = OpenTestFile("simplerepeated.parquet"))
+         {
+            using (var reader = new ParquetReader(stream))
+            {
+               t = reader.ReadAsTable();
+            }
+         }
+
+         Assert.Equal("{[London;Derby;Paris;New York];1}", t[0].ToString());
+      }
+
+      [Fact]
+      public void List_read_structures_from_Apache_Spark()
+      {
+         Table t;
+         using (Stream stream = OpenTestFile("repeatedstruct.parquet"))
+         {
+            using (var reader = new ParquetReader(stream))
+            {
+               t = reader.ReadAsTable();
+            }
+         }
+
+         Assert.Equal("{[{UK;London};{US;New York}];1}", t[0].ToString());
+      }
+
+      #endregion
+
+      #region [ And the Big Ultimate Fat Test!!! ]
+
+      [Fact]
+      public void BigFatOne_variations_from_Apache_Spark()
+      {
+         Table t;
+         using (Stream stream = OpenTestFile("nested.parquet"))
+         {
+            using (var reader = new ParquetReader(stream))
+            {
+               t = reader.ReadAsTable();
+            }
+         }
+
+         Assert.Equal(2, t.Count);
+         Assert.Equal("{[{Dante Road;Head Office;9;SE11};{Somewhere Else;Small Office;10;TN19}];[London;Derby];this file contains all the permunations for nested structures and arrays to test Parquet parser;1;{51.2;66.3};{{2;1}}}", t[0].ToString());
       }
 
       #endregion

@@ -51,9 +51,9 @@ namespace Parquet.Data.Rows
       /// </summary>
       public Schema Schema { get; }
 
-      internal DataColumn[] ExtractDataColumns()
+      internal IReadOnlyCollection<DataColumn> ExtractDataColumns()
       {
-         return RowMatrix.RowsToColumns(Schema, _rows);
+         return new RowsToDataColumnsConverter(Schema, _rows).Convert();
       }
 
       #region [ IList members ]
@@ -68,7 +68,7 @@ namespace Parquet.Data.Rows
          get => _rows[index];
          set
          {
-            RowMatrix.Validate(value, _dfs);
+            RowValidator.Validate(value, _dfs);
             _rows[index] = value;
          }
       }
@@ -89,7 +89,7 @@ namespace Parquet.Data.Rows
       /// <param name="item"></param>
       public void Add(Row item)
       {
-         RowMatrix.Validate(item, _dfs);
+         RowValidator.Validate(item, _dfs);
 
          _rows.Add(item);
       }
@@ -159,7 +159,7 @@ namespace Parquet.Data.Rows
       /// <param name="item"></param>
       public void Insert(int index, Row item)
       {
-         RowMatrix.Validate(item, _dfs);
+         RowValidator.Validate(item, _dfs);
 
          _rows.Insert(index, item);
       }

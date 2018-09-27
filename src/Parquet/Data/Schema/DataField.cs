@@ -89,14 +89,6 @@ namespace Parquet.Data
       }
 
       /// <summary>
-      /// Pretty prints
-      /// </summary>
-      public override string ToString()
-      {
-         return $"{Name}: {DataType} (nulls: {HasNulls}, array: {IsArray}, clr: {ClrType}, path: {Path})";
-      }
-
-      /// <summary>
       /// Indicates whether the current object is equal to another object of the same type.
       /// </summary>
       /// <param name="other">An object to compare with this object.</param>
