@@ -276,6 +276,7 @@ namespace Parquet.Test
             }
          }
 
+         Assert.Single(t);
          Assert.Equal("{[{UK;London};{US;New York}];1}", t[0].ToString());
       }
 

@@ -119,5 +119,13 @@ namespace Parquet.Data
 
          return new DataColumn(column1.Field, data, rl);
       }
+
+      /// <summary>
+      /// pretty print
+      /// </summary>
+      public override string ToString()
+      {
+         return Field.ToString();
+      }
    }
 }

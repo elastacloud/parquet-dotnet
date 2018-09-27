@@ -104,40 +104,12 @@ namespace Parquet.Data.Rows
             return false;
          }
 
-         switch (lf.Item.SchemaType)
+         if(lf.Item.SchemaType != SchemaType.Data)
          {
-            case SchemaType.Data:
-               //data element doesn't need to be sliced
-               break;
-
-            case SchemaType.Struct:
-               //slicing is not yet working properly
-               //cell = Slice((StructField)lf.Item, (Row)cell);
-               break;
-
-            default:
-               throw OtherExtensions.NotImplemented("slicing " + lf.Item.SchemaType);
+            cell = Slice(lf, (Row)cell);
          }
 
          return true;
-      }
-
-      private List<Row> Slice(StructField sf, Row nativeRow)
-      {
-         var rows = new List<Row>();
-
-         //columns of the row represent elements in the struct
-         IEnumerator[] columnEnumerators = nativeRow.Values
-            .Select(v => (IEnumerable)v)
-            .Select(i => i.GetEnumerator())
-            .ToArray();
-
-         while(columnEnumerators.All(i => i.MoveNext()))
-         {
-            rows.Add(new Row(columnEnumerators.Select(i => i.Current).ToArray()));
-         }
-
-         return rows;
       }
 
       private bool TryBuildStructCell(StructField sf, out Row cell)
@@ -160,23 +132,68 @@ namespace Parquet.Data.Rows
             throw new ParquetException("a map has no corresponding row");
          }
 
-         /*
-          * mapRow contains exactly two cells - list of keys and list of values.
-          * 
-          * We want to rotate this matrix so that result rows contain key-value pairs because it's more
-          * human friendly than parquet format (which was the whole point of building row based utils).
-          */
+         rows = Slice(mf, mapRow);
 
-         IEnumerator keys = ((IEnumerable)mapRow[0]).GetEnumerator();
-         IEnumerator values = ((IEnumerable)mapRow[1]).GetEnumerator();
-
-         rows = new List<Row>();
-         while(keys.MoveNext() && values.MoveNext())
-         {
-            rows.Add(new Row(keys.Current, values.Current));
-         }
          return true;
       }
+
+      /// <summary>
+      /// Slices rows represented as native data rows to more user-friendly representations. At the end of the day
+      /// this is the point of row-based parsing.
+      /// </summary>
+      private List<Row> Slice(Field f, Row nativeRow)
+      {
+         if (f.SchemaType == SchemaType.Map)
+         {
+            var rows = new List<Row>();
+
+            //map row contains exactly two cells -list of keys and list of values.
+
+            //columns of the row represent elements in the struct
+            IEnumerator[] columnEnumerators = nativeRow.Values
+               .Select(v => (IEnumerable)v)
+               .Select(i => i.GetEnumerator())
+               .ToArray();
+
+            while (columnEnumerators.All(i => i.MoveNext()))
+            {
+               rows.Add(new Row(columnEnumerators.Select(i => i.Current).ToArray()));
+            }
+
+            return rows;
+         }
+
+         if(f.SchemaType == SchemaType.List)
+         {
+            Field lfi = ((ListField)f).Item;
+
+            if(lfi.SchemaType == SchemaType.Struct)
+            {
+               StructField sf = (StructField)lfi;
+
+               var rows = new List<Row>();
+               IEnumerator[] columnEnumerators = nativeRow.Values
+                  .Select(v => (IEnumerable)v)
+                  .Select(i => i.GetEnumerator())
+                  .ToArray();
+
+               while (columnEnumerators.All(i => i.MoveNext()))
+               {
+                  rows.Add(new Row(columnEnumerators.Select(i => i.Current).ToArray()));
+               }
+
+               return rows;
+            }
+            else
+            {
+               throw new NotSupportedException();
+            }
+
+         }
+
+         throw new NotSupportedException();
+      }
+
 
       private static void ValidateColumnsAreInSchema(Schema schema, DataColumn[] columns)
       {
