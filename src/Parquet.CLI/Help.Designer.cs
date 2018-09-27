@@ -131,5 +131,14 @@ namespace Parquet.CLI {
                 return ResourceManager.GetString("Command_ViewAll_Nulls", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Display types in column headesr. Defaults to false..
+        /// </summary>
+        internal static string Command_ViewAll_Types {
+            get {
+                return ResourceManager.GetString("Command_ViewAll_Types", resourceCulture);
+            }
+        }
     }
 }

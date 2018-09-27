@@ -1,6 +1,7 @@
 ﻿using System;
 using Cpf.App;
 using Parquet.CLI.Commands;
+using Parquet.CLI.Models;
 
 namespace Parquet.CLI
 {
@@ -56,10 +57,44 @@ namespace Parquet.CLI
             Option<bool> expandCells = cmd.Option<bool>("-e|--expand", Help.Command_ViewAll_Expand, false);
             Option<int> displayMinWidth = cmd.Option<int>("-m|--min", Help.Command_ViewAll_Min, 5);
             Option<bool> displayNulls = cmd.Option<bool>("-n|--nulls", Help.Command_ViewAll_Nulls, false);
+            
+            cmd.OnExecute(() =>
+            {
+
+               ViewSettings settings = new ViewSettings
+               {
+                  displayMinWidth = displayMinWidth,
+                  displayNulls = displayNulls,
+                  displayTypes = false,
+                  expandCells = expandCells,
+                  truncationIdentifier = string.Empty
+               };
+
+               new DisplayFullCommand<Views.FullConsoleView>(path).Execute(settings);
+            });
+         });
+
+         app.Command("xview", cmd =>
+         {
+            Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
+            Option<bool> expandCells = cmd.Option<bool>("-e|--expand", Help.Command_ViewAll_Expand, false);
+            Option<int> displayMinWidth = cmd.Option<int>("-m|--min", Help.Command_ViewAll_Min, 5);
+            Option<bool> displayNulls = cmd.Option<bool>("-n|--nulls", Help.Command_ViewAll_Nulls, true);
+            Option<bool> displayTypes= cmd.Option<bool>("-t|--types", Help.Command_ViewAll_Types, false);
+            Option<string> truncationIdentifier = cmd.Option<string>("-u|--truncate", Help.Command_ViewAll_Types, "...");
 
             cmd.OnExecute(() =>
             {
-               new DisplayFullCommand(path).Execute(expandCells, displayMinWidth, displayNulls);
+               ViewSettings settings = new ViewSettings
+               {
+                  displayMinWidth = displayMinWidth,
+                  displayNulls = displayNulls,
+                  displayTypes = displayTypes,
+                  expandCells = expandCells,
+                  truncationIdentifier = truncationIdentifier
+               };
+
+               new DisplayFullCommand<Views.InteractiveConsoleView>(path).Execute(settings);
             });
          });
 

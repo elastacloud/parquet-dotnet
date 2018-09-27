@@ -141,4 +141,7 @@
   <data name="Command_ViewAll_Nulls" xml:space="preserve">
     <value>Display Null Values. Defaults to true.</value>
   </data>
+  <data name="Command_ViewAll_Types" xml:space="preserve">
+    <value>Display types in column headesr. Defaults to false.</value>
+  </data>
 </root>

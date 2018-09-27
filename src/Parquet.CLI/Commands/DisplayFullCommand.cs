@@ -10,7 +10,8 @@ using Parquet.Data.Rows;
 
 namespace Parquet.CLI.Commands
 {
-    class DisplayFullCommand : FileInputCommand
+    class DisplayFullCommand<TViewType> : FileInputCommand
+                              where TViewType : IDrawViews, new()
     {
       public DisplayFullCommand(string path) : base(path)
       {
@@ -71,11 +72,11 @@ namespace Parquet.CLI.Commands
          return parsedSet;
       }
 
-      internal void Execute(bool expandCells, int displayMinWidth, bool displayNulls)
+      internal void Execute(ViewSettings settings)
       {
          Table table = ReadTable();
-         ViewModel viewModel = Get(table, expandCells, displayMinWidth);
-         new FullConsoleView().Draw(viewModel, displayNulls);
+         ViewModel viewModel = Get(table, settings.expandCells, settings.displayMinWidth);
+         new TViewType().Draw(viewModel, settings);
       }
    }
 }

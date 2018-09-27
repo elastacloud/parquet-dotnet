@@ -9,17 +9,17 @@ namespace Parquet.CLI.Views
    /// <summary>
    /// Displays to the Console window a navigatable (2D) data set
    /// </summary>
-   public class FullConsoleView
+   public class FullConsoleView : IDrawViews
    {
       private const string verticalSeparator = "|";
       private const string horizontalSeparator = "-";
       private const string cellDivider = "+";
 
-      public void Draw(ViewModel viewModel, bool displayNulls = true)
+      public void Draw(ViewModel viewModel, ViewSettings settings)
       {
          Console.Clear();
 
-         DrawSheet(viewModel, displayNulls);
+         DrawSheet(viewModel, settings.displayNulls);
 
       }
 
