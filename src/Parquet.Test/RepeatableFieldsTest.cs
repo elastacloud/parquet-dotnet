@@ -17,7 +17,7 @@ namespace Parquet.Test
             new int[] { 0, 1, 0, 1 });
 
          // act
-         DataColumn rc = WriteReadSingleColumn(field, 2, column);
+         DataColumn rc = WriteReadSingleColumn(field, column);
 
          // assert
          Assert.Equal(new int[] { 1, 2, 3, 4 }, rc.Data);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Linq;
 
 namespace Parquet.Data
 {
@@ -99,6 +100,16 @@ namespace Parquet.Data
          {
             pooledDefinitionLevels[i] = maxDefinitionLevel;
          }
+      }
+
+      internal long CalculateRowCount()
+      {
+         if(Field.MaxRepetitionLevel > 0)
+         {
+            return RepetitionLevels.Count(rl => rl == 0);
+         }
+
+         return Data.Length;
       }
 
       /// <summary>

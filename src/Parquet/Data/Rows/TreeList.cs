@@ -19,7 +19,7 @@ namespace Parquet.Data.Rows
 
       public bool HasValues => _values != null && _values.Count > 0;
 
-      public TreeList FirstChild => _children[0];
+      public TreeList FirstChild => (_children == null || _children.Count == 0) ? null : _children[0];
 
       public TreeList Submerge(int depth)
       {

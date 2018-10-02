@@ -18,7 +18,7 @@ namespace Parquet.Test
             ));
 
          var ms = new MemoryStream();
-         ms.WriteSingleRowGroupParquetFile(schema, 1,
+         ms.WriteSingleRowGroupParquetFile(schema,
             new DataColumn(new DataField<string>("name"), new[] { "Ivan" }),
             new DataColumn(new DataField<string>("line1"), new[] { "woods" }),
             new DataColumn(new DataField<string>("postcode"), new[] { "postcode" }));

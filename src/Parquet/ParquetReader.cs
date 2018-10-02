@@ -101,6 +101,8 @@ namespace Parquet
       /// </summary>
       public Schema Schema => _footer.CreateModelSchema(_parquetOptions);
 
+      internal Thrift.FileMetaData ThriftMetadata => _meta;
+
       /// <summary>
       /// 
       /// </summary>

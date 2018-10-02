@@ -42,12 +42,12 @@ namespace Parquet.Test
          }
       }
 
-      protected DataColumn WriteReadSingleColumn(DataField field, int rowCount, DataColumn dataColumn)
+      protected DataColumn WriteReadSingleColumn(DataField field, DataColumn dataColumn)
       {
          using (var ms = new MemoryStream())
          {
             // write with built-in extension method
-            ms.WriteSingleRowGroupParquetFile(new Schema(field), rowCount, dataColumn);
+            ms.WriteSingleRowGroupParquetFile(new Schema(field), dataColumn);
             ms.Position = 0;
 
             // read first gow group and first column
@@ -63,11 +63,11 @@ namespace Parquet.Test
          }
       }
 
-      protected DataColumn[] WriteReadSingleRowGroup(Schema schema, DataColumn[] columns, int rowCount, out Schema readSchema)
+      protected DataColumn[] WriteReadSingleRowGroup(Schema schema, DataColumn[] columns, out Schema readSchema)
       {
          using (var ms = new MemoryStream())
          {
-            ms.WriteSingleRowGroupParquetFile(schema, rowCount, columns);
+            ms.WriteSingleRowGroupParquetFile(schema, columns);
             ms.Position = 0;
 
             using (var reader = new ParquetReader(ms))
@@ -98,7 +98,7 @@ namespace Parquet.Test
             {
                writer.CompressionMethod = compressionMethod;
 
-               using (ParquetRowGroupWriter rg = writer.CreateRowGroup(1))
+               using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
                {
                   Array dataArray = Array.CreateInstance(field.ClrNullableIfHasNullsType, 1);
                   dataArray.SetValue(value, 0);

@@ -15,7 +15,7 @@ namespace Parquet.Test
 
          using (var writer = new ParquetWriter(schema, new MemoryStream()))
          {
-            using (ParquetRowGroupWriter gw = writer.CreateRowGroup(1))
+            using (ParquetRowGroupWriter gw = writer.CreateRowGroup())
             {
                Assert.Throws<ArgumentException>(() =>
                {
@@ -34,17 +34,17 @@ namespace Parquet.Test
 
          using (var writer = new ParquetWriter(new Schema(id), ms))
          {
-            using (ParquetRowGroupWriter rg = writer.CreateRowGroup(1))
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
             {
                rg.WriteColumn(new DataColumn(id, new int[] { 1 }));
             }
 
-            using (ParquetRowGroupWriter rg = writer.CreateRowGroup(1))
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
             {
                rg.WriteColumn(new DataColumn(id, new int[] { 2 }));
             }
 
-            using (ParquetRowGroupWriter rg = writer.CreateRowGroup(1))
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
             {
                rg.WriteColumn(new DataColumn(id, new int[] { 3 }));
             }
@@ -89,7 +89,7 @@ namespace Parquet.Test
 
          using (var writer = new ParquetWriter(new Schema(id), ms))
          {
-            using (ParquetRowGroupWriter rg = writer.CreateRowGroup(2))
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
             {
                rg.WriteColumn(new DataColumn(id, new int[] { 1, 2 }));
             }
@@ -99,7 +99,7 @@ namespace Parquet.Test
          ms.Position = 0;
          using (var writer = new ParquetWriter(new Schema(id), ms, append: true))
          {
-            using (ParquetRowGroupWriter rg = writer.CreateRowGroup(2))
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
             {
                rg.WriteColumn(new DataColumn(id, new int[] { 3, 4 }));
             }
@@ -136,13 +136,14 @@ namespace Parquet.Test
 
       [Theory]
       [MemberData(nameof(NullableColumnContentCases))]
-      public void Write_read_nullable_column(Array input) {
+      public void Write_read_nullable_column(Array input)
+      {
          var id = new DataField<int?>("id");
          var ms = new MemoryStream();
 
          using (var writer = new ParquetWriter(new Schema(id), ms))
          {
-            using (ParquetRowGroupWriter rg = writer.CreateRowGroup(input.Length))
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
             {
                rg.WriteColumn(new DataColumn(id, input));
             }
@@ -157,6 +158,70 @@ namespace Parquet.Test
             {
                Assert.Equal(input.Length, rg.RowCount);
                Assert.Equal(input, rg.ReadColumn(id).Data);
+            }
+         }
+      }
+
+      [Fact]
+      public void FileMetadata_sets_num_rows_on_file_and_row_group()
+      {
+         var ms = new MemoryStream();
+         var id = new DataField<int>("id");
+
+         //write
+         using (var writer = new ParquetWriter(new Schema(id), ms))
+         {
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new[] { 1, 2, 3, 4 }));
+            }
+         }
+
+         //read back
+         using (var reader = new ParquetReader(ms))
+         {
+            Assert.Equal(4, reader.ThriftMetadata.Num_rows);
+
+            using (ParquetRowGroupReader rg = reader.OpenRowGroupReader(0))
+            {
+               Assert.Equal(4, rg.RowCount);
+            }
+         }
+      }
+
+      [Fact]
+      public void FileMetadata_sets_num_rows_on_file_and_row_group_multiple_row_groups()
+      {
+         var ms = new MemoryStream();
+         var id = new DataField<int>("id");
+
+         //write
+         using (var writer = new ParquetWriter(new Schema(id), ms))
+         {
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new[] { 1, 2, 3, 4 }));
+            }
+
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new[] { 5, 6 }));
+            }
+         }
+
+         //read back
+         using (var reader = new ParquetReader(ms))
+         {
+            Assert.Equal(6, reader.ThriftMetadata.Num_rows);
+
+            using (ParquetRowGroupReader rg = reader.OpenRowGroupReader(0))
+            {
+               Assert.Equal(4, rg.RowCount);
+            }
+
+            using (ParquetRowGroupReader rg = reader.OpenRowGroupReader(1))
+            {
+               Assert.Equal(2, rg.RowCount);
             }
          }
       }

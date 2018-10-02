@@ -85,7 +85,7 @@ namespace Parquet.Data.Rows
             position += 1;
          }
 
-         cr = result.FirstChild.Compact(_field.ClrNullableIfHasNullsType);
+         cr = result.FirstChild?.Compact(_field.ClrNullableIfHasNullsType);
          return read;
       }
 

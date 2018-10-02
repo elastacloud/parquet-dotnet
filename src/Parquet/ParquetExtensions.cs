@@ -17,12 +17,12 @@ namespace Parquet
       /// <summary>
       /// Writes a file with a single row group
       /// </summary>
-      public static void WriteSingleRowGroupParquetFile(this Stream stream, Schema schema, int rowCount, params DataColumn[] columns)
+      public static void WriteSingleRowGroupParquetFile(this Stream stream, Schema schema, params DataColumn[] columns)
       {
          using (var writer = new ParquetWriter(schema, stream))
          {
             writer.CompressionMethod = CompressionMethod.None;
-            using (ParquetRowGroupWriter rgw = writer.CreateRowGroup(rowCount))
+            using (ParquetRowGroupWriter rgw = writer.CreateRowGroup())
             {
                foreach(DataColumn column in columns)
                {
@@ -64,7 +64,7 @@ namespace Parquet
       /// <param name="table"></param>
       public static void Write(this ParquetWriter writer, Table table)
       {
-         using (ParquetRowGroupWriter rowGroupWriter = writer.CreateRowGroup(table.Count))
+         using (ParquetRowGroupWriter rowGroupWriter = writer.CreateRowGroup())
          {
             rowGroupWriter.Write(table);
          }
