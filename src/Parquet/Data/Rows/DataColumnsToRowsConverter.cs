@@ -169,7 +169,7 @@ namespace Parquet.Data.Rows
 
             if(lfi.SchemaType == SchemaType.Struct)
             {
-               StructField sf = (StructField)lfi;
+               //StructField sf = (StructField)lfi;
 
                var rows = new List<Row>();
                IEnumerator[] columnEnumerators = nativeRow.Values

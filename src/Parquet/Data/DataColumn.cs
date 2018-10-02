@@ -102,25 +102,6 @@ namespace Parquet.Data
       }
 
       /// <summary>
-      /// Creates a new column by combining data from both
-      /// </summary>
-      internal static DataColumn Merge(DataColumn column1, DataColumn column2,
-         int[] rl1 = null, int[] rl2 = null)
-      {
-         //new data
-         Array data = Array.CreateInstance(column1.Field.ClrNullableIfHasNullsType, column1.Data.Length + column2.Data.Length);
-         Array.Copy(column1.Data, data, column1.Data.Length);
-         Array.Copy(column2.Data, 0, data, column1.Data.Length, column2.Data.Length);
-
-         //new RLs
-         int[] rl = new int[rl1.Length + rl2.Length];
-         Array.Copy(rl1, rl, rl1.Length);
-         Array.Copy(rl2, 0, rl, rl1.Length, rl2.Length);
-
-         return new DataColumn(column1.Field, data, rl);
-      }
-
-      /// <summary>
       /// pretty print
       /// </summary>
       public override string ToString()

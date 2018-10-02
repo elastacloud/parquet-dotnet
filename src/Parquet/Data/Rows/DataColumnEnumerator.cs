@@ -13,6 +13,7 @@ namespace Parquet.Data.Rows
       private int _position = -1;
       private readonly bool _isRepeated;
       private readonly Array _data;
+      private readonly int _mrl;
       private readonly int[] _rls;
       private readonly DataField _field;
       private readonly DataColumn _dc;
@@ -24,6 +25,7 @@ namespace Parquet.Data.Rows
          _rls = dataColumn.RepetitionLevels;
          _field = dataColumn.Field;
          _dc = dataColumn;
+         _mrl = _field.MaxRepetitionLevel;
       }
 
       public object Current { get; private set; }
@@ -37,29 +39,11 @@ namespace Parquet.Data.Rows
 
          if(_isRepeated)
          {
-            var cell = new List<object>();
-            int prevRl = 0;
+            int read = Read(_position, out object current);
 
-            while (_position < _data.Length)
-            {
-               int rl = _rls[_position];
+            _position += read;
 
-               //as soon as RL decreases the element is ended
-               if (cell.Count > 0 && rl < prevRl)
-               {
-                  _position -= 1;   //rewind back as this doesn't belong to you
-                  break;
-               }
-
-               object value = _data.GetValue(_position);
-               cell.Add(value);
-               prevRl = rl;
-               _position += 1;
-            }
-
-            Array cellArray = Array.CreateInstance(_field.ClrNullableIfHasNullsType, cell.Count);
-            Array.Copy(cell.ToArray(), cellArray, cell.Count);
-            Current = cellArray;
+            Current = current;
          }
          else
          {
@@ -67,6 +51,42 @@ namespace Parquet.Data.Rows
          }
 
          return true;
+      }
+
+      private int Read(int position, out object cr)
+      {
+         //0 indicates start of a new row
+         int prl = 0;
+         int read = 0;
+         var result = new TreeList(null);
+         TreeList current = result;
+
+         while(position < _data.Length)
+         {
+            int rl = _rls[position];
+
+            if (rl == 0 && current.HasValues)
+            {
+               break;
+            }
+
+            int lmv = rl - prl;
+
+            if(lmv != 0)
+            {
+               current = current.Submerge(lmv);
+            }
+
+            object value = _data.GetValue(position);
+            current.Add(value);
+            read += 1;
+
+            prl = rl;
+            position += 1;
+         }
+
+         cr = result.FirstChild.Compact(_field.ClrNullableIfHasNullsType);
+         return read;
       }
 
       public void Reset()
