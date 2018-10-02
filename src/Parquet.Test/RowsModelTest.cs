@@ -393,6 +393,36 @@ namespace Parquet.Test
          Assert.Equal(-1m, (decimal)row[3], 2);
       }
 
+      [Fact]
+      public void Special_read_file_with_multiple_row_groups()
+      {
+         var ms = new MemoryStream();
+
+         //create multirowgroup file
+
+         //first row group
+         var t = new Table(new DataField<int>("id"));
+         t.Add(1);
+         t.Add(2);
+         using (var writer = new ParquetWriter(t.Schema, ms))
+         {
+            writer.Write(t);
+         }
+
+         //second row group
+         t.Clear();
+         t.Add(3);
+         t.Add(4);
+         using (var writer = new ParquetWriter(t.Schema, ms, null, true))
+         {
+            writer.Write(t);
+         }
+
+         //read back as table
+         t = ParquetReader.ReadTableFromStream(ms);
+         Assert.Equal(4, t.Count);
+      }
+
       #endregion
 
       #region [ And the Big Ultimate Fat Test!!! ]

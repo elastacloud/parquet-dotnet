@@ -78,6 +78,17 @@ namespace Parquet
          }
       }
 
+      /// <summary>
+      /// Reads entire stream as a table
+      /// </summary>
+      public static Table ReadTableFromStream(Stream stream, ParquetOptions parquetOptions = null)
+      {
+         using (var reader = new ParquetReader(stream, parquetOptions))
+         {
+            return reader.ReadAsTable();
+         }
+      }
+
       #endregion
 
       /// <summary>

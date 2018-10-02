@@ -77,17 +77,31 @@ namespace Parquet
       /// <returns></returns>
       public static Table ReadAsTable(this ParquetReader reader)
       {
-         if (reader.RowGroupCount > 1)
+         Table result = null;
+
+         for(int i = 0; i < reader.RowGroupCount; i++)
          {
-            throw OtherExtensions.NotImplemented("reading to table from files with more than one row group");
+            using (ParquetRowGroupReader rowGroupReader = reader.OpenRowGroupReader(i))
+            {
+               DataColumn[] allData = reader.Schema.GetDataFields().Select(df => rowGroupReader.ReadColumn(df)).ToArray();
+
+               var t = new Table(reader.Schema, allData, rowGroupReader.RowCount);
+
+               if(result == null)
+               {
+                  result = t;
+               }
+               else
+               {
+                  foreach(Row row in t)
+                  {
+                     result.Add(row);
+                  }
+               }
+            }
          }
 
-         using (ParquetRowGroupReader rowGroupReader = reader.OpenRowGroupReader(0))
-         {
-            DataColumn[] allData = reader.Schema.GetDataFields().Select(df => rowGroupReader.ReadColumn(df)).ToArray();
-
-            return new Table(reader.Schema, allData, rowGroupReader.RowCount);
-         }
+         return result;
       }
 
       /// <summary>
