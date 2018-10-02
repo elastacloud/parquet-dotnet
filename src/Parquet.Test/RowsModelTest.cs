@@ -265,8 +265,6 @@ namespace Parquet.Test
       [Fact]
       public void List_simple_element_write_read()
       {
-         //System.IO.File.WriteAllBytes("c:\\tmp\\sc.parquet", ms.ToArray());
-
          var table = new Table(
             new Schema(
                new DataField<int>("id"),
@@ -283,6 +281,8 @@ namespace Parquet.Test
          {
             writer.Write(table);
          }
+
+         System.IO.File.WriteAllBytes("c:\\tmp\\sc.parquet", ms.ToArray());
 
          //read back into table
          ms.Position = 0;

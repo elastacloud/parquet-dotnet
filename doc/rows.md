@@ -89,6 +89,17 @@ where the last cell is the data for your map. As we're in the row-based world, t
 |**Row 0**|234|100|
 |**Row 1**|235|110|
 
+To express this in code:
+
+```csharp
+table.Add("London",
+   new List<Row>
+   {
+      new Row(234, 100L),
+      new Row(235, 110L)
+   });
+```
+
 ## Structures
 
 Structures are represented again as `Row` objects. When you read or write a structure it is embedded into another row's value as a row. To demonstrate, the following schema
@@ -120,6 +131,8 @@ table.Add(new Row("12345-7", new Row("Richard", "Conway")));
 
 Lists are easy to get confused with repeatable fields, because they essentially repeat some data in a cell. This is true for a simple data type like a string, int etc., however lists are special in a way that a list item can be anything else, not just a plain data type. In general, *when repeated data can be represented as a plain type, always use repeatable field*. Repeatable fields are lighter and faster than lists which have extra overhead on serialisation and performance.
 
+### Simple Lists
+
 In simple cases, when a list contains a single data element, it will be mapped to a collection of those elements, for instance in the following schema
 
 ```csharp
@@ -140,5 +153,14 @@ and the following set of data:
 can be represented in code as:
 
 ```csharp
-
+table.Add(1, new[] { "London", "Derby" });
+table.Add(2, new[] { "Paris", "New York" });
 ```
+
+As you can see, it's no different to repeatable fields (in this case a repeatable string) however it will perform much slower due to transformation costs are higher.
+
+### Lists of Stuctures
+
+A more complicated use case of lists where they actually make some sense is using structures.
+
+todo

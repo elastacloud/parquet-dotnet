@@ -13,7 +13,9 @@ namespace Parquet.Test
    {
       protected Stream OpenTestFile(string name)
       {
-         return ResourceReader.Open(name);
+         return F.OpenRead("./data/" + name);
+
+         //return ResourceReader.Open(name);
       }
 
       protected DataColumn WriteReadSingleColumn(DataField field, int rowCount, DataColumn dataColumn)
