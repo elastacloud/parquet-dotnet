@@ -34,12 +34,12 @@ namespace Parquet.Data.Rows
 
       public bool MoveNext()
       {
-         if (++_position >= _data.Length)
+         if ((_position + 1) >= _data.Length)
             return false;
 
          if(_isRepeated)
          {
-            int read = Read(_position, out object current);
+            int read = Read(_position + 1, out object current);
 
             _position += read;
 
@@ -47,7 +47,7 @@ namespace Parquet.Data.Rows
          }
          else
          {
-            Current = _data.GetValue(_position);
+            Current = _data.GetValue(++_position);
          }
 
          return true;
