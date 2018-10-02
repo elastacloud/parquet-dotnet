@@ -123,6 +123,22 @@ Lists are easy to get confused with repeatable fields, because they essentially 
 In simple cases, when a list contains a single data element, it will be mapped to a collection of those elements, for instance in the following schema
 
 ```csharp
+var table = new Table(
+   new Schema(
+      new DataField<int>("id"),
+      new ListField("cities",
+         new DataField<string>("name"))));
 ```
 
-todo
+and the following set of data:
+
+|id|cities|
+|--|------|
+|1|London, Derby|
+|2|Paris, New York|
+
+can be represented in code as:
+
+```csharp
+
+```

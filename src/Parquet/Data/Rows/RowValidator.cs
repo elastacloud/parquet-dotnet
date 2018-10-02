@@ -29,6 +29,9 @@ namespace Parquet.Data.Rows
                case SchemaType.Struct:
                   Validate((Row)value, ((StructField)field).Fields);
                   break;
+               case SchemaType.List:
+                  ValidateList((ListField)field, value);
+                  break;
                default:
                   throw new NotImplementedException(field.SchemaType.ToString());
             }
@@ -50,6 +53,31 @@ namespace Parquet.Data.Rows
          foreach(Row row in (IEnumerable)value)
          {
             Validate(row, new[] { mf.Key, mf.Value });
+         }
+      }
+
+      private static void ValidateList(ListField lf, object value)
+      {
+         if (lf.Item.SchemaType == SchemaType.Data)
+         {
+            DataField df = (DataField)lf.Item;
+
+            //value must be an enumeration of items
+            if (!value.GetType().TryExtractEnumerableType(out Type elementType))
+            {
+               throw new ArgumentException($"simple list must be a collection, but found {value.GetType()}");
+            }
+
+            //value is a list of items
+
+            foreach (object element in (IEnumerable)value)
+            {
+               ValidatePrimitive(df, element);
+            }
+         }
+         else
+         {
+            throw new NotImplementedException();
          }
       }
 

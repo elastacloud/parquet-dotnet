@@ -41,7 +41,18 @@ namespace Parquet.Data
 
       internal override void PropagateLevels(int parentRepetitionLevel, int parentDefinitionLevel)
       {
-         
+         int rl = parentRepetitionLevel;
+         int dl = parentDefinitionLevel;
+
+         //"container" is optional, therefore +1 to DL
+         dl += 1;
+
+         //"list" is repeated, both get +1
+         rl += 1;
+         dl += 1;
+
+         //push to child item
+         Item.PropagateLevels(rl, dl);
       }
 
       internal static ListField CreateWithNoItem(string name)

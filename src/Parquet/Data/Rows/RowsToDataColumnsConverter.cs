@@ -9,6 +9,7 @@ namespace Parquet.Data.Rows
    {
       private readonly Schema _schema;
       private readonly IReadOnlyCollection<Row> _rows;
+      private readonly Dictionary<string, DataColumnAppender> _pathToDataColumn = new Dictionary<string, DataColumnAppender>();
 
       public RowsToDataColumnsConverter(Schema schema, IReadOnlyCollection<Row> rows)
       {
@@ -18,122 +19,92 @@ namespace Parquet.Data.Rows
 
       public IReadOnlyCollection<DataColumn> Convert()
       {
-         return RowsToColumns(_schema.Fields, _rows);
+         ProcessRows(_schema.Fields, _rows);
+
+         List<DataColumn> result = _schema.GetDataFields()
+            .Select(df => _pathToDataColumn[df.Path].ToDataColumn())
+            .ToList();
+
+         return result;
       }
 
-      private static IReadOnlyCollection<DataColumn> RowsToColumns(IReadOnlyCollection<Field> fields, IReadOnlyCollection<Row> rows)
+      private void ProcessRows(IReadOnlyCollection<Field> fields, IReadOnlyCollection<Row> rows)
       {
-         var dcs = new List<DataColumn>();
-
-         int i = 0;
-         foreach (Field f in fields)
+         foreach(Row row in rows)
          {
-            List<object> values = rows.Select(r => r[i]).ToList();
-
-            RowsToColumn(f, values, dcs);
-
-            i += 1;
-         }
-
-         return dcs;
-      }
-
-      private static void RowsToColumn(Field field, IReadOnlyCollection<object> columnValues, IList<DataColumn> result)
-      {
-         switch (field.SchemaType)
-         {
-            case SchemaType.Data:
-               //always maps to a single column
-               result.Add(RowToDataColumn((DataField)field, columnValues));
-               break;
-            case SchemaType.Map:
-               RowToColumns((MapField)field, columnValues, result);
-               break;
-            case SchemaType.Struct:
-               IReadOnlyCollection<DataColumn> structColumns = RowsToColumns(((StructField)field).Fields, columnValues.Cast<Row>().ToList());
-               foreach(DataColumn sc in structColumns)
-               {
-                  result.Add(sc);
-               }
-               break;
-            default:
-               throw new NotImplementedException(field.SchemaType.ToString());
+            ProcessRow(fields, row);
          }
       }
 
-      private static void RowToColumns(MapField mapField, IEnumerable<object> values, IList<DataColumn> resultColumns)
+      private void ProcessRow(IReadOnlyCollection<Field> fields, Row row)
       {
-         DataField keyField = (DataField)mapField.Key;
-         DataField valueField = (DataField)mapField.Value;
-
-         //values are instances of Row collections
-
-         IReadOnlyCollection<DataColumn> columns = null;
-
-         foreach (IReadOnlyCollection<Row> rows in values)
+         int cellIndex = 0;
+         foreach(Field f in fields)
          {
-            IReadOnlyCollection<DataColumn> rowsColumns = RowsToColumns(new Field[] { mapField.Key, mapField.Value }, rows);
-
-            //add correct repetition levels
-            rowsColumns = rowsColumns.Select(rc => new DataColumn(rc.Field, rc.Data, rc.Field.GenerateRepetitions(rc.Data.Length))).ToArray();
-
-            if (columns == null)
+            switch (f.SchemaType)
             {
-               columns = rowsColumns;
-            }
-            else
-            {
-               //columns = rowsColumns.Select((dc, i) => )
-               throw new NotImplementedException();
+               case SchemaType.Data:
+                  ProcessDataValue(f, row[cellIndex]);
+                  break;
+
+               case SchemaType.Map:
+                  ProcessMap((MapField)f, (IReadOnlyCollection<Row>)row[cellIndex]);
+                  break;
+
+               case SchemaType.Struct:
+                  ProcessRow(((StructField)f).Fields, (Row)row[cellIndex]);
+                  break;
+
+               case SchemaType.List:
+                  ProcessList((ListField)f, row[cellIndex]);
+                  break;
+
+               default:
+                  throw new NotImplementedException();
             }
 
-         }
-
-         foreach (DataColumn column in columns)
-         {
-            resultColumns.Add(column);
+            cellIndex++;
          }
       }
 
-      private static DataColumn RowToDataColumn(DataField dataField, IReadOnlyCollection<object> values)
+      private void ProcessMap(MapField mapField, IReadOnlyCollection<Row> mapRows)
       {
-         if (dataField.IsArray)
+         var fields = new Field[] { mapField.Key, mapField.Value };
+
+         var keyCell = mapRows.Select(r => r[0]).ToList();
+         var valueCell = mapRows.Select(r => r[1]).ToList();
+         var row = new Row(keyCell, valueCell);
+
+         ProcessRow(fields, row);
+      }
+
+      private void ProcessList(ListField listField, object cellValue)
+      {
+         Field f = listField.Item;
+
+         
+         if(f.SchemaType == SchemaType.Data)
          {
-            //don't know beforehand how many elements are in the target array, expand the array first!
-            var flatValues = new List<object>();
-            var repetitionLevels = new List<int>();
-            foreach (Array valueArray in values)
-            {
-               int rl = 0;
-               foreach (object value in valueArray)
-               {
-                  repetitionLevels.Add(rl);
-                  flatValues.Add(value);
-                  rl = 1;
-               }
-            }
-
-            //allocate flat array for data column
-            Array data = Array.CreateInstance(dataField.ClrNullableIfHasNullsType, flatValues.Count);
-            for (int i = 0; i < flatValues.Count; i++)
-            {
-               data.SetValue(flatValues[i], i);
-            }
-
-            //return data column with valid repetition levels
-            return new DataColumn(dataField, data, repetitionLevels.ToArray());
+            //list has a special case for simple elements where they are not wrapped in rows
+            ProcessDataValue(f, cellValue);
          }
          else
          {
-            Array data = Array.CreateInstance(dataField.ClrNullableIfHasNullsType, values.Count);
-            int i = 0;
-            foreach (object value in values)
-            {
-               data.SetValue(value, i++);
-            }
-
-            return new DataColumn(dataField, data);
+            //otherwise it's a collection of rows
+            ProcessRows(new[] { f }, (IReadOnlyCollection<Row>)cellValue);
          }
+      }
+
+      private void ProcessDataValue(Field f, object value)
+      {
+         //prepare value appender
+         if(!_pathToDataColumn.TryGetValue(f.Path, out DataColumnAppender appender))
+         {
+            appender = new DataColumnAppender((DataField)f);
+            _pathToDataColumn[f.Path] = appender;
+         }
+
+         appender.Add(value);
       }
    }
 }

@@ -231,8 +231,6 @@ namespace Parquet.Test
             writer.Write(table);
          }
 
-         //System.IO.File.WriteAllBytes("c:\\tmp\\sc.parquet", ms.ToArray());
-
          //read back into table
          ms.Position = 0;
          Table table2;
@@ -265,6 +263,40 @@ namespace Parquet.Test
       }
 
       [Fact]
+      public void List_simple_element_write_read()
+      {
+         //System.IO.File.WriteAllBytes("c:\\tmp\\sc.parquet", ms.ToArray());
+
+         var table = new Table(
+            new Schema(
+               new DataField<int>("id"),
+               new ListField("cities",
+                  new DataField<string>("name"))));
+
+         var ms = new MemoryStream();
+
+         table.Add(1, new[] { "London", "Derby" });
+         table.Add(2, new[] { "Paris", "New York" });
+
+         //write as table
+         using (var writer = new ParquetWriter(table.Schema, ms))
+         {
+            writer.Write(table);
+         }
+
+         //read back into table
+         ms.Position = 0;
+         Table table2;
+         using (var reader = new ParquetReader(ms))
+         {
+            table2 = reader.ReadAsTable();
+         }
+
+         //validate data
+         Assert.Equal(table.ToString(), table2.ToString());
+      }
+
+      [Fact]
       public void List_read_structures_from_Apache_Spark()
       {
          Table t;
@@ -284,6 +316,9 @@ namespace Parquet.Test
 
       #region [ And the Big Ultimate Fat Test!!! ]
 
+      /// <summary>
+      /// This essentially proves that we can READ complicated data structures, but not write (see other tests)
+      /// </summary>
       [Fact]
       public void BigFatOne_variations_from_Apache_Spark()
       {
