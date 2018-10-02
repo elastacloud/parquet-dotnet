@@ -282,8 +282,6 @@ namespace Parquet.Test
             writer.Write(table);
          }
 
-         System.IO.File.WriteAllBytes("c:\\tmp\\sc.parquet", ms.ToArray());
-
          //read back into table
          ms.Position = 0;
          Table table2;

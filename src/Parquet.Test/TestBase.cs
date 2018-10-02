@@ -1,9 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using Parquet.Data;
-using Parquet.File;
-using Parquet.Test.data;
 using System.Linq;
 using F = System.IO.File;
 
@@ -14,8 +11,6 @@ namespace Parquet.Test
       protected Stream OpenTestFile(string name)
       {
          return F.OpenRead("./data/" + name);
-
-         //return ResourceReader.Open(name);
       }
 
       protected DataColumn WriteReadSingleColumn(DataField field, int rowCount, DataColumn dataColumn)
