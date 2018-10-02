@@ -361,13 +361,13 @@ namespace Parquet.Test
       [Fact]
       public void Special_read_all_nulls_no_booleans()
       {
-         ReadTestFileAsTable("all_nulls_no_booleans.parquet");
+         ReadTestFileAsTable("special/all_nulls_no_booleans.parquet");
       }
 
       [Fact]
       public void Special_all_nulls_file()
       {
-         Table t = ReadTestFileAsTable("all_nulls.parquet");
+         Table t = ReadTestFileAsTable("special/all_nulls.parquet");
 
          Assert.Equal(1, t.Schema.Fields.Count);
          Assert.Equal("lognumber", t.Schema[0].Name);
@@ -378,13 +378,13 @@ namespace Parquet.Test
       [Fact]
       public void Special_read_all_nulls_decimal_column()
       {
-         ReadTestFileAsTable("decimalnulls.parquet");
+         ReadTestFileAsTable("special/decimalnulls.parquet");
       }
 
       [Fact]
       public void Special_read_all_legacy_decimals()
       {
-         Table ds = ReadTestFileAsTable("decimallegacy.parquet");
+         Table ds = ReadTestFileAsTable("special/decimallegacy.parquet");
 
          Row row = ds[0];
          Assert.Equal(1, (int)row[0]);
