@@ -145,7 +145,7 @@ namespace Parquet.Test
       public void Map_read_from_Apache_Spark()
       {
          Table t;
-         using (Stream stream = OpenTestFile("map.parquet"))
+         using (Stream stream = OpenTestFile("map_simple.parquet"))
          {
             using (var reader = new ParquetReader(stream))
             {
@@ -251,7 +251,7 @@ namespace Parquet.Test
       public void List_read_simple_element_from_Apache_Spark()
       {
          Table t;
-         using (Stream stream = OpenTestFile("simplerepeated.parquet"))
+         using (Stream stream = OpenTestFile("list_simple.parquet"))
          {
             using (var reader = new ParquetReader(stream))
             {
@@ -298,7 +298,7 @@ namespace Parquet.Test
       public void List_read_structures_from_Apache_Spark()
       {
          Table t;
-         using (Stream stream = OpenTestFile("repeatedstruct.parquet"))
+         using (Stream stream = OpenTestFile("list_structs.parquet"))
          {
             using (var reader = new ParquetReader(stream))
             {
@@ -321,7 +321,7 @@ namespace Parquet.Test
       public void BigFatOne_variations_from_Apache_Spark()
       {
          Table t;
-         using (Stream stream = OpenTestFile("nested.parquet"))
+         using (Stream stream = OpenTestFile("all_var1.parquet"))
          {
             using (var reader = new ParquetReader(stream))
             {

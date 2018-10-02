@@ -250,7 +250,7 @@ root
       [Fact]
       public void Read_simple_map()
       {
-         using (var reader = new ParquetReader(OpenTestFile("map.parquet"), leaveStreamOpen: false))
+         using (var reader = new ParquetReader(OpenTestFile("map_simple.parquet"), leaveStreamOpen: false))
          {
             DataColumn[] data = reader.ReadEntireRowGroup();
 
