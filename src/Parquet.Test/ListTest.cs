@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Parquet.Data;
-using Parquet.File;
+﻿using Parquet.Data;
 using Xunit;
 
 namespace Parquet.Test
@@ -29,27 +26,6 @@ namespace Parquet.Test
          DataColumn[] readColumns = WriteReadSingleRowGroup(schema, new[] { id, cname, ccountry }, 1, out Schema readSchema);
 
       }
-
-      /*[Fact]
-      public void List_of_elements_writes_reads()
-      {
-         var ds = new DataSet(
-            new DataField<int>("id"),
-            new ListField("strings",
-               new DataField<string>("item")
-            ));
-         ds.Add(1, new[] { "one", "two" });
-         Assert.Equal("{1;[one;two]}", ds.WriteReadFirstRow());
-      }*/
-
-      /*[Fact]
-      public void List_of_elements_is_empty_reads_file()
-      {
-
-         DataSet ds = ParquetReader2.Read(OpenTestFile("listofitems-empty-onerow.parquet"));
-         Assert.Equal("{2;[]}", ds[0].ToString());
-         Assert.Equal(1, ds.RowCount);
-      }*/
 
       [Fact]
       public void List_of_elements_with_some_items_empty_reads_file()
@@ -80,39 +56,5 @@ namespace Parquet.Test
          }
 
       }
-
-      /*[Fact]
-      public void List_of_elements_is_empty_writes_reads()
-      {
-         var ds = new DataSet(
-            new DataField<int>("id"),
-            new ListField("strings",
-               new DataField<string>("item")
-            ));
-         ds.Add(1, new string[0]);
-         Assert.Equal("{1;[]}", ds.WriteReadFirstRow());
-      }*/
-
-      /*[Fact]
-      public void List_of_elements_with_some_items_empty_writes_reads()
-      {
-         var ds = new DataSet(
-            new DataField<int>("id"),
-            new ListField("strings",
-               new DataField<string>("item")
-            ));
-         ds.Add(1, new string[] { "1", "2", "3" });
-         ds.Add(2, new string[] { });
-         ds.Add(3, new string[] { "1", "2", "3" });
-         ds.Add(4, new string[] { });
-
-         DataSet ds1 = DataSetGenerator.WriteRead(ds);
-         Assert.Equal(4, ds1.RowCount);
-         Assert.Equal("{1;[1;2;3]}", ds1[0].ToString());
-         Assert.Equal("{2;[]}", ds1[1].ToString());
-         Assert.Equal("{3;[1;2;3]}", ds1[2].ToString());
-         Assert.Equal("{4;[]}", ds1[3].ToString());
-
-      }*/
    }
 }

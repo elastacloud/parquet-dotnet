@@ -3,6 +3,7 @@ using System.IO;
 using Parquet.Data;
 using System.Linq;
 using F = System.IO.File;
+using Parquet.Data.Rows;
 
 namespace Parquet.Test
 {
@@ -11,6 +12,34 @@ namespace Parquet.Test
       protected Stream OpenTestFile(string name)
       {
          return F.OpenRead("./data/" + name);
+      }
+
+      protected Table ReadTestFileAsTable(string name)
+      {
+         using (Stream s = OpenTestFile(name))
+         {
+            using (var reader = new ParquetReader(s))
+            {
+               return reader.ReadAsTable();
+            }
+         }
+      }
+
+      protected Table WriteRead(Table table)
+      {
+         var ms = new MemoryStream();
+
+         using (var writer = new ParquetWriter(table.Schema, ms))
+         {
+            writer.Write(table);
+         }
+
+         ms.Position = 0;
+
+         using (var reader = new ParquetReader(ms))
+         {
+            return reader.ReadAsTable();
+         }
       }
 
       protected DataColumn WriteReadSingleColumn(DataField field, int rowCount, DataColumn dataColumn)

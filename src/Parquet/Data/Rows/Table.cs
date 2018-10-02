@@ -29,6 +29,14 @@ namespace Parquet.Data.Rows
       }
 
       /// <summary>
+      /// Creates an empty table with specified fiels as schema
+      /// </summary>
+      public Table(params Field[] schema) : this(new Schema(schema))
+      {
+
+      }
+
+      /// <summary>
       /// Creates a table with specified schema
       /// </summary>
       /// <param name="schema">Parquet file schema.</param>

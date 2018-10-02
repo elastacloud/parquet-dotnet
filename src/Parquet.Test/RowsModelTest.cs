@@ -58,7 +58,6 @@ namespace Parquet.Test
 
       #endregion
 
-
       #region [ Array Tables ]
 
       [Fact]
@@ -199,14 +198,7 @@ namespace Parquet.Test
       [Fact]
       public void Struct_read_plain_structs_from_Apache_Spark()
       {
-         Table t;
-         using (Stream stream = OpenTestFile("struct_plain.parquet"))
-         {
-            using (var reader = new ParquetReader(stream))
-            {
-               t = reader.ReadAsTable();
-            }
-         }
+         Table t = ReadTestFileAsTable("struct_plain.parquet");
 
          Assert.Equal("[{12345-6;{Ivan;Gavryliuk}},{12345-7;{Richard;Conway}}]", t.ToString());
       }
@@ -225,22 +217,25 @@ namespace Parquet.Test
          table.Add("12345-6", new Row("Ivan", "Gavryliuk"));
          table.Add("12345-7", new Row("Richard", "Conway"));
 
-         //write as table
-         using (var writer = new ParquetWriter(table.Schema, ms))
-         {
-            writer.Write(table);
-         }
+         Table table2 = WriteRead(table);
 
-         //read back into table
-         ms.Position = 0;
-         Table table2;
-         using (var reader = new ParquetReader(ms))
-         {
-            table2 = reader.ReadAsTable();
-         }
-
-         //validate data
          Assert.Equal(table.ToString(), table2.ToString());
+      }
+
+      [Fact]
+      public void Struct_with_repeated_field_writes_reads()
+      {
+         var t = new Table(new Schema(
+            new DataField<string>("name"),
+            new StructField("address",
+               new DataField<string>("name"),
+               new DataField<IEnumerable<string>>("lines"))));
+
+         t.Add("Ivan", new Row("Primary", new[] { "line1", "line2" }));
+
+         Table t2 = WriteRead(t);
+
+         Assert.Equal("{Ivan;{Primary;[line1;line2]}}", t[0].ToString());
       }
 
       #endregion
@@ -308,6 +303,94 @@ namespace Parquet.Test
 
          Assert.Single(t);
          Assert.Equal("{[{UK;London};{US;New York}];1}", t[0].ToString());
+      }
+
+      [Fact]
+      public void List_of_elements_is_empty_reads_file()
+      {
+         Table t;
+         using (Stream stream = OpenTestFile("list_empty.parquet"))
+         {
+            using (var reader = new ParquetReader(stream))
+            {
+               t = reader.ReadAsTable();
+            }
+         }
+
+         Assert.Equal("{2;[]}", t[0].ToString());
+      }
+
+      [Fact]
+      public void List_of_elements_is_empty_writes_reads()
+      {
+         var t = new Table(
+            new DataField<int>("id"),
+            new ListField("strings",
+               new DataField<string>("item")
+            ));
+         t.Add(1, new string[0]);
+         Assert.Equal("{1;[]}", WriteRead(t).ToString());
+      }
+
+      [Fact]
+      public void List_of_elements_with_some_items_empty_writes_reads()
+      {
+         var t = new Table(
+            new DataField<int>("id"),
+            new ListField("strings",
+               new DataField<string>("item")
+            ));
+         t.Add(1, new string[] { "1", "2", "3" });
+         t.Add(2, new string[] { });
+         t.Add(3, new string[] { "1", "2", "3" });
+         t.Add(4, new string[] { });
+
+         Table t1 = WriteRead(t);
+         Assert.Equal(4, t1.Count);
+         Assert.Equal("{1;[1;2;3]}", t1[0].ToString());
+         Assert.Equal("{2;[]}", t1[1].ToString());
+         Assert.Equal("{3;[1;2;3]}", t1[2].ToString());
+         Assert.Equal("{4;[]}", t1[3].ToString());
+
+      }
+
+      #endregion
+
+      #region [ Special Cases ]
+
+      [Fact]
+      public void Special_read_all_nulls_no_booleans()
+      {
+         ReadTestFileAsTable("all_nulls_no_booleans.parquet");
+      }
+
+      [Fact]
+      public void Special_all_nulls_file()
+      {
+         Table t = ReadTestFileAsTable("all_nulls.parquet");
+
+         Assert.Equal(1, t.Schema.Fields.Count);
+         Assert.Equal("lognumber", t.Schema[0].Name);
+         Assert.Single(t);
+         Assert.Null(t[0][0]);
+      }
+
+      [Fact]
+      public void Special_read_all_nulls_decimal_column()
+      {
+         ReadTestFileAsTable("decimalnulls.parquet");
+      }
+
+      [Fact]
+      public void Special_read_all_legacy_decimals()
+      {
+         Table ds = ReadTestFileAsTable("decimallegacy.parquet");
+
+         Row row = ds[0];
+         Assert.Equal(1, (int)row[0]);
+         Assert.Equal(1.2m, (decimal)row[1], 2);
+         Assert.Null(row[2]);
+         Assert.Equal(-1m, (decimal)row[3], 2);
       }
 
       #endregion
