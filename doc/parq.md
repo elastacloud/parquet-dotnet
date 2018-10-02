@@ -1,15 +1,6 @@
 # PARQ (Global Tool)
 
-Since v3.1 parquet repository includes an amazing [.NET Core Global Tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools) called 
-<span style="background-color: black; padding-left:5px; padding-right: 5px; padding-bottom: 4px">
-   <strong>
-      <font color="yellow">p</font>
-      <font color="red">a</font>
-      <font color="green">r</font>
-      <font color="blue">q</font>
-   </strong>
-</span>
-which serves as a first class command-line client to perform various funtions on parquet files.
+Since v3.1 parquet repository includes an amazing [.NET Core Global Tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools) called **parq** which serves as a first class command-line client to perform various funtions on parquet files.
 
 ## Installing
 
@@ -28,3 +19,7 @@ parq schema <path-to-file>
 which produces an output similar to:
 
 ![Parq Schema](img/parq-schema.png)
+
+### More Commands
+
+They are coming soon, please leave your comments in the issue tracker in terms of what you would like to see next.
