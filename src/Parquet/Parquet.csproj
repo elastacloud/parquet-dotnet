@@ -10,7 +10,10 @@ Works on all flavours of Windows and Linux. Compatible with iOS and Android via 
     <Company>Elastacloud</Company>
     <PackageId>Parquet.Net</PackageId>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PackageReleaseNotes>3.0.5:
+    <PackageReleaseNotes>3.1.0:
+- re-introducing utilities for row-based access allowing you to access and create parquet files in more readable format.
+- Field class now supports MaxRepetitionLevel and MaxDefinitionLevel
+3.0.5:
 - #321 bug fixed: a nullable field should support all-non-nullable values 
 - performance improvement around packing definition levels
 

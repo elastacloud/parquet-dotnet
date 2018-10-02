@@ -35,6 +35,14 @@ This project is aimed to fix this problem. We support all the popular server and
 - [Fast Automatic Serialisation](doc/serialisation.md)
 - [Declaring Schema](doc/schema.md)
   - [Supported Types](doc/types.md)
+- [<span style="background-color: black; padding-left:5px; padding-right: 5px; padding-bottom: 4px">
+   <strong>
+      <font color="yellow">p</font>
+      <font color="red">a</font>
+      <font color="green">r</font>
+      <font color="blue">q</font>
+   </strong>
+</span>](doc/parq.md)
 
 You can track the [amount of features we have implemented so far](doc/features.md).
 

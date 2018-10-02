@@ -21,6 +21,20 @@ namespace Parquet.CLI
       {
          var app = new Application("Parquet CLI (https://github.com/elastacloud/parquet-dotnet)");
 
+         app.OnBeforeExecuteCommand(cmd =>
+         {
+            PoshWrite("{p}{a}{r}{q} v", ConsoleColor.Yellow, ConsoleColor.Red, ConsoleColor.Green, ConsoleColor.Blue);
+            string[] pts = app.Version.Split('.');
+            for(int i = 0; i < pts.Length; i++)
+            {
+               if (i > 0)
+                  Write(".", ConsoleColor.DarkGray);
+
+               Write(pts[i], ConsoleColor.Green);
+            }
+            WriteLine();
+         });
+
          app.OnError((cmd, err) =>
          {
             log.Trace("error in command {command}", cmd.Name, err);
