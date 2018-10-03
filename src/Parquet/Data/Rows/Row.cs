@@ -193,10 +193,14 @@ namespace Parquet.Data.Rows
 
          bool first = true;
          IEnumerator<Field> fien = fields?.GetEnumerator();
+         bool finished = false;
          foreach (object v in Values)
          {
-            fien?.MoveNext();
-            Field f = fien?.Current;
+            if (!finished)
+            {
+               finished = fien?.MoveNext() ?? true;
+            }
+            Field f = finished ? null : fien?.Current;
 
             if (first)
             {
