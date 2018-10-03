@@ -97,6 +97,7 @@ namespace Parquet.CLI
             });
             */
 
+#if DEBUG
             app.Command("view-all", cmd =>
             {
                Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
@@ -143,7 +144,9 @@ namespace Parquet.CLI
                   new DisplayFullCommand<Views.InteractiveConsoleView>(path).Execute(settings);
                });
             });
-            
+
+#endif
+
             int exitCode = app.Execute();
 
 #if DEBUG
