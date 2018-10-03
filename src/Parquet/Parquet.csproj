@@ -13,6 +13,8 @@ Works on all flavours of Windows and Linux. Compatible with iOS and Android via 
     <PackageReleaseNotes>3.1.0:
 - re-introducing utilities for row-based access allowing you to access and create parquet files in more readable format.
 - Field class now supports MaxRepetitionLevel and MaxDefinitionLevel
+- fixed bug #334 preventing reading generated files in Impala
+- parquet.net library supports SourceLink
 3.0.5:
 - #321 bug fixed: a nullable field should support all-non-nullable values 
 - performance improvement around packing definition levels
@@ -47,7 +49,7 @@ the first release of a major rewrite</PackageReleaseNotes>
    </PropertyGroup>
 
    <ItemGroup Condition="'$(Configuration)' == 'Release'">
-      <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All"/>
+      <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All" />
    </ItemGroup>
 
    <ItemGroup>

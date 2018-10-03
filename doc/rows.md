@@ -161,6 +161,27 @@ As you can see, it's no different to repeatable fields (in this case a repeatabl
 
 ### Lists of Stuctures
 
-A more complicated use case of lists where they actually make some sense is using structures.
+A more complicated use case of lists where they actually make some sense is using structures (although lists can contain any subclass of `Field`). Let's say you have the the following schema definition:
 
-todo
+```csharp
+var t = new Table(
+   new DataField<int>("id"),
+   new ListField("structs",
+      new StructField("mystruct",
+         new DataField<int>("id"),
+         new DataField<string>("name"))));
+```
+
+and would like to add the following data:
+
+|id|structs|
+|--|-------|
+|1|id: 1, name: Joe; id: 2, name: Bloggs|
+|1|id: 3, name Star; id: 4, name: Wars|
+
+which essentially creates a list of structures with two fields - id and name in a single table cell. To add the data to the table:
+
+```csharp
+t.Add(1, new[] { new Row(1, "Joe"), new Row(2, "Bloggs") });
+t.Add(2, new[] { new Row(3, "Star"), new Row(4, "Wars") });
+```
