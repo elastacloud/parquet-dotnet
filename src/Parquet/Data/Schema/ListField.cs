@@ -51,6 +51,9 @@ namespace Parquet.Data
          rl += 1;
          dl += 1;
 
+         MaxRepetitionLevel = rl;
+         MaxDefinitionLevel = dl;
+
          //push to child item
          Item.PropagateLevels(rl, dl);
       }

@@ -173,7 +173,7 @@ namespace Parquet.Test
                new Row(235, 110L)
             });
 
-         Table table2 = WriteRead(table, true);
+         Table table2 = WriteRead(table);
 
          Assert.Equal(table.ToString(), table2.ToString());
       }
@@ -305,9 +305,9 @@ namespace Parquet.Test
          t.Add(1, new[] { new Row(1, "Joe"), new Row(2, "Bloggs") });
          t.Add(2, new[] { new Row(3, "Star"), new Row(4, "Wars") });
 
-         Table t2 = WriteRead(t);
+         Table t2 = WriteRead(t, true);
 
-         Assert.Equal(t, t2);
+         Assert.Equal(t.ToString(), t2.ToString());
       }
 
       [Fact]

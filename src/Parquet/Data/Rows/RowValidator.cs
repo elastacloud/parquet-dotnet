@@ -60,15 +60,15 @@ namespace Parquet.Data.Rows
       {
          bool isEnumerable = value.GetType().TryExtractEnumerableType(out Type elementType);
 
+         //value must be an enumeration of items
+         if (!isEnumerable)
+         {
+            throw new ArgumentException($"simple list must be a collection, but found {value.GetType()}");
+         }
+
          if (lf.Item.SchemaType == SchemaType.Data)
          {
             DataField df = (DataField)lf.Item;
-
-            //value must be an enumeration of items
-            if (!isEnumerable)
-            {
-               throw new ArgumentException($"simple list must be a collection, but found {value.GetType()}");
-            }
 
             //value is a list of items
 
@@ -79,7 +79,10 @@ namespace Parquet.Data.Rows
          }
          else
          {
-            throw new NotImplementedException();
+            if(elementType != typeof(Row))
+            {
+               throw new ArgumentException($"expected a collection of {typeof(Row)} but found a collection of {elementType}");
+            }
          }
       }
 

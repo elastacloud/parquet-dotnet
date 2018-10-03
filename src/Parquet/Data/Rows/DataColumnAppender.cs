@@ -11,6 +11,8 @@ namespace Parquet.Data.Rows
       private readonly List<object> _values = new List<object>();
       private readonly List<int> _rls = new List<int>();
       private readonly bool _isRepeated;
+      private int _lastIndex;
+      private int _lastLevel;
 
       public DataColumnAppender(DataField dataField)
       {
@@ -18,22 +20,37 @@ namespace Parquet.Data.Rows
          _isRepeated = dataField.MaxRepetitionLevel > 0;
       }
 
-      public void Add(object value)
+      public void Add(object value, int level, int index)
       {
          if (_isRepeated)
          {
-            int rl = 0;
-            foreach(object valueItem in (IEnumerable)value)
+            if(!(value is string) && value is IEnumerable valueItems)
             {
-               _values.Add(valueItem);
-               _rls.Add(rl);
-               rl = _dataField.MaxRepetitionLevel;
+               int rl = 0;
+               foreach (object valueItem in (IEnumerable)value)
+               {
+                  _values.Add(valueItem);
+                  _rls.Add(rl);
+                  rl = _dataField.MaxRepetitionLevel;
+               }
             }
+            else
+            {
+               int rl = index == 0 ? 0 : _dataField.MaxRepetitionLevel;
+
+               _values.Add(value);
+               _rls.Add(rl);
+            }
+
+            _lastLevel = level;
+            _lastIndex = index;
          }
          else
          {
+            //non-repeated fields can only appear on the first level and have no repetition levels (obviously)
             _values.Add(value);
          }
+
       }
 
       public DataColumn ToDataColumn()

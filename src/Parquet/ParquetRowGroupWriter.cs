@@ -85,7 +85,7 @@ namespace Parquet
          //todo: check if all columns are present
 
          //row count is know only after at least one column is written
-         _thriftRowGroup.Num_rows = RowCount.Value;
+         _thriftRowGroup.Num_rows = RowCount ?? 0;
 
          //row group's size is a sum of _uncompressed_ sizes of all columns in it, including the headers
          //luckily ColumnChunk already contains sizes of page+header in it's meta

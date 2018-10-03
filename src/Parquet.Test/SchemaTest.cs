@@ -234,5 +234,25 @@ namespace Parquet.Test
          Assert.Equal(1, value.MaxRepetitionLevel);
          Assert.Equal(3, value.MaxDefinitionLevel);
       }
+
+      [Fact]
+      public void List_of_structures_valid_levels()
+      {
+         var idField = new DataField<int>("id");
+         var nameField = new DataField<string>("name");
+
+         var schema = new Schema(
+            new DataField<int>("id"),
+            new ListField("structs",
+               new StructField("mystruct",
+                  idField,
+                  nameField)));
+
+         Assert.Equal(1, idField.MaxRepetitionLevel);
+         Assert.Equal(2, idField.MaxDefinitionLevel);
+
+         Assert.Equal(1, nameField.MaxRepetitionLevel);
+         Assert.Equal(3, nameField.MaxDefinitionLevel);
+      }
    }
 }
