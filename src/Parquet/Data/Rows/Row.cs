@@ -182,58 +182,52 @@ namespace Parquet.Data.Rows
       {
          var sb = new StringBuilder();
          
-         ToString(sb, -1);
+         ToString(sb, StringFormat.Internal, 0, null);
 
          return sb.ToString();
       }
 
-      internal void ToString(StringBuilder sb, int nestLevel)
+      internal void ToString(StringBuilder sb, StringFormat sf, int level, IReadOnlyCollection<Field> fields)
       {
-         sb.OpenBrace(nestLevel);
+         sb.StartObject(sf);
 
          bool first = true;
+         IEnumerator<Field> fien = fields?.GetEnumerator();
          foreach (object v in Values)
          {
+            fien?.MoveNext();
+            Field f = fien?.Current;
+
             if (first)
             {
                first = false;
             }
             else
             {
-               if (nestLevel == -1)
-               {
-                  sb.Append(";");
-               }
-               else
-               {
-                  sb.AppendLine();
-               }
+               sb.DivideObjects(sf);
             }
 
-            FormatValue(v, sb, nestLevel == -1 ? -1 : nestLevel + 1);
+            FormatValue(v, sb, sf, f, level + 1);
          }
 
-         if(nestLevel != -1)
-         {
-            sb.AppendLine();
-         }
-         sb.CloseBrace(nestLevel);
+         sb.EndObject(sf);
       }
 
-      private static void FormatValue(object v, StringBuilder sb, int nestLevel)
+      private static void FormatValue(object v, StringBuilder sb, StringFormat sf, Field f, int level)
       {
+         sb.AppendPropertyName(sf, f);
+
          if (v == null)
          {
-            sb.Ident(nestLevel);
-            sb.Append("null");
+            sb.AppendNull(sf);
          }
          else if (v is Row row)
          {
-            row.ToString(sb, nestLevel);
+            row.ToString(sb, sf, level, GetMoreFields(f));
          }
          else if ((!v.GetType().IsSimple()) && v is IEnumerable ien)
          {
-            sb.Append("[");
+            sb.StartArray(sf);
             bool first = true;
             foreach (object cv in ien)
             {
@@ -243,19 +237,40 @@ namespace Parquet.Data.Rows
                }
                else
                {
-                  sb.Append(";");
+                  sb.DivideObjects(sf);
                }
 
-               FormatValue(cv, sb, nestLevel == -1 ? -1 : nestLevel + 1);
+               FormatValue(cv, sb, sf, f, level + 1);
             }
-            sb.Append("]");
+            sb.EndArray(sf);
          }
          else
          {
-            sb.Ident(nestLevel);
-            sb.Append(v.ToString());
+            sb.Append(sf, v);
          }
 
+      }
+
+      private static IReadOnlyCollection<Field> GetMoreFields(Field f)
+      {
+         if (f == null)
+            return null;
+
+         switch (f.SchemaType)
+         {
+            case SchemaType.List:
+               return new[] { ((ListField)f).Item };
+
+            case SchemaType.Map:
+               MapField mf = (MapField)f;
+               return new[] { mf.Key, mf.Value };
+
+            case SchemaType.Struct:
+               return ((StructField)f).Fields;
+
+            default:
+               return null;
+         }
       }
 
       /// <summary>

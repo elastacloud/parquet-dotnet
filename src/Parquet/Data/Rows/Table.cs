@@ -281,7 +281,7 @@ namespace Parquet.Data.Rows
       /// <summary>
       /// Converts to string with optional formatting
       /// </summary>
-      /// <param name="format">mjo - mini json one-liner, mjn - mini json with nesting</param>
+      /// <param name="format">null - internal format, j - one line json</param>
       /// <returns></returns>
       public string ToString(string format)
       {
@@ -289,25 +289,25 @@ namespace Parquet.Data.Rows
       }
 
       /// <summary>
-      /// 
+      /// Converts to string with optional formatting
       /// </summary>
-      /// <param name="format"></param>
+      /// <param name="format">null - internal format, j - one line json</param>
       /// <param name="formatProvider"></param>
       /// <returns></returns>
       public string ToString(string format, IFormatProvider formatProvider)
       {
-         //todo: (code purity) can be moved out into separate IFormattable class
-         if (string.IsNullOrEmpty(format))
-            format = "mjo";
-
          if (formatProvider == null)
             formatProvider = CultureInfo.CurrentCulture;
 
-         int nestLevel = format == "mjn" ? 0 : -1;
-         int nextNest = nestLevel == -1 ? -1 : 1;
+         StringFormat sf;
+         if (format == "j")
+            sf = StringFormat.Json;
+         else
+            sf = StringFormat.Internal;
 
          var sb = new StringBuilder();
-         sb.OpenBrace(nestLevel, "[");
+
+         sb.StartArray(sf);
 
          bool first = true;
          foreach (Row row in _rows)
@@ -318,22 +318,13 @@ namespace Parquet.Data.Rows
             }
             else
             {
-               //sb.Ident(nextNest);
-               sb.Append(",");
-               if (nestLevel != -1)
-               {
-                  sb.AppendLine();
-               }
+               sb.DivideObjects(sf);
             }
 
-            row.ToString(sb, nextNest);
+            row.ToString(sb, sf, 1, Schema.Fields);
          }
 
-         if (nestLevel != -1)
-         {
-            sb.AppendLine();
-         }
-         sb.CloseBrace(nestLevel, "]");
+         sb.EndArray(sf);
 
          return sb.ToString();
       }

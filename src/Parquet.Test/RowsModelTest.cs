@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Newtonsoft.Json;
 using Parquet.Data;
 using Parquet.Data.Rows;
 using Xunit;
@@ -187,7 +188,7 @@ namespace Parquet.Test
       {
          Table t = ReadTestFileAsTable("struct_plain.parquet");
 
-         Assert.Equal("[{12345-6;{Ivan;Gavryliuk}},{12345-7;{Richard;Conway}}]", t.ToString());
+         Assert.Equal("[{12345-6;{Ivan;Gavryliuk}};{12345-7;{Richard;Conway}}]", t.ToString());
       }
 
       [Fact]
@@ -454,6 +455,20 @@ namespace Parquet.Test
          Assert.Equal(2, t.Count);
          Assert.Equal("{[{Dante Road;Head Office;[9;10;11;12;13;14;15;16;17;18];SE11};{Somewhere Else;Small Office;[6;7;19;20;21;22;23];TN19}];[London;Derby];this file contains all the permunations for nested structures and arrays to test Parquet parser;1;{51.2;66.3};{{2;1}}}", t[0].ToString());
          Assert.Equal("{[{Dante Road;Head Office;[9;10;11;12;13;14;15;16;17;18];SE11};{Somewhere Else;Small Office;[6;7;19;20;21;22;23];TN19}];[London;Derby];this file contains all the permunations for nested structures and arrays to test Parquet parser;1;{51.2;66.3};{{2;1}}}", t[1].ToString());
+      }
+
+      #endregion
+
+      #region [ JSON Conversions ]
+
+      [Fact]
+      public void JSON_reads_by_newtonsoft()
+      {
+         Table t = ReadTestFileAsTable("struct_plain.parquet");
+
+         string json = t.ToString("j");
+
+         object jsonObject = JsonConvert.DeserializeObject(json);
       }
 
       #endregion

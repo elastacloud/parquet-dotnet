@@ -1,56 +1,95 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
+using Parquet.Data;
+using Parquet.Data.Rows;
 
 namespace Parquet.Extensions
 {
    internal static class StringBuilderExtensions
    {
-      private static int NL = 2;
       private const string BraceOpen = "{";
       private const string BraceClose = "}";
 
-      public static void Ident(this StringBuilder sb, int level)
+      public static void StartArray(this StringBuilder sb, StringFormat sf)
       {
-         if (level == -1)
-            return;
-
-         sb.Append(new string(' ', level * NL));
+         sb.Append("[");
       }
 
-      public static void StartEntity(this StringBuilder sb, int level)
+      public static void EndArray(this StringBuilder sb, StringFormat sf)
       {
-         if (level == -1)
-            return;
-
-         sb.AppendLine();
+         sb.Append("]");
       }
 
-      public static void OpenBrace(this StringBuilder sb, int level, string brace = BraceOpen)
+      public static void DivideObjects(this StringBuilder sb, StringFormat sf)
       {
-         if(level == -1)
+         switch (sf)
          {
-            sb.Append(brace);
+            case StringFormat.Json:
+               sb.Append(",");
+               break;
+            default:
+               sb.Append(";");
+               break;
          }
-         else
+         
+      }
+
+      public static void StartObject(this StringBuilder sb, StringFormat sf)
+      {
+         sb.Append("{");
+      }
+
+      public static void EndObject(this StringBuilder sb, StringFormat sf)
+      {
+         sb.Append("}");
+      }
+
+      public static void AppendPropertyName(this StringBuilder sb, StringFormat sf, Field f)
+      {
+         switch (sf)
          {
-            sb.Append(new string(' ', level * NL));
-            sb.Append(brace);
-            sb.AppendLine();
+            case StringFormat.Json:
+               sb.Append("\"");
+               sb.Append(f?.Name ?? "?");
+               sb.Append("\": ");
+               break;
          }
       }
 
-      public static void CloseBrace(this StringBuilder sb, int level, string brace = BraceClose)
+      public static void AppendNull(this StringBuilder sb, StringFormat sf)
       {
-         if (level == -1)
+         switch (sf)
          {
-            sb.Append(brace);
+            case StringFormat.Json:
+               sb.Append("null");
+               break;
+            default:
+               sb.Append("<null>");
+               break;
          }
-         else
+      }
+
+      public static void Append(this StringBuilder sb, StringFormat sf, object value)
+      {
+         switch (sf)
          {
-            sb.Append(new string(' ', level * NL));
-            sb.Append(brace);
+            case StringFormat.Json:
+               EncodeJson(sb, value);
+               break;
+            default:
+               sb.Append(value.ToString());
+               break;
          }
+      }
+
+      private static void EncodeJson(StringBuilder sb, object value)
+      {
+         //todo: add real encoding
+
+         sb.Append("\"");
+
+         sb.Append(value.ToString());
+
+         sb.Append("\"");
       }
    }
 }
