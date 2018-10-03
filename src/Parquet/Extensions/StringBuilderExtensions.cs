@@ -1,6 +1,8 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using Parquet.Data;
 using Parquet.Data.Rows;
+using Parquet.Serialization;
 
 namespace Parquet.Extensions
 {
@@ -83,13 +85,19 @@ namespace Parquet.Extensions
 
       private static void EncodeJson(StringBuilder sb, object value)
       {
-         //todo: add real encoding
+         Type t = value.GetType();
 
-         sb.Append("\"");
+         if (t == typeof(string))
+         {
+            sb.Append("\"");
+            sb.Append(HttpEncoder.JavaScriptStringEncode((string)value));
+            sb.Append("\"");
+         }
+         else
+         {
+            sb.Append(value.ToString());
+         }
 
-         sb.Append(value.ToString());
-
-         sb.Append("\"");
       }
    }
 }
