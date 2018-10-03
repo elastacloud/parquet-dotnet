@@ -25,13 +25,18 @@ namespace Parquet.Test
          }
       }
 
-      protected Table WriteRead(Table table)
+      protected Table WriteRead(Table table, bool saveLocal = false)
       {
          var ms = new MemoryStream();
 
          using (var writer = new ParquetWriter(table.Schema, ms))
          {
             writer.Write(table);
+         }
+
+         if(saveLocal)
+         {
+            F.WriteAllBytes("c:\\tmp\\test.parquet", ms.ToArray());
          }
 
          ms.Position = 0;

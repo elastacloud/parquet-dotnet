@@ -58,12 +58,14 @@ namespace Parquet.Data.Rows
 
       private static void ValidateList(ListField lf, object value)
       {
+         bool isEnumerable = value.GetType().TryExtractEnumerableType(out Type elementType);
+
          if (lf.Item.SchemaType == SchemaType.Data)
          {
             DataField df = (DataField)lf.Item;
 
             //value must be an enumeration of items
-            if (!value.GetType().TryExtractEnumerableType(out Type elementType))
+            if (!isEnumerable)
             {
                throw new ArgumentException($"simple list must be a collection, but found {value.GetType()}");
             }

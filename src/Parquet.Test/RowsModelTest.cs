@@ -173,21 +173,8 @@ namespace Parquet.Test
                new Row(235, 110L)
             });
 
-         //write as table
-         using (var writer = new ParquetWriter(table.Schema, ms))
-         {
-            writer.Write(table);
-         }
+         Table table2 = WriteRead(table, true);
 
-         //read back into table
-         ms.Position = 0;
-         Table table2;
-         using (var reader = new ParquetReader(ms))
-         {
-            table2 = reader.ReadAsTable();
-         }
-
-         //validate data
          Assert.Equal(table.ToString(), table2.ToString());
       }
 

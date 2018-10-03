@@ -22,6 +22,10 @@ object ScalaApp extends App {
          .parquet("c:\\tmp\\" + tag + ".parquet.folder")
    }
 
+   val testFile = spark.read.parquet("c:\\tmp\\test.parquet")
+   testFile.printSchema
+   testFile.show(10, false)
+
    // MAPS
    /*val mapSimple = Map(1 -> "one", 2 -> "two", 3 -> "three")
    var df = sc.parallelize(Seq(
@@ -35,7 +39,7 @@ object ScalaApp extends App {
 
    // STRUCT
 
-   case class AuthorInfo(firstName: String, lastName: String)
+   /*case class AuthorInfo(firstName: String, lastName: String)
 
    case class Book(isbn: String, author: AuthorInfo)
 
@@ -47,7 +51,7 @@ object ScalaApp extends App {
    ds.printSchema()
    ds.show
    //ds.printSchema()
-   write(ds.toDF, "struct_plain")
+   write(ds.toDF, "struct_plain")*/
 
 
 
