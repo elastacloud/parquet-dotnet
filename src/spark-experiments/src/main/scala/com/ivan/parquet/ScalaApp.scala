@@ -26,6 +26,8 @@ object ScalaApp extends App {
    testFile.printSchema
    testFile.show(10, false)
 
+   //EMPTY LIST
+
    // MAPS
    /*val mapSimple = Map(1 -> "one", 2 -> "two", 3 -> "three")
    var df = sc.parallelize(Seq(
