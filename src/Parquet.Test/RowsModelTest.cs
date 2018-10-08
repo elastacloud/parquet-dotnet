@@ -311,22 +311,31 @@ namespace Parquet.Test
          Assert.Equal(t.ToString(), t2.ToString());
       }
 
-      //[Fact]
-      public void List_of_elements_is_empty_reads_file()
+      [Fact]
+      public void List_of_elements_is_empty_read_from_Apache_Spark()
       {
-         Table t;
-         using (Stream stream = OpenTestFile("list_empty.parquet"))
-         {
-            using (var reader = new ParquetReader(stream))
-            {
-               t = reader.ReadAsTable();
-            }
-         }
+         Table t = ReadTestFileAsTable("list_empty.parquet");
 
          Assert.Equal("{2;[]}", t[0].ToString());
       }
 
-      //[Fact]
+      [Fact]
+      public void List_of_elements_empty_alternates_read_from_Apache_Spark()
+      {
+         /*
+          list data:
+          - 1: [1, 2, 3]
+          - 2: []
+          - 3: [1, 2, 3]
+          - 4: []
+          */
+
+         Table t = ReadTestFileAsTable("list_empty_alt.parquet");
+
+         Assert.Equal("[{1;[1;2;3]};{2;[]};{3;[1;2;3]};{4;[]}]", t.ToString());
+      }
+
+      [Fact]
       public void List_of_elements_is_empty_writes_reads()
       {
          var t = new Table(
@@ -338,7 +347,7 @@ namespace Parquet.Test
          Assert.Equal("{1;[]}", WriteRead(t).ToString());
       }
 
-      //[Fact]
+      [Fact]
       public void List_of_elements_with_some_items_empty_writes_reads()
       {
          var t = new Table(
