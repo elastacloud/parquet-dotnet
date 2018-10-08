@@ -244,7 +244,7 @@ namespace Parquet.Test
             }
          }
 
-         Assert.Equal("{[London;Derby;Paris;New York];1}", t[0].ToString());
+         Assert.Equal("{'cities': ['London', 'Derby', 'Paris', 'New York'], 'id': 1}", t[0].ToString());
       }
 
       [Fact]
@@ -292,7 +292,7 @@ namespace Parquet.Test
          }
 
          Assert.Single(t);
-         Assert.Equal("{[{UK;London};{US;New York}];1}", t[0].ToString());
+         Assert.Equal("{'cities': [{'country': 'UK', 'name': 'London'}, {'country': 'US', 'name': 'New York'}], 'id': 1}", t[0].ToString());
       }
 
       [Fact]
@@ -318,7 +318,7 @@ namespace Parquet.Test
       {
          Table t = ReadTestFileAsTable("list_empty.parquet");
 
-         Assert.Equal("{2;[]}", t[0].ToString());
+         Assert.Equal("{'id': 2, 'repeats1': []}", t[0].ToString());
       }
 
       [Fact]
@@ -334,7 +334,10 @@ namespace Parquet.Test
 
          Table t = ReadTestFileAsTable("list_empty_alt.parquet");
 
-         Assert.Equal("[{1;[1;2;3]};{2;[]};{3;[1;2;3]};{4;[]}]", t.ToString());
+         Assert.Equal(@"{'id': 1, 'repeats2': ['1', '2', '3']}
+{'id': 2, 'repeats2': []}
+{'id': 3, 'repeats2': ['1', '2', '3']}
+{'id': 4, 'repeats2': []}", t.ToString());
       }
 
       [Fact]
@@ -346,7 +349,7 @@ namespace Parquet.Test
                new DataField<string>("item")
             ));
          t.Add(1, new string[0]);
-         Assert.Equal("[{1;[]}]", WriteRead(t).ToString());
+         Assert.Equal("{'id': 1, 'strings': []}", WriteRead(t).ToString());
       }
 
       [Fact]
@@ -364,10 +367,10 @@ namespace Parquet.Test
 
          Table t1 = WriteRead(t);
          Assert.Equal(4, t1.Count);
-         Assert.Equal("{1;[1;2;3]}", t1[0].ToString());
-         Assert.Equal("{2;[]}", t1[1].ToString());
-         Assert.Equal("{3;[1;2;3]}", t1[2].ToString());
-         Assert.Equal("{4;[]}", t1[3].ToString());
+         Assert.Equal(@"{'id': 1, 'strings': ['1', '2', '3']}
+{'id': 2, 'strings': []}
+{'id': 3, 'strings': ['1', '2', '3']}
+{'id': 4, 'strings': []}", t.ToString());
 
       }
 
@@ -464,8 +467,8 @@ namespace Parquet.Test
          }
 
          Assert.Equal(2, t.Count);
-         Assert.Equal("{[{Dante Road;Head Office;[9;10;11;12;13;14;15;16;17;18];SE11};{Somewhere Else;Small Office;[6;7;19;20;21;22;23];TN19}];[London;Derby];this file contains all the permunations for nested structures and arrays to test Parquet parser;1;{51.2;66.3};{{2;1}}}", t[0].ToString());
-         Assert.Equal("{[{Dante Road;Head Office;[9;10;11;12;13;14;15;16;17;18];SE11};{Somewhere Else;Small Office;[6;7;19;20;21;22;23];TN19}];[London;Derby];this file contains all the permunations for nested structures and arrays to test Parquet parser;1;{51.2;66.3};{{2;1}}}", t[1].ToString());
+         Assert.Equal("{'addresses': [{'line1': 'Dante Road', 'name': 'Head Office', 'openingHours': [9, 10, 11, 12, 13, 14, 15, 16, 17, 18], 'postcode': 'SE11'}, {'line1': 'Somewhere Else', 'name': 'Small Office', 'openingHours': [6, 7, 19, 20, 21, 22, 23], 'postcode': 'TN19'}], 'cities': ['London', 'Derby'], 'comment': 'this file contains all the permunations for nested structures and arrays to test Parquet parser', 'id': 1, 'location': {'latitude': 51.2, 'longitude': 66.3}, 'price': {'lunch': {'max': 2, 'min': 1}}}", t[0].ToString());
+         Assert.Equal("{'addresses': [{'line1': 'Dante Road', 'name': 'Head Office', 'openingHours': [9, 10, 11, 12, 13, 14, 15, 16, 17, 18], 'postcode': 'SE11'}, {'line1': 'Somewhere Else', 'name': 'Small Office', 'openingHours': [6, 7, 19, 20, 21, 22, 23], 'postcode': 'TN19'}], 'cities': ['London', 'Derby'], 'comment': 'this file contains all the permunations for nested structures and arrays to test Parquet parser', 'id': 1, 'location': {'latitude': 51.2, 'longitude': 66.3}, 'price': {'lunch': {'max': 2, 'min': 1}}}", t[1].ToString());
       }
 
       #endregion

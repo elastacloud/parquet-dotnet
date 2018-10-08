@@ -244,11 +244,14 @@ namespace Parquet.Data.Rows
          sb.EndObject(sf);
       }
 
-      private void FormatValue(object v, StringBuilder sb, StringFormat sf, Field f, int level)
+      private void FormatValue(object v, StringBuilder sb, StringFormat sf, Field f, int level, bool appendPropertyName = true)
       {
-         sb.AppendPropertyName(sf, f);
-         bool first = true;
+         if (appendPropertyName)
+         {
+            sb.AppendPropertyName(sf, f);
+         }
 
+         bool first = true;
 
          if (v == null)
          {
@@ -302,6 +305,21 @@ namespace Parquet.Data.Rows
                   sb.EndArray(sf, level);
                   break;
 
+               case SchemaType.List:
+                  ListField lf = (ListField)f;
+                  sb.StartArray(sf, level);
+                  foreach(object le in (IEnumerable)v)
+                  {
+                     if (first)
+                        first = false;
+                     else
+                        sb.DivideObjects(sf, level);
+
+                     FormatValue(le, sb, sf, lf.Item, level + 1, false);
+                  }
+                  sb.EndArray(sf, level);
+                  break;
+
                default:
                   throw new NotImplementedException(f.SchemaType.ToString());
             }
@@ -310,44 +328,6 @@ namespace Parquet.Data.Rows
          {
             throw new NotImplementedException("null schema, value: " + v);
          }
-
-
-         /*else if (v is Row row)
-         {
-            row.ToString(sb, sf, level, GetMoreFields(f));
-         }
-         else if ((!v.GetType().IsSimple()) && v is IEnumerable ien)
-         {
-            sb.StartArray(sf, level);
-            bool first = true;
-            foreach (object cv in ien)
-            {
-               if (first)
-               {
-                  first = false;
-               }
-               else
-               {
-                  sb.DivideObjects(sf, level);
-               }
-
-               if (cv.GetType().IsSimple())
-               {
-                  sb.Append(sf, cv);
-               }
-               else
-               {
-                  FormatValue(cv, sb, sf, f?.SchemaType == SchemaType.Data ? null : f, level + 1);
-               }
-            }
-            sb.EndArray(sf, level);
-         }
-         else
-         {
-            sb.Append(sf, v);
-         }
-         */
-
       }
 
       private static IReadOnlyCollection<Field> GetMoreFields(Field f)
