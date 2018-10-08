@@ -154,7 +154,7 @@ namespace Parquet.Test
             }
          }
 
-         Assert.Equal("{1;[{1;one};{2;two};{3;three}]}", t[0].ToString());
+         Assert.Equal("{'id': 1, 'numbers': [{'key': 1, 'value': 'one'}, {'key': 2, 'value': 'two'}, {'key': 3, 'value': 'three'}]}", t[0].ToString());
       }
 
       [Fact]

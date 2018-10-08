@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Text;
 using Parquet.Data;
 using Parquet.Data.Rows;

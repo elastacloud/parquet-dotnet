@@ -210,18 +210,24 @@ namespace Parquet.Data.Rows
 
       internal void ToString(StringBuilder sb, StringFormat sf, int level, IReadOnlyCollection<Field> fields)
       {
+         ToString(sb, Values, sf, level, fields);
+      }
+
+      internal void ToString(StringBuilder sb, object[] values, StringFormat sf, int level, IReadOnlyCollection<Field> fields)
+      {
+         if (fields == null)
+         {
+            throw new ArgumentNullException(nameof(fields));
+         }
+
          sb.StartObject(sf);
 
          bool first = true;
-         IEnumerator<Field> fien = fields?.GetEnumerator();
-         bool finished = false;
-         foreach (object v in Values)
+         int nl = level + 1;
+         foreach (Tuple<object, Field> valueWithField in values.IterateWith(fields))
          {
-            if (!finished)
-            {
-               finished = !(fien?.MoveNext() ?? false);
-            }
-            Field f = finished ? null : fien?.Current;
+            object v = valueWithField.Item1;
+            Field f = valueWithField.Item2;
 
             if (first)
             {
@@ -232,21 +238,81 @@ namespace Parquet.Data.Rows
                sb.DivideObjects(sf, level);
             }
 
-            FormatValue(v, sb, sf, f, level + 1);
+            FormatValue(v, sb, sf, f, nl);
          }
 
          sb.EndObject(sf);
       }
 
-      private static void FormatValue(object v, StringBuilder sb, StringFormat sf, Field f, int level)
+      private void FormatValue(object v, StringBuilder sb, StringFormat sf, Field f, int level)
       {
          sb.AppendPropertyName(sf, f);
+         bool first = true;
+
 
          if (v == null)
          {
             sb.AppendNull(sf);
          }
-         else if (v is Row row)
+         else if(f != null)
+         {
+            switch (f.SchemaType)
+            {
+               case SchemaType.Data:
+                  DataField df = (DataField)f;
+                  if(df.IsArray)
+                  {
+                     sb.StartArray(sf, level);
+                     foreach(object vb in (IEnumerable)v)
+                     {
+                        if (first)
+                           first = false;
+                        else
+                        {
+                           sb.DivideObjects(sf, level);
+                        }
+
+                        sb.Append(sf, vb);
+                     }
+                     sb.EndArray(sf, level);
+                  }
+                  else
+                  {
+                     sb.Append(sf, v);
+                  }
+                  break;
+
+               case SchemaType.Struct:
+                  StructField stf = (StructField)f;
+                  ToString(sb, ((Row)v).Values, sf, level + 1, stf.Fields);
+                  break;
+
+               case SchemaType.Map:
+                  MapField mf = (MapField)f;
+                  sb.StartArray(sf, level);
+                  foreach(Row row in (IEnumerable)v)
+                  {
+                     if (first)
+                        first = false;
+                     else
+                        sb.DivideObjects(sf, level);
+
+                     ToString(sb, row.Values, sf, level + 1, new[] { mf.Key, mf.Value });
+                  }
+                  sb.EndArray(sf, level);
+                  break;
+
+               default:
+                  throw new NotImplementedException(f.SchemaType.ToString());
+            }
+         }
+         else
+         {
+            throw new NotImplementedException("null schema, value: " + v);
+         }
+
+
+         /*else if (v is Row row)
          {
             row.ToString(sb, sf, level, GetMoreFields(f));
          }
@@ -280,6 +346,7 @@ namespace Parquet.Data.Rows
          {
             sb.Append(sf, v);
          }
+         */
 
       }
 
