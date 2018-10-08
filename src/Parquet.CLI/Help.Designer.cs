@@ -70,6 +70,15 @@ namespace Parquet.CLI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Converts between file formats. Currently supports conversion from parquet to json only..
+        /// </summary>
+        internal static string Command_Convert_Description {
+            get {
+                return ResourceManager.GetString("Command_Convert_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Displays first N rows of a parquet file..
         /// </summary>
         internal static string Command_Head_Description {

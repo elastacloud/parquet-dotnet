@@ -12,6 +12,9 @@ namespace Parquet.CLI
    /// <summary>
    /// This is a parquet.net dotnet CLI tool that can be installed globally. An ultimate replacement for "parq".
    /// It is very much in progress and in design.
+   /// 
+   /// It's using CPF library for handling console commands which is very fresh and unstable. Why? Because no one
+   /// ever 
    /// </summary>
    class Program
    {
@@ -47,7 +50,7 @@ namespace Parquet.CLI
          {
             cmd.Description = Help.Command_Schema_Description;
 
-            Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
+            LinePrimitive<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required().FileExists();
 
             cmd.OnExecute(() =>
             {
@@ -55,25 +58,25 @@ namespace Parquet.CLI
             });
          });
 
-         app.Command("tojson", cmd =>
+         app.Command("convert", cmd =>
          {
-            cmd.Description = "todo";
+            cmd.Description = Help.Command_Convert_Description;
 
-            Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
+            LinePrimitive<string> path = cmd.Argument<string>("input", Help.Argument_Path).Required().FileExists();
 
             cmd.OnExecute(() =>
             {
-               new ConvertToJsonCommand(path).Execute();
+               new ConvertCommand(path).Execute();
             });
          });
 
          app.Command("view-all", cmd =>
          {
             cmd.Description = Help.Command_ViewAll_Description;
-            Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
-            Option<bool> expandCells = cmd.Option<bool>("-e|--expand", Help.Command_ViewAll_Expand, false);
-            Option<int> displayMinWidth = cmd.Option<int>("-m|--min", Help.Command_ViewAll_Min, 5);
-            Option<bool> displayNulls = cmd.Option<bool>("-n|--nulls", Help.Command_ViewAll_Nulls, false);
+            LinePrimitive<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required().FileExists();
+            LinePrimitive<bool> expandCells = cmd.Option<bool>("-e|--expand", Help.Command_ViewAll_Expand, false);
+            LinePrimitive<int> displayMinWidth = cmd.Option<int>("-m|--min", Help.Command_ViewAll_Min, 5);
+            LinePrimitive<bool> displayNulls = cmd.Option<bool>("-n|--nulls", Help.Command_ViewAll_Nulls, false);
 
             cmd.OnExecute(() =>
             {
@@ -93,12 +96,12 @@ namespace Parquet.CLI
          app.Command("view", cmd =>
          {
             cmd.Description = Help.Command_View_Description;
-            Argument<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
-            Option<bool> expandCells = cmd.Option<bool>("-e|--expand", Help.Command_ViewAll_Expand, false);
-            Option<int> displayMinWidth = cmd.Option<int>("-m|--min", Help.Command_ViewAll_Min, 5);
-            Option<bool> displayNulls = cmd.Option<bool>("-n|--nulls", Help.Command_ViewAll_Nulls, true);
-            Option<bool> displayTypes = cmd.Option<bool>("-t|--types", Help.Command_ViewAll_Types, false);
-            Option<string> truncationIdentifier = cmd.Option<string>("-u|--truncate", Help.Command_ViewAll_Types, "...");
+            LinePrimitive<string> path = cmd.Argument<string>("path", Help.Argument_Path).Required();
+            LinePrimitive<bool> expandCells = cmd.Option<bool>("-e|--expand", Help.Command_ViewAll_Expand, false);
+            LinePrimitive<int> displayMinWidth = cmd.Option<int>("-m|--min", Help.Command_ViewAll_Min, 5);
+            LinePrimitive<bool> displayNulls = cmd.Option<bool>("-n|--nulls", Help.Command_ViewAll_Nulls, true);
+            LinePrimitive<bool> displayTypes = cmd.Option<bool>("-t|--types", Help.Command_ViewAll_Types, false);
+            LinePrimitive<string> truncationIdentifier = cmd.Option<string>("-u|--truncate", Help.Command_ViewAll_Types, "...");
 
             cmd.OnExecute(() =>
             {
