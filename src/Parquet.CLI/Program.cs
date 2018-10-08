@@ -23,7 +23,7 @@ namespace Parquet.CLI
       static int Main(string[] args)
       {
          var app = new Application("Parquet CLI (https://github.com/elastacloud/parquet-dotnet)");
-         ConfigureTelemetry(app);
+         ConfigureTelemetry(app, args);
 
          app.OnBeforeExecuteCommand(cmd =>
          {
@@ -63,10 +63,11 @@ namespace Parquet.CLI
             cmd.Description = Help.Command_Convert_Description;
 
             LinePrimitive<string> path = cmd.Argument<string>("input", Help.Argument_Path).Required().FileExists();
+            LinePrimitive<bool> noColour = cmd.Option<bool>("--no-color", Help.Command_Convert_NoColour);
 
             cmd.OnExecute(() =>
             {
-               new ConvertCommand(path).Execute();
+               new ConvertCommand(path, noColour).Execute();
             });
          });
 
@@ -126,24 +127,27 @@ namespace Parquet.CLI
             exitCode = app.Execute();
          }
 
-#if DEBUG
-         WriteLine("debug: press any key to close");
-         Console.ReadKey();
-#endif
-
          L.Config.Shutdown();
 
          return exitCode;
       }
 
-      private static void ConfigureTelemetry(Application app)
+      private static void ConfigureTelemetry(Application app, string[] args)
       {
          //let's see if we get complains about performance here, should be OK
+
+         /*
+          * If you're wondering whether hardcoding the key is good or not - it doesn't really matter. The worst you can _attempt_ to do
+          * is send us a lot of fake telemetry but we can live with it. Even if we would hide the key you could still do the same thing
+          * by launching application instead of calling appinsights REST API.
+          */
+
          L.Config
             .WriteTo.AzureApplicationInsights("0a310ae1-0f93-43fc-bfa1-62e92fc869b9")
-            .EnrichWith.Constant(KnownProperty.Version, app.Version);
+            .EnrichWith.Constant(KnownProperty.Version, app.Version)
+            .EnrichWith.MachineIpAddress();  //we'd like to know where it's used geographically
 
-         Telemetry.CliInvoked();
+         Telemetry.CliInvoked(args);
       }
    }
 }

@@ -244,7 +244,14 @@ namespace Parquet.Data.Rows
                   sb.DivideObjects(sf, level);
                }
 
-               FormatValue(cv, sb, sf, f?.SchemaType == SchemaType.Data ? null : f, level + 1);
+               if (cv.GetType().IsSimple())
+               {
+                  sb.Append(sf, cv);
+               }
+               else
+               {
+                  FormatValue(cv, sb, sf, f?.SchemaType == SchemaType.Data ? null : f, level + 1);
+               }
             }
             sb.EndArray(sf, level);
          }

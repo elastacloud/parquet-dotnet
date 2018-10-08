@@ -121,16 +121,10 @@
     <value>Path to parquet file.</value>
   </data>
   <data name="Command_Convert_Description" xml:space="preserve">
-    <value>Converts between file formats. Currently supports conversion from parquet to multiline json only.</value>
+    <value>Converts between file formats. Currently supports conversion from parquet to multiline json only. When launched prints json documents to the terminal.</value>
   </data>
-  <data name="Command_Head_Description" xml:space="preserve">
-    <value>Displays first N rows of a parquet file.</value>
-  </data>
-  <data name="Command_Head_Format" xml:space="preserve">
-    <value>Output format.</value>
-  </data>
-  <data name="Command_Head_Max" xml:space="preserve">
-    <value>Maximum number of rows to display. Hard limit is 100.</value>
+  <data name="Command_Convert_NoColour" xml:space="preserve">
+    <value>Suppresses colorisation and human readable formatting. Useful for outputting to files.</value>
   </data>
   <data name="Command_Schema_Description" xml:space="preserve">
     <value>Displays parquet file schema as Parquet.Net sees it. Note that this is a simplified, human-readable version of the schema.</value>

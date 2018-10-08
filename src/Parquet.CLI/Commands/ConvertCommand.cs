@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Parquet.Data.Rows;
+using NetBox.Extensions;
 using static Cpf.PoshConsole;
 
 namespace Parquet.CLI.Commands
@@ -10,10 +12,12 @@ namespace Parquet.CLI.Commands
    class ConvertCommand : FileInputCommand
    {
       private readonly string _path;
+      private readonly bool _noColour;
 
-      public ConvertCommand(string path) : base(path)
+      public ConvertCommand(string path, bool noColour) : base(path)
       {
          _path = path;
+         _noColour = noColour;
       }
 
       public void Execute()
@@ -30,39 +34,69 @@ namespace Parquet.CLI.Commands
 
       private void ConvertFromParquet()
       {
+         Telemetry.CommandExecuted("convert",
+            "path", _path);
+
          Table t = ReadTable();
 
          string json = t.ToString("j");
 
-         WriteLine(json);
+         int i = 0;
+         foreach(string jsonLine in json.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries))
+         {
+            if (_noColour)
+            {
+               WriteLine(jsonLine);
+            }
+            else
+            {
+               object jsonDoc = JsonConvert.DeserializeObject(jsonLine);
 
-         //object jsonObject = JsonConvert.DeserializeObject(json);
-         //WriteColor(jsonObject, 0);
+               WriteColor(jsonDoc, 0, i++);
+            }
+         }
       }
 
       private const ConsoleColor BracketColor = ConsoleColor.DarkGray;
       private const ConsoleColor QuoteColor = ConsoleColor.Yellow;
+      private const ConsoleColor PropertyNameColor = ConsoleColor.DarkGray;
+      private const ConsoleColor ValueColor = ConsoleColor.White;
 
-      private void WriteColor(object jsonObject, int level)
+      private void WriteColor(object jsonObject, int level, int index = -1)
       {
+         if(index != -1)
+         {
+            WriteLine();
+            PoshWriteLine($"{{document}} {{#}}{{{index}}}", ConsoleColor.Green, ConsoleColor.DarkGray, ConsoleColor.Yellow);
+         }
+
          string ident = new string(' ', level * 2);
 
          if(jsonObject is JProperty jp)
          {
             Write(ident);
-            Write("\"", QuoteColor);
-            Write(jp.Name);
-            Write("\": ", QuoteColor);
+            Write("\"", PropertyNameColor);
+            Write(jp.Name, PropertyNameColor);
+            Write("\": ", PropertyNameColor);
 
             WriteColor(jp.Value, level + 1);
          }
          else if(jsonObject is JValue jv)
          {
-            WriteLine(jv);
+            if (jv.Parent.Count > 1)
+            {
+               if (jv.Previous != null)
+               {
+                  Write(",");
+                  WriteLine();
+               }
+               Write(ident);
+            }
+
+            WriteValue(jv);
          }
          else if (jsonObject is JArray jar)
          {
-            Write(ident);
             Write("[", BracketColor);
             WriteLine();
 
@@ -71,6 +105,7 @@ namespace Parquet.CLI.Commands
                WriteColor(element, level + 1);
             }
 
+            WriteLine();
             Write(ident);
             Write("]", BracketColor);
             WriteLine();
@@ -86,6 +121,7 @@ namespace Parquet.CLI.Commands
                WriteColor(element, level + 1);
             }
 
+            WriteLine();
             Write(ident);
             Write("}", BracketColor);
             WriteLine();
@@ -93,6 +129,26 @@ namespace Parquet.CLI.Commands
          else
          {
             throw new NotSupportedException(jsonObject.GetType().ToString());
+         }
+      }
+
+      private void WriteValue(JValue value)
+      {
+         switch (value.Type)
+         {
+            //quoted
+            case JTokenType.String:
+            case JTokenType.Date:
+            case JTokenType.Guid:
+            case JTokenType.Uri:
+            case JTokenType.TimeSpan:
+               Write("\"", QuoteColor);
+               Write(value.Value, ValueColor);
+               Write("\"", QuoteColor);
+               break;
+            default:
+               Write(value.Value, ValueColor);
+               break;
          }
       }
 

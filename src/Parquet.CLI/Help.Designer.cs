@@ -70,7 +70,7 @@ namespace Parquet.CLI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Converts between file formats. Currently supports conversion from parquet to multiline json only..
+        ///   Looks up a localized string similar to Converts between file formats. Currently supports conversion from parquet to multiline json only. When launched prints json documents to the terminal..
         /// </summary>
         internal static string Command_Convert_Description {
             get {
@@ -79,29 +79,11 @@ namespace Parquet.CLI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Displays first N rows of a parquet file..
+        ///   Looks up a localized string similar to Suppresses colorisation and human readable formatting. Useful for outputting to files..
         /// </summary>
-        internal static string Command_Head_Description {
+        internal static string Command_Convert_NoColour {
             get {
-                return ResourceManager.GetString("Command_Head_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Output format..
-        /// </summary>
-        internal static string Command_Head_Format {
-            get {
-                return ResourceManager.GetString("Command_Head_Format", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Maximum number of rows to display. Hard limit is 100..
-        /// </summary>
-        internal static string Command_Head_Max {
-            get {
-                return ResourceManager.GetString("Command_Head_Max", resourceCulture);
+                return ResourceManager.GetString("Command_Convert_NoColour", resourceCulture);
             }
         }
         
