@@ -281,7 +281,7 @@ namespace Parquet.Data.Rows
       /// <summary>
       /// Converts to string with optional formatting
       /// </summary>
-      /// <param name="format">null - internal format, j - one line json</param>
+      /// <param name="format">null - internal format, j - one line json where each row represents json document</param>
       /// <returns></returns>
       public string ToString(string format)
       {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 using Parquet.Data;
 using Parquet.Data.Rows;
@@ -475,9 +476,9 @@ namespace Parquet.Test
       {
          Table t = ReadTestFileAsTable("struct_plain.parquet");
 
-         string json = t.ToString("j");
+         string[] jsons = t.ToString("j").Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 
-         object jsonObject = JsonConvert.DeserializeObject(json);
+         jsons.Select(j => JsonConvert.DeserializeObject(j)).ToList();
       }
 
       #endregion
