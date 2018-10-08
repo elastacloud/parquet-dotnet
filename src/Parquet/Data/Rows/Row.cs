@@ -198,7 +198,7 @@ namespace Parquet.Data.Rows
          {
             if (!finished)
             {
-               finished = fien?.MoveNext() ?? true;
+               finished = !(fien?.MoveNext() ?? false);
             }
             Field f = finished ? null : fien?.Current;
 
@@ -208,7 +208,7 @@ namespace Parquet.Data.Rows
             }
             else
             {
-               sb.DivideObjects(sf);
+               sb.DivideObjects(sf, level);
             }
 
             FormatValue(v, sb, sf, f, level + 1);
@@ -231,7 +231,7 @@ namespace Parquet.Data.Rows
          }
          else if ((!v.GetType().IsSimple()) && v is IEnumerable ien)
          {
-            sb.StartArray(sf);
+            sb.StartArray(sf, level);
             bool first = true;
             foreach (object cv in ien)
             {
@@ -241,12 +241,12 @@ namespace Parquet.Data.Rows
                }
                else
                {
-                  sb.DivideObjects(sf);
+                  sb.DivideObjects(sf, level);
                }
 
-               FormatValue(cv, sb, sf, f, level + 1);
+               FormatValue(cv, sb, sf, f.SchemaType == SchemaType.Data ? null : f, level + 1);
             }
-            sb.EndArray(sf);
+            sb.EndArray(sf, level);
          }
          else
          {

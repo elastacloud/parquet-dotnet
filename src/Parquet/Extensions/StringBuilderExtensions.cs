@@ -11,22 +11,55 @@ namespace Parquet.Extensions
       private const string BraceOpen = "{";
       private const string BraceClose = "}";
 
-      public static void StartArray(this StringBuilder sb, StringFormat sf)
-      {
-         sb.Append("[");
-      }
-
-      public static void EndArray(this StringBuilder sb, StringFormat sf)
-      {
-         sb.Append("]");
-      }
-
-      public static void DivideObjects(this StringBuilder sb, StringFormat sf)
+      public static void StartArray(this StringBuilder sb, StringFormat sf, int level)
       {
          switch (sf)
          {
             case StringFormat.Json:
-               sb.Append(",");
+               if(level == 0)
+               {
+                  sb.AppendLine();
+               }
+               else
+               {
+                  sb.Append("[");
+               }
+               break;
+            default:
+               sb.Append("[");
+               break;
+         }
+      }
+
+      public static void EndArray(this StringBuilder sb, StringFormat sf, int level)
+      {
+         switch (sf)
+         {
+            case StringFormat.Json:
+               if(level > 0)
+               {
+                  sb.Append("]");
+               }
+               break;
+            default:
+               sb.Append("]");
+               break;
+         }
+      }
+
+      public static void DivideObjects(this StringBuilder sb, StringFormat sf, int level)
+      {
+         switch (sf)
+         {
+            case StringFormat.Json:
+               if (level > 0)
+               {
+                  sb.Append(",");
+               }
+               else
+               {
+                  sb.AppendLine();
+               }
                break;
             default:
                sb.Append(";");
@@ -50,9 +83,12 @@ namespace Parquet.Extensions
          switch (sf)
          {
             case StringFormat.Json:
-               sb.Append("\"");
-               sb.Append(f?.Name ?? "?");
-               sb.Append("\": ");
+               if (f != null)
+               {
+                  sb.Append("\"");
+                  sb.Append(f?.Name ?? "?");
+                  sb.Append("\": ");
+               }
                break;
          }
       }
@@ -91,6 +127,12 @@ namespace Parquet.Extensions
          {
             sb.Append("\"");
             sb.Append(HttpEncoder.JavaScriptStringEncode((string)value));
+            sb.Append("\"");
+         }
+         else if(t == typeof(DateTimeOffset))
+         {
+            sb.Append("\"");
+            sb.Append(value.ToString());
             sb.Append("\"");
          }
          else

@@ -307,7 +307,7 @@ namespace Parquet.Data.Rows
 
          var sb = new StringBuilder();
 
-         sb.StartArray(sf);
+         sb.StartArray(sf, 0);
 
          bool first = true;
          foreach (Row row in _rows)
@@ -318,13 +318,13 @@ namespace Parquet.Data.Rows
             }
             else
             {
-               sb.DivideObjects(sf);
+               sb.DivideObjects(sf, 0);
             }
 
             row.ToString(sb, sf, 1, Schema.Fields);
          }
 
-         sb.EndArray(sf);
+         sb.EndArray(sf, 0);
 
          return sb.ToString();
       }

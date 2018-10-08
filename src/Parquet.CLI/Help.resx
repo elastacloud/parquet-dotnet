@@ -121,7 +121,7 @@
     <value>Path to parquet file.</value>
   </data>
   <data name="Command_Convert_Description" xml:space="preserve">
-    <value>Converts between file formats. Currently supports conversion from parquet to json only.</value>
+    <value>Converts between file formats. Currently supports conversion from parquet to multiline json only.</value>
   </data>
   <data name="Command_Head_Description" xml:space="preserve">
     <value>Displays first N rows of a parquet file.</value>

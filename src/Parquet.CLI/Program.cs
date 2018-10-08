@@ -131,6 +131,8 @@ namespace Parquet.CLI
          Console.ReadKey();
 #endif
 
+         L.Config.Shutdown();
+
          return exitCode;
       }
 
@@ -138,9 +140,10 @@ namespace Parquet.CLI
       {
          //let's see if we get complains about performance here, should be OK
          L.Config
-            .WriteTo.AzureApplicationInsights("0a310ae1-0f93-43fc-bfa1-62e92fc869b9", flushOnWrite: true)
+            .WriteTo.AzureApplicationInsights("0a310ae1-0f93-43fc-bfa1-62e92fc869b9")
             .EnrichWith.Constant(KnownProperty.Version, app.Version);
 
+         Telemetry.CliInvoked();
       }
    }
 }

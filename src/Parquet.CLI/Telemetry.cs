@@ -14,6 +14,12 @@ namespace Parquet.CLI
 
       public const string ExecuteCommand = "Exec";
 
+      public static void CliInvoked()
+      {
+         log.Event("CliInvoked",
+            "OS", Environment.OSVersion.VersionString);
+      }
+
       public static void CommandExecuted(string name, params object[] properties)
       {
          var psl = new List<object>(properties);
