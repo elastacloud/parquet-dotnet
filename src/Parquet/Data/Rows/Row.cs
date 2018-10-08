@@ -21,6 +21,8 @@ namespace Parquet.Data.Rows
 
       }
 
+      internal IReadOnlyCollection<Field> Schema { get; set; }
+
       /// <summary>
       /// Creates a single cell row. Use this method to avoid overloading confusion.
       /// </summary>
@@ -175,16 +177,36 @@ namespace Parquet.Data.Rows
       }
 
       /// <summary>
-      /// 
+      /// Converts to internal format string
       /// </summary>
       /// <returns></returns>
       public override string ToString()
       {
+         return ToString(null);
+      }
+
+      /// <summary>
+      /// Convert to string with optional formatting
+      /// </summary>
+      public string ToString(string format)
+      {
          var sb = new StringBuilder();
          
-         ToString(sb, StringFormat.Internal, 0, null);
+         ToString(sb, GetStringFormat(format), 1, Schema);
 
          return sb.ToString();
+      }
+
+      internal static StringFormat GetStringFormat(string format)
+      {
+         StringFormat sf;
+         if (format == "j")
+            sf = StringFormat.Json;
+         else if (format == "jsq")
+            sf = StringFormat.JsonSingleQuote;
+         else
+            sf = StringFormat.Internal;
+         return sf;
       }
 
       internal void ToString(StringBuilder sb, StringFormat sf, int level, IReadOnlyCollection<Field> fields)

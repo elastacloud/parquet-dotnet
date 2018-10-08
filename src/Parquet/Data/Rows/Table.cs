@@ -77,6 +77,7 @@ namespace Parquet.Data.Rows
          set
          {
             RowValidator.Validate(value, _dfs);
+            value.Schema = Schema.Fields;
             _rows[index] = value;
          }
       }
@@ -98,6 +99,7 @@ namespace Parquet.Data.Rows
       public void Add(Row item)
       {
          RowValidator.Validate(item, _dfs);
+         item.Schema = Schema.Fields;
 
          _rows.Add(item);
       }
@@ -299,11 +301,7 @@ namespace Parquet.Data.Rows
          if (formatProvider == null)
             formatProvider = CultureInfo.CurrentCulture;
 
-         StringFormat sf;
-         if (format == "j")
-            sf = StringFormat.Json;
-         else
-            sf = StringFormat.Internal;
+         StringFormat sf = Row.GetStringFormat(format);
 
          var sb = new StringBuilder();
 

@@ -10,15 +10,18 @@ namespace Parquet.Extensions
    {
       private const string BraceOpen = "{";
       private const string BraceClose = "}";
+      private const string JsonQuote = "\"";
+      private const string JsonSingleQuote = "'";
 
       public static void StartArray(this StringBuilder sb, StringFormat sf, int level)
       {
          switch (sf)
          {
             case StringFormat.Json:
+            case StringFormat.JsonSingleQuote:
                if(level == 0)
                {
-                  sb.AppendLine();
+                  //sb.AppendLine();
                }
                else
                {
@@ -36,6 +39,7 @@ namespace Parquet.Extensions
          switch (sf)
          {
             case StringFormat.Json:
+            case StringFormat.JsonSingleQuote:
                if(level > 0)
                {
                   sb.Append("]");
@@ -52,9 +56,10 @@ namespace Parquet.Extensions
          switch (sf)
          {
             case StringFormat.Json:
+            case StringFormat.JsonSingleQuote:
                if (level > 0)
                {
-                  sb.Append(",");
+                  sb.Append(", ");
                }
                else
                {
@@ -85,9 +90,19 @@ namespace Parquet.Extensions
             case StringFormat.Json:
                if (f != null)
                {
-                  sb.Append("\"");
+                  sb.Append(JsonQuote);
                   sb.Append(f?.Name ?? "?");
-                  sb.Append("\": ");
+                  sb.Append(JsonQuote);
+                  sb.Append(": ");
+               }
+               break;
+            case StringFormat.JsonSingleQuote:
+               if (f != null)
+               {
+                  sb.Append(JsonSingleQuote);
+                  sb.Append(f?.Name ?? "?");
+                  sb.Append(JsonSingleQuote);
+                  sb.Append(": ");
                }
                break;
          }
@@ -98,6 +113,7 @@ namespace Parquet.Extensions
          switch (sf)
          {
             case StringFormat.Json:
+            case StringFormat.JsonSingleQuote:
                sb.Append("null");
                break;
             default:
@@ -111,7 +127,8 @@ namespace Parquet.Extensions
          switch (sf)
          {
             case StringFormat.Json:
-               EncodeJson(sb, value);
+            case StringFormat.JsonSingleQuote:
+               EncodeJson(sb, sf, value);
                break;
             default:
                sb.Append(value.ToString());
@@ -119,21 +136,22 @@ namespace Parquet.Extensions
          }
       }
 
-      private static void EncodeJson(StringBuilder sb, object value)
+      private static void EncodeJson(StringBuilder sb, StringFormat sf, object value)
       {
          Type t = value.GetType();
+         string quote = sf == StringFormat.Json ? JsonQuote : JsonSingleQuote;
 
          if (t == typeof(string))
          {
-            sb.Append("\"");
+            sb.Append(quote);
             sb.Append(HttpEncoder.JavaScriptStringEncode((string)value));
-            sb.Append("\"");
+            sb.Append(quote);
          }
          else if(t == typeof(DateTimeOffset))
          {
-            sb.Append("\"");
+            sb.Append(quote);
             sb.Append(value.ToString());
-            sb.Append("\"");
+            sb.Append(quote);
          }
          else
          {

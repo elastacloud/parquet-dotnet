@@ -472,9 +472,12 @@ namespace Parquet.Test
       #region [ JSON Conversions ]
 
       [Fact]
-      public void JSON_reads_by_newtonsoft()
+      public void JSON_struct_plain_reads_by_newtonsoft()
       {
          Table t = ReadTestFileAsTable("struct_plain.parquet");
+
+         Assert.Equal("{'isbn': '12345-6', 'author': {'firstName': 'Ivan', 'lastName': 'Gavryliuk'}}", t[0].ToString("jsq"));
+         Assert.Equal("{'isbn': '12345-7', 'author': {'firstName': 'Richard', 'lastName': 'Conway'}}", t[1].ToString("jsq"));
 
          string[] jsons = t.ToString("j").Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 
