@@ -15,62 +15,30 @@ namespace Parquet.Extensions
 
       public static void StartArray(this StringBuilder sb, StringFormat sf, int level)
       {
-         switch (sf)
+         if(level > 0)
          {
-            case StringFormat.Json:
-            case StringFormat.JsonSingleQuote:
-               if(level == 0)
-               {
-                  //sb.AppendLine();
-               }
-               else
-               {
-                  sb.Append("[");
-               }
-               break;
-            default:
-               sb.Append("[");
-               break;
+            sb.Append("[");
          }
       }
 
       public static void EndArray(this StringBuilder sb, StringFormat sf, int level)
       {
-         switch (sf)
+         if(level > 0)
          {
-            case StringFormat.Json:
-            case StringFormat.JsonSingleQuote:
-               if(level > 0)
-               {
-                  sb.Append("]");
-               }
-               break;
-            default:
-               sb.Append("]");
-               break;
+            sb.Append("]");
          }
       }
 
       public static void DivideObjects(this StringBuilder sb, StringFormat sf, int level)
       {
-         switch (sf)
+         if (level > 0)
          {
-            case StringFormat.Json:
-            case StringFormat.JsonSingleQuote:
-               if (level > 0)
-               {
-                  sb.Append(", ");
-               }
-               else
-               {
-                  sb.AppendLine();
-               }
-               break;
-            default:
-               sb.Append(";");
-               break;
+            sb.Append(", ");
          }
-         
+         else
+         {
+            sb.AppendLine();
+         }         
       }
 
       public static void StartObject(this StringBuilder sb, StringFormat sf)
@@ -110,30 +78,12 @@ namespace Parquet.Extensions
 
       public static void AppendNull(this StringBuilder sb, StringFormat sf)
       {
-         switch (sf)
-         {
-            case StringFormat.Json:
-            case StringFormat.JsonSingleQuote:
-               sb.Append("null");
-               break;
-            default:
-               sb.Append("<null>");
-               break;
-         }
+         sb.Append("null");
       }
 
       public static void Append(this StringBuilder sb, StringFormat sf, object value)
       {
-         switch (sf)
-         {
-            case StringFormat.Json:
-            case StringFormat.JsonSingleQuote:
-               EncodeJson(sb, sf, value);
-               break;
-            default:
-               sb.Append(value.ToString());
-               break;
-         }
+         EncodeJson(sb, sf, value);
       }
 
       private static void EncodeJson(StringBuilder sb, StringFormat sf, object value)

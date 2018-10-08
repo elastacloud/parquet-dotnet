@@ -293,7 +293,7 @@ namespace Parquet.Data.Rows
       /// <summary>
       /// Converts to string with optional formatting
       /// </summary>
-      /// <param name="format">null - internal format, j - one line json</param>
+      /// <param name="format">jsq - one line single-quote json, default, j - one line json</param>
       /// <param name="formatProvider"></param>
       /// <returns></returns>
       public string ToString(string format, IFormatProvider formatProvider)

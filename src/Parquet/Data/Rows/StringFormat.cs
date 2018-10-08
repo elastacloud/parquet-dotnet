@@ -2,8 +2,7 @@
 {
    enum StringFormat
    {
-      Internal,
-      Json,
-      JsonSingleQuote
+      JsonSingleQuote,
+      Json
    }
 }

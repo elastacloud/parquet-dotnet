@@ -189,7 +189,8 @@ namespace Parquet.Test
       {
          Table t = ReadTestFileAsTable("struct_plain.parquet");
 
-         Assert.Equal("[{12345-6;{Ivan;Gavryliuk}};{12345-7;{Richard;Conway}}]", t.ToString());
+         Assert.Equal(@"{'isbn': '12345-6', 'author': {'firstName': 'Ivan', 'lastName': 'Gavryliuk'}}
+{'isbn': '12345-7', 'author': {'firstName': 'Richard', 'lastName': 'Conway'}}", t.ToString());
       }
 
       [Fact]
@@ -224,7 +225,7 @@ namespace Parquet.Test
 
          Table t2 = WriteRead(t);
 
-         Assert.Equal("{Ivan;{Primary;[line1;line2]}}", t[0].ToString());
+         Assert.Equal("{'name': 'Ivan', 'address': {'name': 'Primary', 'lines': ['line1', 'line2']}}", t2.ToString());
       }
 
       #endregion

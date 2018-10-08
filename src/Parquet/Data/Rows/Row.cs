@@ -188,6 +188,7 @@ namespace Parquet.Data.Rows
       /// <summary>
       /// Convert to string with optional formatting
       /// </summary>
+      /// <param name="format">jsq - one line single-quote json, default, j - one line json</param>
       public string ToString(string format)
       {
          var sb = new StringBuilder();
@@ -202,10 +203,8 @@ namespace Parquet.Data.Rows
          StringFormat sf;
          if (format == "j")
             sf = StringFormat.Json;
-         else if (format == "jsq")
-            sf = StringFormat.JsonSingleQuote;
          else
-            sf = StringFormat.Internal;
+            sf = StringFormat.JsonSingleQuote;
          return sf;
       }
 
