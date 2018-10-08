@@ -344,7 +344,7 @@ namespace Parquet.Test
                new DataField<string>("item")
             ));
          t.Add(1, new string[0]);
-         Assert.Equal("{1;[]}", WriteRead(t).ToString());
+         Assert.Equal("[{1;[]}]", WriteRead(t).ToString());
       }
 
       [Fact]
