@@ -40,6 +40,7 @@ the first release of a major rewrite</PackageReleaseNotes>
      <DocumentationFile>bin\Debug\$(TargetFramework)\Parquet.xml</DocumentationFile>
      <DebugType>full</DebugType>
      <DebugSymbols>true</DebugSymbols>
+     <PackageTags>apache parquet dotnet core net c# f# windows linux macos ios android xboxone xbox</PackageTags>
   </PropertyGroup>
 
    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
