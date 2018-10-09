@@ -29,7 +29,7 @@ This project is aimed to fix this problem. We support all the popular server and
 - [Reading Data](doc/reading.md) 
 - [Writing Data](doc/writing.md)
 - [Complex Types](doc/complex-types.md)
-- [Utilities for row-based access](doc/rows.md)
+- [Row-Based API](doc/rows.md)
 - [Fast Automatic Serialisation](doc/serialisation.md)
 - [Declaring Schema](doc/schema.md)
   - [Supported Types](doc/types.md)
@@ -128,6 +128,10 @@ using (Stream fileStream = System.IO.File.OpenWrite("c:\\test.parquet"))
    }
 }
 ```
+
+### Row-Based Access
+
+Parquet.Net includes [API for row-based access](doc/rows.md) that simplify parquet programming at the expense of memory, speed and flexibility. We recommend using column based approacha when you can (examples above) however if not possible use these API as we constantly optimise for speed and use them internally outselves in certain situations.
 
 ## License
 
