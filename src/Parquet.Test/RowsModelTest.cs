@@ -110,7 +110,7 @@ namespace Parquet.Test
          }
 
          //validate data
-         Assert.Equal(table.ToString(), table2.ToString());
+         Assert.Equal(table.ToString(), table2.ToString(), ignoreLineEndingDifferences: true);
       }
 
       #endregion
@@ -154,7 +154,7 @@ namespace Parquet.Test
             }
          }
 
-         Assert.Equal("{'id': 1, 'numbers': [{'key': 1, 'value': 'one'}, {'key': 2, 'value': 'two'}, {'key': 3, 'value': 'three'}]}", t[0].ToString());
+         Assert.Equal("{'id': 1, 'numbers': [{'key': 1, 'value': 'one'}, {'key': 2, 'value': 'two'}, {'key': 3, 'value': 'three'}]}", t[0].ToString(), ignoreLineEndingDifferences: true);
       }
 
       [Fact]
@@ -177,7 +177,7 @@ namespace Parquet.Test
 
          Table table2 = WriteRead(table);
 
-         Assert.Equal(table.ToString(), table2.ToString());
+         Assert.Equal(table.ToString(), table2.ToString(), ignoreLineEndingDifferences: true);
       }
 
       #endregion
@@ -190,7 +190,7 @@ namespace Parquet.Test
          Table t = ReadTestFileAsTable("struct_plain.parquet");
 
          Assert.Equal(@"{'isbn': '12345-6', 'author': {'firstName': 'Ivan', 'lastName': 'Gavryliuk'}}
-{'isbn': '12345-7', 'author': {'firstName': 'Richard', 'lastName': 'Conway'}}", t.ToString());
+{'isbn': '12345-7', 'author': {'firstName': 'Richard', 'lastName': 'Conway'}}", t.ToString(), ignoreLineEndingDifferences: true);
       }
 
       [Fact]
@@ -209,7 +209,7 @@ namespace Parquet.Test
 
          Table table2 = WriteRead(table);
 
-         Assert.Equal(table.ToString(), table2.ToString());
+         Assert.Equal(table.ToString(), table2.ToString(), ignoreLineEndingDifferences: true);
       }
 
       [Fact]
@@ -225,7 +225,7 @@ namespace Parquet.Test
 
          Table t2 = WriteRead(t);
 
-         Assert.Equal("{'name': 'Ivan', 'address': {'name': 'Primary', 'lines': ['line1', 'line2']}}", t2.ToString());
+         Assert.Equal("{'name': 'Ivan', 'address': {'name': 'Primary', 'lines': ['line1', 'line2']}}", t2.ToString(), ignoreLineEndingDifferences: true);
       }
 
       #endregion
@@ -244,7 +244,7 @@ namespace Parquet.Test
             }
          }
 
-         Assert.Equal("{'cities': ['London', 'Derby', 'Paris', 'New York'], 'id': 1}", t[0].ToString());
+         Assert.Equal("{'cities': ['London', 'Derby', 'Paris', 'New York'], 'id': 1}", t[0].ToString(), ignoreLineEndingDifferences: true);
       }
 
       [Fact]
@@ -276,7 +276,7 @@ namespace Parquet.Test
          }
 
          //validate data
-         Assert.Equal(table.ToString(), table2.ToString());
+         Assert.Equal(table.ToString(), table2.ToString(), ignoreLineEndingDifferences: true);
       }
 
       [Fact]
@@ -292,7 +292,7 @@ namespace Parquet.Test
          }
 
          Assert.Single(t);
-         Assert.Equal("{'cities': [{'country': 'UK', 'name': 'London'}, {'country': 'US', 'name': 'New York'}], 'id': 1}", t[0].ToString());
+         Assert.Equal("{'cities': [{'country': 'UK', 'name': 'London'}, {'country': 'US', 'name': 'New York'}], 'id': 1}", t[0].ToString(), ignoreLineEndingDifferences: true);
       }
 
       [Fact]
@@ -310,7 +310,7 @@ namespace Parquet.Test
 
          Table t2 = WriteRead(t);
 
-         Assert.Equal(t.ToString(), t2.ToString());
+         Assert.Equal(t.ToString(), t2.ToString(), ignoreLineEndingDifferences: true);
       }
 
       [Fact]
@@ -318,7 +318,7 @@ namespace Parquet.Test
       {
          Table t = ReadTestFileAsTable("list_empty.parquet");
 
-         Assert.Equal("{'id': 2, 'repeats1': []}", t[0].ToString());
+         Assert.Equal("{'id': 2, 'repeats1': []}", t[0].ToString(), ignoreLineEndingDifferences: true);
       }
 
       [Fact]
@@ -337,7 +337,7 @@ namespace Parquet.Test
          Assert.Equal(@"{'id': 1, 'repeats2': ['1', '2', '3']}
 {'id': 2, 'repeats2': []}
 {'id': 3, 'repeats2': ['1', '2', '3']}
-{'id': 4, 'repeats2': []}", t.ToString());
+{'id': 4, 'repeats2': []}", t.ToString(), ignoreLineEndingDifferences: true);
       }
 
       [Fact]
@@ -349,7 +349,7 @@ namespace Parquet.Test
                new DataField<string>("item")
             ));
          t.Add(1, new string[0]);
-         Assert.Equal("{'id': 1, 'strings': []}", WriteRead(t).ToString());
+         Assert.Equal("{'id': 1, 'strings': []}", WriteRead(t).ToString(), ignoreLineEndingDifferences: true);
       }
 
       [Fact]
@@ -370,7 +370,7 @@ namespace Parquet.Test
          Assert.Equal(@"{'id': 1, 'strings': ['1', '2', '3']}
 {'id': 2, 'strings': []}
 {'id': 3, 'strings': ['1', '2', '3']}
-{'id': 4, 'strings': []}", t.ToString());
+{'id': 4, 'strings': []}", t.ToString(), ignoreLineEndingDifferences: true);
 
       }
 
