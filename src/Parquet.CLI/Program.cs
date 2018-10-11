@@ -25,6 +25,8 @@ namespace Parquet.CLI
          var app = new Application("Parquet CLI (https://github.com/elastacloud/parquet-dotnet)");
          ConfigureTelemetry(app, args);
 
+         LinePrimitive<bool> verboseOption = app.SharedOption<bool>("-d|--debug", Help.App_Verbose);
+
          app.OnBeforeExecuteCommand(cmd =>
          {
             PoshWrite("{p}{a}{r}{q} v", ConsoleColor.Yellow, ConsoleColor.Red, ConsoleColor.Green, ConsoleColor.Blue);
@@ -44,6 +46,7 @@ namespace Parquet.CLI
          app.OnError((cmd, err) =>
          {
             log.Trace("error in command {command}", cmd.Name, err);
+            return true;
          });
 
          app.Command("schema", cmd =>
@@ -62,12 +65,14 @@ namespace Parquet.CLI
          {
             cmd.Description = Help.Command_Convert_Description;
 
-            LinePrimitive<string> path = cmd.Argument<string>("input", Help.Argument_Path).Required().FileExists();
-            LinePrimitive<bool> noColour = cmd.Option<bool>("--no-color", Help.Command_Convert_NoColour);
+            LinePrimitive<string> input = cmd.Argument<string>("input", Help.Command_Convert_Input).Required().FileExists();
+            //LinePrimitive<string> output = cmd.Argument<string>("output", Help.Command_Convert_Output);
+            //LinePrimitive<string> style = cmd.Option<string>("-s|--style", Help.Command_Convert_Style);
+            LinePrimitive<bool> pretty = cmd.Option<bool>("-p|--pretty", Help.Command_Convert_Pretty);
 
             cmd.OnExecute(() =>
             {
-               new ConvertCommand(path, noColour).Execute();
+               new ConvertCommand(input, null, null, pretty).Execute();
             });
          });
 
@@ -144,8 +149,7 @@ namespace Parquet.CLI
 
          L.Config
             .WriteTo.AzureApplicationInsights("0a310ae1-0f93-43fc-bfa1-62e92fc869b9")
-            .EnrichWith.Constant(KnownProperty.Version, app.Version)
-            .EnrichWith.MachineIpAddress();  //we'd like to know where it's used geographically
+            .EnrichWith.Constant(KnownProperty.Version, app.Version);
 
          Telemetry.CliInvoked(args);
       }

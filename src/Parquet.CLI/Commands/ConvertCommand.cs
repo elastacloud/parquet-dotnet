@@ -11,18 +11,22 @@ namespace Parquet.CLI.Commands
 {
    class ConvertCommand : FileInputCommand
    {
-      private readonly string _path;
-      private readonly bool _noColour;
+      private readonly string _inputPath;
+      private readonly string _output;
+      private readonly string _style;
+      private readonly bool _pretty;
 
-      public ConvertCommand(string path, bool noColour) : base(path)
+      public ConvertCommand(string input, string output, string style, bool noColour) : base(input)
       {
-         _path = path;
-         _noColour = noColour;
+         _inputPath = input;
+         _output = output;
+         _style = style;
+         _pretty = noColour;
       }
 
       public void Execute()
       {
-         string sourceExtension = Path.GetExtension(_path);
+         string sourceExtension = Path.GetExtension(_inputPath);
 
          if(sourceExtension != ".parquet")
          {
@@ -35,123 +39,55 @@ namespace Parquet.CLI.Commands
       private void ConvertFromParquet()
       {
          Telemetry.CommandExecuted("convert",
-            "path", _path);
+            "input", _inputPath,
+            "output", _output,
+            "style", _style,
+            "pretty", _pretty);
 
          Table t = ReadTable();
 
-         string json = t.ToString("j");
+         if(_pretty)
+         {
+            WriteLine("[", BracketColor);
+         }
 
          int i = 0;
-         foreach(string jsonLine in json.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries))
+         foreach(Row row in t)
          {
-            if (_noColour)
+            string json = row.ToString("j");
+
+            if(!_pretty)
             {
-               WriteLine(jsonLine);
+               WriteLine(json);
             }
             else
             {
-               object jsonDoc = JsonConvert.DeserializeObject(jsonLine);
-
-               WriteColor(jsonDoc, 0, i++);
+               WriteColorJson(json, ++i < t.Count);
             }
+         }
+
+         if (_pretty)
+         {
+            WriteLine("]", BracketColor);
          }
       }
 
       private const ConsoleColor BracketColor = ConsoleColor.DarkGray;
       private const ConsoleColor QuoteColor = ConsoleColor.Yellow;
-      private const ConsoleColor PropertyNameColor = ConsoleColor.DarkGray;
+      private const ConsoleColor PropertyNameColor = ConsoleColor.Green;
       private const ConsoleColor ValueColor = ConsoleColor.White;
 
-      private void WriteColor(object jsonObject, int level, int index = -1)
+      private void WriteColorJson(string json, bool hasMore)
       {
-         if(index != -1)
+         JToken jt = JToken.Parse(json);
+
+         Write(jt.ToString(Formatting.Indented));
+
+         if(hasMore)
          {
+            Write(",");
             WriteLine();
-            PoshWriteLine($"{{document}} {{#}}{{{index}}}", ConsoleColor.Green, ConsoleColor.DarkGray, ConsoleColor.Yellow);
-         }
-
-         string ident = new string(' ', level * 2);
-
-         if(jsonObject is JProperty jp)
-         {
-            Write(ident);
-            Write("\"", PropertyNameColor);
-            Write(jp.Name, PropertyNameColor);
-            Write("\": ", PropertyNameColor);
-
-            WriteColor(jp.Value, level + 1);
-         }
-         else if(jsonObject is JValue jv)
-         {
-            if (jv.Parent.Count > 1)
-            {
-               if (jv.Previous != null)
-               {
-                  Write(",");
-                  WriteLine();
-               }
-               Write(ident);
-            }
-
-            WriteValue(jv);
-         }
-         else if (jsonObject is JArray jar)
-         {
-            Write("[", BracketColor);
-            WriteLine();
-
-            foreach(object element in jar)
-            {
-               WriteColor(element, level + 1);
-            }
-
-            WriteLine();
-            Write(ident);
-            Write("]", BracketColor);
-            WriteLine();
-         }
-         else if(jsonObject is JObject jo)
-         {
-            Write(ident);
-            Write("{", BracketColor);
-            WriteLine();
-
-            foreach(object element in jo.Children())
-            {
-               WriteColor(element, level + 1);
-            }
-
-            WriteLine();
-            Write(ident);
-            Write("}", BracketColor);
-            WriteLine();
-         }
-         else
-         {
-            throw new NotSupportedException(jsonObject.GetType().ToString());
          }
       }
-
-      private void WriteValue(JValue value)
-      {
-         switch (value.Type)
-         {
-            //quoted
-            case JTokenType.String:
-            case JTokenType.Date:
-            case JTokenType.Guid:
-            case JTokenType.Uri:
-            case JTokenType.TimeSpan:
-               Write("\"", QuoteColor);
-               Write(value.Value, ValueColor);
-               Write("\"", QuoteColor);
-               break;
-            default:
-               Write(value.Value, ValueColor);
-               break;
-         }
-      }
-
-
    }
 }

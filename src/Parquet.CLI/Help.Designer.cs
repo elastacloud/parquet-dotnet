@@ -61,6 +61,15 @@ namespace Parquet.CLI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Display verbose output..
+        /// </summary>
+        internal static string App_Verbose {
+            get {
+                return ResourceManager.GetString("App_Verbose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Path to parquet file..
         /// </summary>
         internal static string Argument_Path {
@@ -79,11 +88,47 @@ namespace Parquet.CLI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Suppresses colorisation and human readable formatting. Useful for outputting to files..
+        ///   Looks up a localized string similar to Path to input file, required..
         /// </summary>
-        internal static string Command_Convert_NoColour {
+        internal static string Command_Convert_Input {
             get {
-                return ResourceManager.GetString("Command_Convert_NoColour", resourceCulture);
+                return ResourceManager.GetString("Command_Convert_Input", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum amount of rows to fetch. By default all of the rows are processed..
+        /// </summary>
+        internal static string Command_Convert_MaxRows {
+            get {
+                return ResourceManager.GetString("Command_Convert_MaxRows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Path to output file. If not specified, the result is printed to the console..
+        /// </summary>
+        internal static string Command_Convert_Output {
+            get {
+                return ResourceManager.GetString("Command_Convert_Output", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to When set, colorises and idents output..
+        /// </summary>
+        internal static string Command_Convert_Pretty {
+            get {
+                return ResourceManager.GetString("Command_Convert_Pretty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Output style. By default result is a multiline json document. Specify &quot;single&quot; to generate an array document with list of documents embedded, or &quot;multiline&quot; for a multiline json..
+        /// </summary>
+        internal static string Command_Convert_Style {
+            get {
+                return ResourceManager.GetString("Command_Convert_Style", resourceCulture);
             }
         }
         

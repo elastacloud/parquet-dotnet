@@ -272,35 +272,37 @@ namespace Parquet.Data.Rows
       #endregion
 
       /// <summary>
-      /// Formats rows
+      /// Converts table to multiline json. Only shows the first 10 rows as table may be large.
       /// </summary>
       /// <returns></returns>
       public override string ToString()
       {
-         return ToString(null, CultureInfo.CurrentCulture);
+         return ToString(null, 10);
       }
 
       /// <summary>
-      /// Converts to string with optional formatting
-      /// </summary>
-      /// <param name="format">null - internal format, j - one line json where each row represents json document</param>
-      /// <returns></returns>
-      public string ToString(string format)
-      {
-         return ToString(format, CultureInfo.CurrentCulture);
-      }
-
-      /// <summary>
-      /// Converts to string with optional formatting
+      /// Converts to string with optional formatting.  Only shows the first 10 rows as table may be large.
       /// </summary>
       /// <param name="format">jsq - one line single-quote json, default, j - one line json</param>
-      /// <param name="formatProvider"></param>
+      /// <param name="formatProvider">Optaional format provider, not used at the moment</param>
       /// <returns></returns>
       public string ToString(string format, IFormatProvider formatProvider)
       {
-         if (formatProvider == null)
-            formatProvider = CultureInfo.CurrentCulture;
+         return ToString(format, 10);
+      }
 
+      /// <summary>
+      /// Converts to string with optional formatting.  Only shows the first 10 rows as table may be large.
+      /// </summary>
+      /// <param name="format">jsq - one line single-quote json, default, j - one line json</param>
+      /// <returns></returns>
+      public string ToString(string format)
+      {
+         return ToString(format, 10);
+      }
+
+      private string ToString(string format, int maxRows)
+      {
          StringFormat sf = Row.GetStringFormat(format);
 
          var sb = new StringBuilder();
