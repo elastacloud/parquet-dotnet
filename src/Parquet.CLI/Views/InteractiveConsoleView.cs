@@ -11,9 +11,6 @@ namespace Parquet.CLI.Views
    /// </summary>
    public class InteractiveConsoleView : IDrawViews
    {
-      private const string verticalSeparator = "|";
-      private const string horizontalSeparator = "-";
-      private const string cellDivider = "+";
       private Stack<ConsoleSheet> unreadSheets;
       private Stack<ConsoleSheet> readSheets = new Stack<ConsoleSheet>();
       private Stack<ConsoleFold> unreadFolds;
@@ -82,11 +79,11 @@ namespace Parquet.CLI.Views
       private void DrawSheet(ViewModel viewModel, ConsoleSheet currentSheet, ConsoleFold currentFold, ViewPort viewPort, bool displayTypes, bool displayNulls, string truncationIdentifier, bool displayRefs)
       {
          Console.Clear();
-         DrawLine(currentSheet, viewPort, displayRefs);
-         WriteHeaderLine(currentSheet, viewPort, displayTypes);
-         DrawLine(currentSheet, viewPort);
-         WriteValues(viewModel, currentSheet, currentFold, viewPort, displayNulls, truncationIdentifier, displayRefs);
-         DrawLine(currentSheet, viewPort);
+         //DrawLine(currentSheet, viewPort, displayRefs);
+         //WriteHeaderLine(currentSheet, viewPort, displayTypes);
+         //DrawLine(currentSheet, viewPort);
+         //WriteValues(viewModel, currentSheet, currentFold, viewPort, displayNulls, truncationIdentifier, displayRefs);
+         //DrawLine(currentSheet, viewPort);
          WriteSummary(viewModel, currentSheet, currentFold, displayNulls);
 
          Input input = AwaitInput();
@@ -212,6 +209,8 @@ namespace Parquet.CLI.Views
          return Input.NoOp;
       }
 
+      // todo: retire the following
+      private const string verticalSeparator = "|";
       private IEnumerable<ColumnDetails> FitColumns(ViewPort viewPort, IEnumerable<ColumnDetails> columns, int displayMinWidth)
       {
          int allColumnsWidth = columns
@@ -244,10 +243,6 @@ namespace Parquet.CLI.Views
          return !chosenColumns.Any() && column.columnWidth + verticalSeparator.Length > viewPort.Width;
       }
 
-      private bool IsOverlyLargeColumn(ColumnDetails column, ViewPort viewPort)
-      {
-         return column.columnWidth + verticalSeparator.Length > viewPort.Width;
-      }
 
       private void WriteSummary(ViewModel viewModel, ConsoleSheet currentSheet, ConsoleFold currentFold, bool displayNulls)
       {
@@ -263,167 +258,6 @@ namespace Parquet.CLI.Views
          }
          Console.WriteLine("Showing {0} to {1} of {2} Rows Total. Press ENTER to quit;", currentFold.IndexStart, currentFold.IndexEnd, viewModel.RowCount);
       }
-      private void WriteHeaderLine(ConsoleSheet sheet, ViewPort viewPort, bool displayTypes)
-      {
-         Console.Write(verticalSeparator);
-         foreach (ColumnDetails column in sheet.Columns)
-         {
-            if (IsOverlyLargeColumn(column, viewPort))
-            {
-               for (int i = 0; i < viewPort.Width - column.columnName.Length - (verticalSeparator.Length * 2) - Environment.NewLine.Length; i++)
-               {
-                  Console.Write(" ");
-               }
-            }
-            else
-            {
-               for (int i = 0; i < column.columnWidth - column.columnName.Length; i++)
-               {
-                  Console.Write(" ");
-               }
-            }
-
-            Console.Write(column.columnName);
-            Console.Write(verticalSeparator);
-         }
-         Console.Write(Environment.NewLine);
-         if (displayTypes)
-         {
-            Console.Write(verticalSeparator);
-            foreach (ColumnDetails column in sheet.Columns)
-            {
-               int offset = column.isNullable ? 1 : 0;
-               if (IsOverlyLargeColumn(column, viewPort))
-               {
-                  for (int i = 0; i < viewPort.Width - offset - column.type.ToString().Length - (verticalSeparator.Length * 2) - Environment.NewLine.Length; i++)
-                  {
-                     Console.Write(" ");
-                  }
-               }
-               else
-               {
-                  for (int i = 0; i < column.columnWidth - column.type.ToString().Length - offset; i++)
-                  {
-                     Console.Write(" ");
-                  }
-               }
-               Console.ForegroundColor = ConsoleColor.Blue;
-
-               if (column.columnWidth > column.type.ToString().Length + (verticalSeparator.Length * 2))
-               {
-                  Console.Write(column.type.ToString());
-               }
-               else
-               {
-                  int howMuchSpaceDoWeHave = column.isNullable ? column.columnWidth - 1 : column.columnWidth;
-                  Console.Write(column.type.ToString().Substring(0, howMuchSpaceDoWeHave));
-               }
-
-
-               if (column.isNullable)
-               {
-                  Console.ForegroundColor = ConsoleColor.Cyan;
-                  Console.Write("?");
-                  Console.ResetColor();
-               }
-               Console.Write(verticalSeparator);
-            }
-            Console.Write(Environment.NewLine);
-         }
-      }
-
-      private void WriteValues(ViewModel viewModel, ConsoleSheet columnsFitToScreen, ConsoleFold foldedRows, ViewPort viewPort, bool displayNulls, string truncationIdentifier, bool displayRefs)
-      {
-         for (int i = foldedRows.IndexStart; i < foldedRows.IndexEnd; i++)
-         {
-            object[] row = viewModel.Rows.ElementAt(i);
-            Console.Write(verticalSeparator);
-            for (int j = 0; j < row.Length; j++)
-            {
-               ColumnDetails header = viewModel.Columns.ElementAt(j);
-               if (columnsFitToScreen.Columns.Any(x => x.columnName == header.columnName))
-               {
-                  ColumnDetails persistedFit = columnsFitToScreen.Columns.First(x => x.columnName == header.columnName);
-                  string data = persistedFit.GetFormattedValue(row[j], displayNulls);
-
-                  if (IsOverlyLargeColumn(persistedFit, viewPort))
-                  {
-                     if (data.Length > viewPort.Width)
-                     {
-                        Console.Write(data.Substring(0, viewPort.Width - (verticalSeparator.Length * 2) - Environment.NewLine.Length - truncationIdentifier.Length));
-
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.BackgroundColor = ConsoleColor.Black;
-                        Console.Write(truncationIdentifier);
-                        Console.ResetColor();
-                     }
-                  }
-                  else if (data.Contains("[null]"))
-                  {
-                     Console.ForegroundColor = ConsoleColor.DarkGray;
-                     Console.Write(data);
-                     Console.ResetColor();
-                  }
-                  else
-                  {
-                     Console.Write(data);
-                  }
-
-                  Console.Write(verticalSeparator);
-               }
-            }
-            Console.WriteLine();
-         }
-      }
-      private void DrawLine(ConsoleSheet consoleSheet, ViewPort viewPort, bool drawRefs = false)
-      {
-         Console.Write(cellDivider);
-         for (int c = 0; c < consoleSheet.Columns.Count(); c++)
-         {
-            ColumnDetails column = consoleSheet.Columns.ElementAt(c);
-
-            int columnNameLength = c.ToString().Length;
-            if (IsOverlyLargeColumn(column, viewPort))
-            {
-               for (int i = 0; i < ((viewPort.Width - (verticalSeparator.Length * 2) - Environment.NewLine.Length) / 2) - (columnNameLength / 2); i++)
-               {
-                  Console.Write(horizontalSeparator);
-               }
-               if (drawRefs)
-               {
-                  Console.Write(c.ToString());
-               }
-               else
-               {
-                  Console.Write(horizontalSeparator);
-               }
-               for (int i = 0; i < ((viewPort.Width - (verticalSeparator.Length * 2) - Environment.NewLine.Length) / 2) - (columnNameLength / 2) - ((columnNameLength + 1) % 2); i++)
-               {
-                  Console.Write(horizontalSeparator);
-               }
-            }
-            else
-            {
-               for (int i = 0; i < (column.columnWidth / 2) - (c.ToString().Length / 2); i++)
-               {
-                  Console.Write(horizontalSeparator);
-               }
-               if (drawRefs)
-               {
-                  Console.Write(c.ToString());
-               }
-               else
-               {
-                  Console.Write(horizontalSeparator);
-               }
-               for (int i = 0; i < (column.columnWidth / 2) - (c.ToString().Length / 2) - ((column.columnWidth + 1) % 2); i++)
-               {
-                  Console.Write(horizontalSeparator);
-               }
-            }
-            Console.Write(cellDivider);
-         }
-         Console.Write(Environment.NewLine);
-      }
+      
    }
 }
