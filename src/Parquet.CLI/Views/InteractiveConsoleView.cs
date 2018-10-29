@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Parquet.CLI.Models;
+using Parquet.CLI.Models.Tabular;
 
 namespace Parquet.CLI.Views
 {
@@ -79,11 +80,13 @@ namespace Parquet.CLI.Views
       private void DrawSheet(ViewModel viewModel, ConsoleSheet currentSheet, ConsoleFold currentFold, ViewPort viewPort, bool displayTypes, bool displayNulls, string truncationIdentifier, bool displayRefs)
       {
          Console.Clear();
-         //DrawLine(currentSheet, viewPort, displayRefs);
-         //WriteHeaderLine(currentSheet, viewPort, displayTypes);
-         //DrawLine(currentSheet, viewPort);
-         //WriteValues(viewModel, currentSheet, currentFold, viewPort, displayNulls, truncationIdentifier, displayRefs);
-         //DrawLine(currentSheet, viewPort);
+         DisplayTable displayTable = new DisplayTable();
+         displayTable.Header = GenerateHeaderFromSheet(viewModel, currentSheet);
+         displayTable.ColumnDetails = currentSheet.Columns.ToArray();
+         displayTable.Rows = GenerateRowsFromFold(viewModel, currentFold, currentSheet);
+         new Tablular.TableWriter(viewPort).Draw(displayTable);
+
+
          WriteSummary(viewModel, currentSheet, currentFold, displayNulls);
 
          Input input = AwaitInput();
@@ -151,6 +154,54 @@ namespace Parquet.CLI.Views
                }
                break;
          }
+      }
+
+      private TableRow[] GenerateRowsFromFold(ViewModel viewModel, ConsoleFold currentFold, ConsoleSheet currentSheet)
+      {
+         List<TableRow> rows = new List<TableRow>();
+         for (int i = currentFold.IndexStart; i < currentFold.IndexEnd; i++)
+         {
+            var row = new TableRow();
+            List<TableCell> cells = new List<TableCell>();
+            for (int j = currentSheet.IndexStart; j < currentSheet.IndexEnd; j++)
+            {
+               cells.Add(new BasicTableCell
+               {
+                  CellLineCount = 1,
+                  ContentAreas = new[] { new BasicCellContent
+                     {
+                        Value = viewModel.Rows[i][j].ToString()
+                     }
+                  }
+               });
+            }
+            row.Cells = cells.ToArray();
+            rows.Add(row);
+         }
+         return rows.ToArray();
+      }
+
+      private TableRow GenerateHeaderFromSheet(ViewModel viewModel, ConsoleSheet currentSheet)
+      {
+         var row = new TableRow();
+         List<TableCell> headers = new List<TableCell>();
+         for (int i = currentSheet.IndexStart; i < currentSheet.IndexEnd; i++)
+         {
+            Data.Field column = viewModel.Schema.Fields.ElementAt(i);
+            headers.Add(new BasicTableCell
+            {
+               CellLineCount = 1,
+               ContentAreas = new[]
+               {
+                  new BasicCellContent
+                  {
+                     Value = column.Name
+                  }
+               }
+            });
+         }
+         row.Cells = headers.ToArray();
+         return row;
       }
 
       private Stack<ConsoleSheet> GenerateSheets(ViewPort viewPort, IEnumerable<ColumnDetails> columns, int displayMinWidth)

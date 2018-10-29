@@ -10,7 +10,6 @@ namespace Parquet.CLI.Views.Tablular
    public interface IConsoleOutputter
    {
       void Write(string s);
-      void WriteLine();
       void SetForegroundColor(ConsoleColor foreColor);
       ConsoleColor BackgroundColor { get; set; }
       void ResetColor();
@@ -24,6 +23,7 @@ namespace Parquet.CLI.Views.Tablular
       private readonly IConsoleOutputter consoleOutputter;
       private readonly ViewPort viewPort;
 
+      public TableWriter(ViewPort viewPort) : this (new ConsoleOutputter(), viewPort) { }
       public TableWriter(IConsoleOutputter consoleOutputter, ViewPort viewPort)
       {
          this.consoleOutputter = consoleOutputter;
@@ -59,23 +59,7 @@ namespace Parquet.CLI.Views.Tablular
             {
                ColumnDetails column = table.ColumnDetails[h];
                TableCell cell = table.Header.Cells[h];
-               ICellContent[] content = cell.GetCellContentByLineOrdinal(j);
-               string cellContent = content.First().Value;
-
-               if (IsOverlyLargeColumn(column, viewPort))
-               {
-                  for (int i = 0; i < viewPort.Width - cellContent.Length - (verticalSeparator.Length * 2) - Environment.NewLine.Length; i++)
-                  {
-                     consoleOutputter.Write(" ");
-                  }
-               }
-               else
-               {
-                  for (int i = 0; i < column.columnWidth - cellContent.Length; i++)
-                  {
-                     consoleOutputter.Write(" ");
-                  }
-               }
+               
 
                cell.Write(consoleOutputter, viewPort, 0, column);
                consoleOutputter.Write(verticalSeparator);
@@ -146,7 +130,7 @@ namespace Parquet.CLI.Views.Tablular
                consoleOutputter.Write(verticalSeparator);
                
             }
-            consoleOutputter.WriteLine();
+            consoleOutputter.Write(Environment.NewLine);
          }
       }
       private void DrawLine(DisplayTable displayTable, ViewPort viewPort, bool drawRefs = false)

@@ -45,6 +45,30 @@ namespace Parquet.CLI.Test
       }
 
       [Fact]
+      public void TableWriterWritesTwoHeaders()
+      {
+         var mockOutputter = new Mock<IConsoleOutputter>();
+         var target = new TableWriter(mockOutputter.Object, new ViewPort(100, 100));
+
+         var table = new DisplayTable()
+         {
+            Header = new TableRow { Cells = new[] {
+               new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell1" } } },
+               new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell2" } } },
+            } },
+            ColumnDetails = new[] {
+               new ColumnDetails { columnName = "harrumph", columnWidth = 10, isNullable = false, type = Data.DataType.String },
+               new ColumnDetails { columnName = "harrumphflup", columnWidth = 10, isNullable = false, type = Data.DataType.String },
+            }
+         };
+
+         target.Draw(table);
+         string s = ConsoleOutputHelper.getConsoleOutput(mockOutputter.Invocations);
+         Assert.Contains("TestCell1", s);
+         Assert.Contains("TestCell2", s);
+      }
+
+      [Fact]
       public void TableWriter_SimpleTable_WritesHeaderLines3LineBreaks()
       {
          var mockOutputter = new Mock<IConsoleOutputter>();
