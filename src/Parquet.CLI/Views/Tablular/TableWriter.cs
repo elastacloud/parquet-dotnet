@@ -11,7 +11,7 @@ namespace Parquet.CLI.Views.Tablular
    {
       void Write(string s);
       void WriteLine();
-      ConsoleColor ForegroundColor { get; set; }
+      void SetForegroundColor(ConsoleColor foreColor);
       ConsoleColor BackgroundColor { get; set; }
       void ResetColor();
    }
@@ -36,40 +36,53 @@ namespace Parquet.CLI.Views.Tablular
 
       public void Draw(DisplayTable table)
       {
-         if (table.Header.Any())
+         if (table.Header.Cells.Any())
          {
             DrawLine(table, viewPort);
             WriteHeaderLine(table, viewPort);
+            DrawLine(table, viewPort);
+         }
+         if (table.Rows.Any())
+         {
+            WriteValues(table, viewPort, true, "...", false);
             DrawLine(table, viewPort);
          }
       }
 
       private void WriteHeaderLine(DisplayTable table, ViewPort viewPort, bool displayTypes=false)
       {
-         consoleOutputter.Write(verticalSeparator);
-         for (int h = 0; h < table.Header.Length; h++)
-         {
-            ColumnDetails column = table.ColumnDetails[h];
-            TableCell cell = table.Header[h];
-            if (IsOverlyLargeColumn(column, viewPort))
-            {
-               for (int i = 0; i < viewPort.Width - cell.Content.Length - (verticalSeparator.Length * 2) - Environment.NewLine.Length; i++)
-               {
-                  consoleOutputter.Write(" ");
-               }
-            }
-            else
-            {
-               for (int i = 0; i < column.columnWidth - cell.Content.Length; i++)
-               {
-                  consoleOutputter.Write(" ");
-               }
-            }
 
-            consoleOutputter.Write(cell.Content);
+         for (int j = 0; j < table.Header.MaxCellLineCount; j++)
+         {
             consoleOutputter.Write(verticalSeparator);
+            for (int h = 0; h < table.Header.Cells.Length; h++)
+            {
+               ColumnDetails column = table.ColumnDetails[h];
+               TableCell cell = table.Header.Cells[h];
+               ICellContent[] content = cell.GetCellContentByLineOrdinal(j);
+               string cellContent = content.First().Value;
+
+               if (IsOverlyLargeColumn(column, viewPort))
+               {
+                  for (int i = 0; i < viewPort.Width - cellContent.Length - (verticalSeparator.Length * 2) - Environment.NewLine.Length; i++)
+                  {
+                     consoleOutputter.Write(" ");
+                  }
+               }
+               else
+               {
+                  for (int i = 0; i < column.columnWidth - cellContent.Length; i++)
+                  {
+                     consoleOutputter.Write(" ");
+                  }
+               }
+
+               cell.Write(consoleOutputter, viewPort, 0, column);
+               consoleOutputter.Write(verticalSeparator);
+
+            }
+            consoleOutputter.Write(Environment.NewLine);
          }
-         consoleOutputter.Write(Environment.NewLine);
 
          // todo: the idea of a TableCell is to handle this
          /*if (displayTypes)
@@ -117,45 +130,21 @@ namespace Parquet.CLI.Views.Tablular
          }*/
       }
 
-      private void WriteValues(ViewModel viewModel, ConsoleSheet columnsFitToScreen, ConsoleFold foldedRows, ViewPort viewPort, bool displayNulls, string truncationIdentifier, bool displayRefs)
+      private void WriteValues(DisplayTable table, ViewPort viewPort, bool displayNulls = true, string truncationIdentifier = "...", bool displayRefs=false)
       {
-         for (int i = foldedRows.IndexStart; i < foldedRows.IndexEnd; i++)
+         for (int i = 0; i < table.Rows.Length; i++)
          {
-            object[] row = viewModel.Rows.ElementAt(i);
+            TableRow row = table.Rows.ElementAt(i);
             consoleOutputter.Write(verticalSeparator);
-            for (int j = 0; j < row.Length; j++)
+            for (int j = 0; j < row.Cells.Length; j++)
             {
-               ColumnDetails header = viewModel.Columns.ElementAt(j);
-               if (columnsFitToScreen.Columns.Any(x => x.columnName == header.columnName))
-               {
-                  ColumnDetails persistedFit = columnsFitToScreen.Columns.First(x => x.columnName == header.columnName);
-                  string data = persistedFit.GetFormattedValue(row[j], displayNulls);
+               ColumnDetails header = table.ColumnDetails.ElementAt(j);
+               TableCell cell = row.Cells[j];
 
-                  if (IsOverlyLargeColumn(persistedFit, viewPort))
-                  {
-                     if (data.Length > viewPort.Width)
-                     {
-                        consoleOutputter.Write(data.Substring(0, viewPort.Width - (verticalSeparator.Length * 2) - Environment.NewLine.Length - truncationIdentifier.Length));
+               cell.Write(consoleOutputter, viewPort, 0, header);
 
-                        consoleOutputter.ForegroundColor = ConsoleColor.Yellow;
-                        consoleOutputter.BackgroundColor = ConsoleColor.Black;
-                        consoleOutputter.Write(truncationIdentifier);
-                        consoleOutputter.ResetColor();
-                     }
-                  }
-                  else if (data.Contains("[null]"))
-                  {
-                     consoleOutputter.ForegroundColor = ConsoleColor.DarkGray;
-                     consoleOutputter.Write(data);
-                     consoleOutputter.ResetColor();
-                  }
-                  else
-                  {
-                     consoleOutputter.Write(data);
-                  }
-
-                  consoleOutputter.Write(verticalSeparator);
-               }
+               consoleOutputter.Write(verticalSeparator);
+               
             }
             consoleOutputter.WriteLine();
          }
@@ -163,9 +152,9 @@ namespace Parquet.CLI.Views.Tablular
       private void DrawLine(DisplayTable displayTable, ViewPort viewPort, bool drawRefs = false)
       {
          consoleOutputter.Write(cellDivider);
-         for (int c = 0; c < displayTable.Header.Length; c++)
+         for (int c = 0; c < displayTable.Header.Cells.Length; c++)
          {
-            TableCell column = displayTable.Header[c];
+            TableCell column = displayTable.Header.Cells[c];
             ColumnDetails details = displayTable.ColumnDetails[c];
 
             int columnNameLength = c.ToString().Length;
