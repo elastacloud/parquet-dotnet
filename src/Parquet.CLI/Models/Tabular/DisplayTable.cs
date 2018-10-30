@@ -16,8 +16,13 @@ namespace Parquet.CLI.Models.Tabular
       public string Value { get; set; }
       public ConsoleColor? ForegroundColor { get;  set; }
    }
+   public class BreakingRuleContentArea : ICellContent
+   {
+      public string Value { get; set; }
+      public ConsoleColor? ForegroundColor { get; set; }
+   }
    public abstract class TableCell {
-      public abstract int CellLineCount { get; set; }
+      public abstract int CellLineCount { get;  }
       public virtual ICellContent[] ContentAreas { get; set; }
       public virtual ICellContent[] GetCellContentByLineOrdinal(int ordinal)
       {
@@ -74,9 +79,11 @@ namespace Parquet.CLI.Models.Tabular
       }
    }
    public class BasicTableCell : TableCell {
-      private int _reqCell;
-
-      public override int CellLineCount { get => 1; set => _reqCell = value; }
+      public override int CellLineCount { get => 1;  }
+   }
+   public class MultilineTableCell : TableCell
+   {
+      public override int CellLineCount { get => this.ContentAreas.OfType<BreakingRuleContentArea>().Count() + 1; }
    }
    public class TableRow {
       public TableCell[] Cells { get; set; }

@@ -19,9 +19,9 @@ namespace Parquet.CLI.Test
 
          var table = new DisplayTable()
          {
-            Header = new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
+            Header = new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
             ColumnDetails = new[] { new ColumnDetails { columnName = "harrumph", columnWidth = 10, isNullable = false, type = Data.DataType.String } },
-            Rows = new[] { new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "This is a test value." } } } } } }
+            Rows = new[] { new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "This is a test value." } } } } } }
          };
 
          target.Draw(table);
@@ -37,9 +37,9 @@ namespace Parquet.CLI.Test
 
          var table = new DisplayTable()
          {
-            Header = new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
+            Header = new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
             ColumnDetails = new[] { new ColumnDetails { columnName = "harrumph", columnWidth = 50, isNullable = false, type = Data.DataType.String } },
-            Rows = new[] { new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "This is a test value." } } } } } }
+            Rows = new[] { new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "This is a test value." } } } } } }
          };
 
          target.Draw(table);
@@ -57,9 +57,9 @@ namespace Parquet.CLI.Test
 
          var table = new DisplayTable()
          {
-            Header = new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
+            Header = new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
             ColumnDetails = new[] { new ColumnDetails { columnName = "harrumph", columnWidth = columnWidth, isNullable = false, type = Data.DataType.String } },
-            Rows = new[] { new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "This is a test value." } } } } } }
+            Rows = new[] { new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "This is a test value." } } } } } }
          };
 
          target.Draw(table);
@@ -77,9 +77,9 @@ namespace Parquet.CLI.Test
 
          var table = new DisplayTable()
          {
-            Header = new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
+            Header = new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
             ColumnDetails = new[] { new ColumnDetails { columnName = "harrumph", columnWidth = columnWidth, isNullable = false, type = Data.DataType.String } },
-            Rows = new[] { new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "This is a test value." } } } } } }
+            Rows = new[] { new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "This is a test value." } } } } } }
          };
 
          target.Draw(table);
@@ -95,9 +95,9 @@ namespace Parquet.CLI.Test
 
          var table = new DisplayTable()
          {
-            Header = new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
+            Header = new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
             ColumnDetails = new[] { new ColumnDetails { columnName = "harrumph", columnWidth = columnWidth, isNullable = false, type = Data.DataType.String } },
-            Rows = new[] { new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "This is a test value." } } } } } }
+            Rows = new[] { new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "This is a test value." } } } } } }
          };
 
          target.Draw(table);
@@ -113,9 +113,9 @@ namespace Parquet.CLI.Test
 
          var table = new DisplayTable()
          {
-            Header = new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
+            Header = new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
             ColumnDetails = new[] { new ColumnDetails { columnName = "harrumph", columnWidth = columnWidth, isNullable = false, type = Data.DataType.String } },
-            Rows = new[] { new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "This is a test value." } } } } } }
+            Rows = new[] { new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "This is a test value." } } } } } }
          };
 
          target.Draw(table);
@@ -131,9 +131,9 @@ namespace Parquet.CLI.Test
 
          var table = new DisplayTable()
          {
-            Header = new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
+            Header = new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
             ColumnDetails = new[] { new ColumnDetails { columnName = "harrumph", columnWidth = columnWidth, isNullable = false, type = Data.DataType.String } },
-            Rows = new[] { new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "This is a test value." } } } } } }
+            Rows = new[] { new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "This is a test value." } } } } } }
          };
 
          target.Draw(table);

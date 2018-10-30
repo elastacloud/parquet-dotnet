@@ -167,7 +167,7 @@ namespace Parquet.CLI.Views
             {
                cells.Add(new BasicTableCell
                {
-                  CellLineCount = 1,
+                  
                   ContentAreas = new[] { new BasicCellContent
                      {
                         Value = viewModel.Rows[i][j].ToString()
@@ -190,7 +190,7 @@ namespace Parquet.CLI.Views
             Data.Field column = viewModel.Schema.Fields.ElementAt(i);
             headers.Add(new BasicTableCell
             {
-               CellLineCount = 1,
+               
                ContentAreas = new[]
                {
                   new BasicCellContent

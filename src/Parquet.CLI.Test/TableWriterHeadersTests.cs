@@ -18,7 +18,7 @@ namespace Parquet.CLI.Test
          var target = new TableWriter(mockOutputter.Object, new ViewPort(100, 100));
 
          var table = new DisplayTable() {
-            Header = new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } } ,
+            Header = new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } } ,
             ColumnDetails = new [] { new ColumnDetails { columnName = "harrumph", columnWidth = 10, isNullable = false, type = Data.DataType.String  } }
          };
 
@@ -35,7 +35,7 @@ namespace Parquet.CLI.Test
 
          var table = new DisplayTable()
          {
-            Header = new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
+            Header = new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
             ColumnDetails = new[] { new ColumnDetails { columnName = "harrumph", columnWidth = 10, isNullable = false, type = Data.DataType.String } }
          };
 
@@ -53,8 +53,8 @@ namespace Parquet.CLI.Test
          var table = new DisplayTable()
          {
             Header = new TableRow { Cells = new[] {
-               new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell1" } } },
-               new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell2" } } },
+               new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell1" } } },
+               new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell2" } } },
             } },
             ColumnDetails = new[] {
                new ColumnDetails { columnName = "harrumph", columnWidth = 10, isNullable = false, type = Data.DataType.String },
@@ -76,7 +76,7 @@ namespace Parquet.CLI.Test
 
          var table = new DisplayTable()
          {
-            Header = new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
+            Header = new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
             ColumnDetails = new[] { new ColumnDetails { columnName = "harrumph", columnWidth = 10, isNullable = false, type = Data.DataType.String } }
          };
 
@@ -92,7 +92,7 @@ namespace Parquet.CLI.Test
 
          var table = new DisplayTable()
          {
-            Header = new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
+            Header = new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell" } } } } },
             ColumnDetails = new[] { new ColumnDetails { columnName = "harrumph", columnWidth = 10, isNullable = false, type = Data.DataType.String } }
          };
 
@@ -110,7 +110,7 @@ namespace Parquet.CLI.Test
 
          var table = new DisplayTable()
          {
-            Header = new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell", ForegroundColor = ConsoleColor.Green } } } } },
+            Header = new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell", ForegroundColor = ConsoleColor.Green } } } } },
             ColumnDetails = new[] { new ColumnDetails { columnName = "harrumph", columnWidth = 10, isNullable = false, type = Data.DataType.String } }
          };
 
@@ -127,7 +127,7 @@ namespace Parquet.CLI.Test
 
          var table = new DisplayTable()
          {
-            Header = new TableRow { Cells = new[] { new BasicTableCell { CellLineCount = 1, ContentAreas = new[] { new BasicCellContent { Value = "TestCell", ForegroundColor = ConsoleColor.Green } } } } },
+            Header = new TableRow { Cells = new[] { new BasicTableCell {  ContentAreas = new[] { new BasicCellContent { Value = "TestCell", ForegroundColor = ConsoleColor.Green } } } } },
             ColumnDetails = new[] { new ColumnDetails { columnName = "harrumph", columnWidth = 10, isNullable = false, type = Data.DataType.String } }
          };
 
