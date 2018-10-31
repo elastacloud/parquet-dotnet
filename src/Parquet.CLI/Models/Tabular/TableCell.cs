@@ -40,7 +40,7 @@ namespace Parquet.CLI.Models.Tabular
       {
          foreach (ICellContent item in this.GetCellContentByLineOrdinal(lineOrdinal))
          {
-            string data = columnConstraints.GetFormattedValue(item.Value, displayNulls);
+            string data = columnConstraints.GetFormattedValue(item.Value, viewPort, displayNulls, verticalSeparator);
 
             if (IsOverlyLargeColumn(columnConstraints, viewPort, verticalSeparator))
             {
@@ -56,6 +56,15 @@ namespace Parquet.CLI.Models.Tabular
                   consoleOutputter.SetForegroundColor(ConsoleColor.Yellow);
                   consoleOutputter.BackgroundColor = ConsoleColor.Black;
                   consoleOutputter.Write(truncationIdentifier);
+                  consoleOutputter.ResetColor();
+               }
+               else
+               {
+                  if (item.ForegroundColor.HasValue)
+                  {
+                     consoleOutputter.SetForegroundColor(item.ForegroundColor.Value);
+                  }
+                  consoleOutputter.Write(data);
                   consoleOutputter.ResetColor();
                }
             }
