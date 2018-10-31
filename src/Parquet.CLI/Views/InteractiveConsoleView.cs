@@ -37,7 +37,8 @@ namespace Parquet.CLI.Views
          _currentSheet = unreadSheets.Pop();
          _currentFold = unreadFolds.Pop();
          DrawSheet(viewModel, _currentSheet, _currentFold, viewPort, settings.displayTypes, settings.displayNulls, settings.truncationIdentifier, settings.displayReferences);
-
+         Console.Clear();
+         Console.WriteLine("Exiting...");
       }
 
       public void Update(ViewModel viewModel, bool displayTypes, bool displayNulls, string truncationIdentifier, bool displayRefs)
@@ -85,7 +86,6 @@ namespace Parquet.CLI.Views
          displayTable.ColumnDetails = currentSheet.Columns.ToArray();
          displayTable.Rows = GenerateRowsFromFold(viewModel, currentFold, currentSheet);
          new Tablular.TableWriter(viewPort).Draw(displayTable);
-
 
          WriteSummary(viewModel, currentSheet, currentFold, displayNulls);
 
@@ -280,7 +280,7 @@ namespace Parquet.CLI.Views
             List<ColumnDetails> chosenColumns = new List<ColumnDetails>();
             foreach (ColumnDetails column in columns)
             {
-               if (runningTotal + column.columnWidth + verticalSeparator.Length > viewPort.Width)
+               if (runningTotal + column.columnWidth + verticalSeparator.Length >= viewPort.Width)
                {
                   if (!IsSingleOverlyLargeColumn(chosenColumns, column, viewPort))
                   {
