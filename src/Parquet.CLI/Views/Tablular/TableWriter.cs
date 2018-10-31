@@ -61,7 +61,7 @@ namespace Parquet.CLI.Views.Tablular
                TableCell cell = table.Header.Cells[h];
                
 
-               cell.Write(consoleOutputter, viewPort, 0, column);
+               cell.Write(consoleOutputter, viewPort, j, column);
                consoleOutputter.Write(verticalSeparator);
 
             }

@@ -170,7 +170,7 @@ namespace Parquet.CLI.Views
                   
                   ContentAreas = new[] { new BasicCellContent
                      {
-                        Value = viewModel.Rows[i][j].ToString()
+                        Value = viewModel.Rows[i][j]
                      }
                   }
                });
@@ -187,17 +187,23 @@ namespace Parquet.CLI.Views
          List<TableCell> headers = new List<TableCell>();
          for (int i = currentSheet.IndexStart; i < currentSheet.IndexEnd; i++)
          {
-            Data.Field column = viewModel.Schema.Fields.ElementAt(i);
+            ColumnDetails column = currentSheet.Columns.ElementAt(i - currentSheet.IndexStart);
+
+            var content = new List<ICellContent>();
+            content.Add(
+                  new BasicCellContent
+                  {
+                     Value = column.columnName
+                  });
+            if (_settings.displayTypes)
+            {
+               content.Add(new BreakingRuleContentArea());
+               content.Add(new BasicCellContent { ForegroundColor = ConsoleColor.Blue, Value = column.type.ToString() });
+            }
             headers.Add(new BasicTableCell
             {
                
-               ContentAreas = new[]
-               {
-                  new BasicCellContent
-                  {
-                     Value = column.Name
-                  }
-               }
+               ContentAreas = content.ToArray()
             });
          }
          row.Cells = headers.ToArray();
