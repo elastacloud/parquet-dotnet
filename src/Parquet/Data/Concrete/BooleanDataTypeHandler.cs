@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Parquet.Data;
+using Parquet.Thrift;
 
 namespace Parquet.Data.Concrete
 {
@@ -12,45 +14,45 @@ namespace Parquet.Data.Concrete
       {
       }
 
-      public override IList Read(Thrift.SchemaElement tse, BinaryReader reader, ParquetOptions formatOptions)
+      public override int Read(BinaryReader reader, SchemaElement tse, Array dest, int offset, ParquetOptions formatOptions)
       {
-         IList dest = CreateEmptyList(tse.IsNullable(), false, 0);
+         int start = offset;
 
          int ibit = 0;
+         bool[] bdest = (bool[])dest;
 
-         while(reader.BaseStream.Position < reader.BaseStream.Length)
+         while (reader.BaseStream.Position < reader.BaseStream.Length && offset < dest.Length)
          {
             byte b = reader.ReadByte();
 
-            while(ibit < 8)
+            while (ibit < 8 && offset < dest.Length)
             {
                bool set = ((b >> ibit++) & 1) == 1;
-               dest.Add(set);
+               bdest[offset++] = set;
             }
 
             ibit = 0;
          }
 
-         return dest;
+
+         return offset - start;
       }
 
       public override void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values)
       {
-         List<bool> lst = tse.IsNullable()
-            ? ((List<bool?>)values).Select(v => v.Value).ToList()
-            : (List<bool>)values;
          int n = 0;
          byte b = 0;
-         byte[] buffer = new byte[lst.Count / 8 + 1];
+         byte[] buffer = new byte[values.Count / 8 + 1];
          int ib = 0;
 
-         foreach (bool flag in lst)
+         foreach (bool flag in values)
          {
             if (flag)
             {
-               b |= (byte)(1 << n++);
+               b |= (byte)(1 << n);
             }
 
+            n++;
             if (n == 8)
             {
                buffer[ib++] = b;

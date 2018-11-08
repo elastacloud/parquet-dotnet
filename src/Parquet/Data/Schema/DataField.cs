@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Text;
+using Parquet.File;
 
 namespace Parquet.Data
 {
+   /// <summary>
+   /// Field containing actual data, unlike fields containing metadata.
+   /// </summary>
    public class DataField : Field, IEquatable<DataField>
    {
       /// <summary>
@@ -27,28 +29,43 @@ namespace Parquet.Data
       /// </summary>
       internal Type ClrType { get; private set; }
 
-      public DataField(string name, Type clrType) : this(name, Discover(clrType).dataType, Discover(clrType).hasNulls, Discover(clrType).isArray)
-      {
+      internal Type ClrNullableIfHasNullsType { get; private set; }
 
+      /// <summary>
+      /// Creates a new instance of <see cref="DataField"/> by name and CLR type.
+      /// </summary>
+      /// <param name="name">Field name</param>
+      /// <param name="clrType">CLR type of this field. The type is internally discovered and expanded into appropriate Parquet flags.</param>
+      public DataField(string name, Type clrType) 
+         : this(name,
+              Discover(clrType).dataType,
+              Discover(clrType).hasNulls,
+              Discover(clrType).isArray)
+      {
+         //todo: calls to Discover() can be killed by making a constructor method
       }
 
+      /// <summary>
+      /// Creates a new instance of <see cref="DataField"/> by specifying all the required attributes.
+      /// </summary>
+      /// <param name="name">Field name.</param>
+      /// <param name="dataType">Native Parquet type</param>
+      /// <param name="hasNulls">When true, the field accepts null values. Note that nullable values take slightly more disk space comparing to non-nullable.</param>
+      /// <param name="isArray">When true, each value of this field can have multiple values, similar to array in .NET</param>
       public DataField(string name, DataType dataType, bool hasNulls = true, bool isArray = false) : base(name, SchemaType.Data)
       {
          DataType = dataType;
          HasNulls = hasNulls;
          IsArray = isArray;
 
+         MaxRepetitionLevel = isArray ? 1 : 0;
+
          IDataTypeHandler handler = DataTypeFactory.Match(dataType);
          if (handler != null)
          {
             ClrType = handler.ClrType;
+            ClrNullableIfHasNullsType = hasNulls ? ClrType.GetNullable() : ClrType;
          }
-      }
-
-      public IList CreateEmptyList(bool isNullable, bool isArray)
-      {
-         IDataTypeHandler handler = DataTypeFactory.Match(DataType);
-         return handler.CreateEmptyList(isNullable, isArray, 0);
       }
 
       internal override string PathPrefix
@@ -60,11 +77,15 @@ namespace Parquet.Data
       }
 
       /// <summary>
-      /// Pretty prints
+      /// see
+      /// <see cref="ThriftFooter.GetLevels(Thrift.ColumnChunk, out int, out int)"/>
+      /// and
+      /// <see cref="BasicDataTypeHandler{TSystemType}.CreateSchemaElement(System.Collections.Generic.IList{Thrift.SchemaElement}, ref int, out int)"/>
       /// </summary>
-      public override string ToString()
+      internal override void PropagateLevels(int parentRepetitionLevel, int parentDefinitionLevel)
       {
-         return $"{Name}: {DataType} (nulls: {HasNulls}, array: {IsArray}, clr: {ClrType}, path: {Path})";
+         MaxRepetitionLevel = parentRepetitionLevel + (IsArray ? 1 : 0);
+         MaxDefinitionLevel = parentDefinitionLevel + (HasNulls ? 1 : 0);
       }
 
       /// <summary>
@@ -147,11 +168,6 @@ namespace Parquet.Data
          {
             baseType = baseType.GetNonNullable();
             hasNulls = true;
-         }
-
-         if (typeof(Row) == baseType)
-         {
-            throw new ArgumentException($"{typeof(Row)} is not supported. If you tried to declare a struct please use {typeof(StructField)} instead.");
          }
 
          IDataTypeHandler handler = DataTypeFactory.Match(baseType);

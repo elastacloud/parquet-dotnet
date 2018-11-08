@@ -11,12 +11,10 @@ namespace Parquet.File.Values
    //todo: this abstrtion is not useful and must die - create RLE encoding class instead for both reading and writing
    class RunLengthBitPackingHybridValuesReader
    {
-      public static List<int> Read(BinaryReader reader, int bitWidth)
+      public static int Read(BinaryReader reader, int bitWidth, int[] dest, int destOffset)
       {
          int length = GetRemainingLength(reader);
-         var result = new List<int>();
-         ReadRleBitpackedHybrid(reader, bitWidth, length, result);
-         return result;
+         return ReadRleBitpackedHybrid(reader, bitWidth, length, dest, destOffset);
       }
 
       /* from specs:
@@ -34,11 +32,12 @@ namespace Parquet.File.Values
        * repeated-value := value that is repeated, using a fixed-width of round-up-to-next-byte(bit-width)
        */
 
-      public static void ReadRleBitpackedHybrid(BinaryReader reader, int bitWidth, int length, List<int> destination)
+      public static int ReadRleBitpackedHybrid(BinaryReader reader, int bitWidth, int length, int[] dest, int offset)
       {
          if (length == 0) length = reader.ReadInt32();
 
          long start = reader.BaseStream.Position;
+         int startOffset = offset;
          while (reader.BaseStream.Position - start < length)
          {
             int header = ReadUnsignedVarInt(reader);
@@ -46,19 +45,21 @@ namespace Parquet.File.Values
 
             if (isRle)
             {
-               ReadRle(header, reader, bitWidth, destination);
+               offset += ReadRle(header, reader, bitWidth, dest, offset);
             }
             else
             {
-               ReadBitpacked(header, reader, bitWidth, destination);
+               offset += ReadBitpacked(header, reader, bitWidth, dest, offset);
             }
          }
+
+         return offset - startOffset;
       }
+
 
       /// <summary>
       /// Read run-length encoded run from the given header and bit length.
       /// </summary>
-      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       private static void ReadRle(int header, BinaryReader reader, int bitWidth, List<int> destination)
       {
          // The count is determined from the header and the width is used to grab the
@@ -72,9 +73,33 @@ namespace Parquet.File.Values
          destination.AddRange(Enumerable.Repeat(value, count));
       }
 
-      [MethodImpl(MethodImplOptions.AggressiveInlining)]
-      private static void ReadBitpacked(int header, BinaryReader reader, int bitWidth, List<int> destination)
+      private static int ReadRle(int header, BinaryReader reader, int bitWidth, int[] dest, int offset)
       {
+         // The count is determined from the header and the width is used to grab the
+         // value that's repeated. Yields the value repeated count times.
+
+         int start = offset;
+         int count = header >> 1;
+         if (count == 0) return 0; //important not to continue reading as will result in data corruption in data page further
+         int width = (bitWidth + 7) / 8; //round up to next byte
+         byte[] data = reader.ReadBytes(width);
+         int value = ReadIntOnBytes(data);
+
+         for(int i = 0; i < count; i++)
+         {
+            //as arrays are pre-allocated on max length and RLE can go over max length due to 8-bit boundary, do the check
+            if (offset < dest.Length)
+            {
+               dest[offset++] = value;
+            }
+         }
+
+         return offset - start;
+      }
+
+      private static int ReadBitpacked(int header, BinaryReader reader, int bitWidth, int[] dest, int offset)
+      {
+         int start = offset;
          int groupCount = header >> 1;
          int count = groupCount * 8;
          int byteCount = (bitWidth * count) / 8;
@@ -90,7 +115,7 @@ namespace Parquet.File.Values
          int total = byteCount * 8;
          int bwl = 8;
          int bwr = 0;
-         while (total >= bitWidth)
+         while (total >= bitWidth && offset < dest.Length)
          {
             if (bwr >= 8)
             {
@@ -104,7 +129,7 @@ namespace Parquet.File.Values
                total -= bitWidth;
                bwr += bitWidth;
 
-               destination.Add(r);
+               dest[offset++] = r;
             }
             else if (i + 1 < byteCount)
             {
@@ -113,12 +138,15 @@ namespace Parquet.File.Values
                bwl += 8;
             }
          }
+
+         return offset - start;
       }
+
+
 
       /// <summary>
       /// Read a value using the unsigned, variable int encoding.
       /// </summary>
-      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       private static int ReadUnsignedVarInt(BinaryReader reader)
       {
          int result = 0;
@@ -135,7 +163,6 @@ namespace Parquet.File.Values
          return result;
       }
 
-      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       private static int ReadIntOnBytes(byte[] data)
       {
          switch (data.Length)
@@ -155,13 +182,11 @@ namespace Parquet.File.Values
          }
       }
 
-      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       private static int MaskForBits(int width)
       {
          return (1 << width) - 1;
       }
 
-      [MethodImpl(MethodImplOptions.AggressiveInlining)]
       private static int GetRemainingLength(BinaryReader reader)
       {
          return (int)(reader.BaseStream.Length - reader.BaseStream.Position);

@@ -25,24 +25,25 @@ namespace Parquet.Data.Concrete
          tse.Type_length = 12;
       }
 
-
-      public override IList Read(Thrift.SchemaElement tse, BinaryReader reader, ParquetOptions formatOptions)
+      public override int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset, ParquetOptions formatOptions)
       {
-         IList result = CreateEmptyList(tse.IsNullable(), false, 0);
          int typeLength = tse.Type_length;
-         if (typeLength == 0) return result;
+         if (typeLength == 0) return 0;
+         int idx = offset;
+         Interval[] tdest = (Interval[])dest;
 
-         while(reader.BaseStream.Position + 12 <= reader.BaseStream.Length)
+         while (reader.BaseStream.Position + 12 <= reader.BaseStream.Length)
          {
             // assume this is the number of months / days / millis offset from the Julian calendar
             int months = reader.ReadInt32();
             int days = reader.ReadInt32();
             int millis = reader.ReadInt32();
+            var e = new Interval(months, days, millis);
 
-            result.Add(new Interval(months, days, millis));
+            tdest[idx++] = e;
          }
 
-         return result;
+         return idx - offset;
       }
 
       public override void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values)

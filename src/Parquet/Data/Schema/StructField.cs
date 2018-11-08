@@ -9,7 +9,6 @@ namespace Parquet.Data
    /// </summary>
    public class StructField : Field, IEquatable<StructField>
    {
-      private string _path;
       private readonly List<Field> _fields = new List<Field>();
 
       /// <summary>
@@ -48,16 +47,19 @@ namespace Parquet.Data
          }
       }
 
+      internal override void PropagateLevels(int parentRepetitionLevel, int parentDefinitionLevel)
+      {
+         //struct is a container, it doesn't have any levels
+
+         foreach(Field f in Fields)
+         {
+            f.PropagateLevels(parentRepetitionLevel, parentDefinitionLevel);
+         }
+      }
+
       private StructField(string name) : base(name, SchemaType.Struct)
       {
 
-      }
-
-      public override string ToString()
-      {
-         string fields = string.Join(", ", Fields.Select(f => f.ToString()));
-
-         return $"{Name}: [{fields}]";
       }
 
       internal static StructField CreateWithNoElements(string name)
@@ -75,6 +77,11 @@ namespace Parquet.Data
          _fields.Add(se);
       }
 
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="other"></param>
+      /// <returns></returns>
       public bool Equals(StructField other)
       {
          if (ReferenceEquals(null, other)) return false;
@@ -90,6 +97,11 @@ namespace Parquet.Data
          return true;
       }
 
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="obj"></param>
+      /// <returns></returns>
       public override bool Equals(object obj)
       {
          if (ReferenceEquals(null, obj)) return false;
@@ -99,6 +111,10 @@ namespace Parquet.Data
          return Equals((StructField)obj);
       }
 
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <returns></returns>
       public override int GetHashCode()
       {
          return Name.GetHashCode() *

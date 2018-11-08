@@ -19,9 +19,26 @@ namespace Parquet.Data
       public string Name { get; private set; }
 
       /// <summary>
-      /// Only used internally!
+      /// Gets Parquet column path. For non-nested columns always equals to column <see cref="Name"/> otherwise contains
+      /// a dot (.) separated path to the column within Parquet file. Note that this is a physical path which depends on field
+      /// schema and you shouldn't build any reasonable business logic based on it.
       /// </summary>
-      internal string Path { get; set; }
+      public string Path { get; internal set; }
+
+      /// <summary>
+      /// Max repetition level
+      /// </summary>
+      public int MaxRepetitionLevel { get; internal set; }
+
+      /// <summary>
+      /// Max definition level
+      /// </summary>
+      public int MaxDefinitionLevel { get; internal set; }
+
+      /// <summary>
+      /// Used internally for serialisation
+      /// </summary>
+      internal string ClrPropName { get; set; }
 
       internal virtual string PathPrefix { set { } }
 
@@ -36,7 +53,7 @@ namespace Parquet.Data
 
          if(Name.Contains(Schema.PathSeparator))
          {
-            throw new ArgumentException($"'{Schema.PathSeparator}' is not allowed in field name as it's used internally as path separator");
+            throw new ArgumentException($"'{Schema.PathSeparator}' is not allowed in field name as it's used in Apache Parquet format as field path separator.");
          }
 
          SchemaType = schemaType;
@@ -45,11 +62,50 @@ namespace Parquet.Data
 
       #region [ Internal Helpers ]
 
+      /// <summary>
+      /// Called by schema when field hierarchy is constructed, so that fields can calculate levels as this is
+      /// done in reverse order of construction and needs to be done after data is ready
+      /// </summary>
+      internal abstract void PropagateLevels(int parentRepetitionLevel, int parentDefinitionLevel);
+
+      internal int[] GenerateRepetitions(int count)
+      {
+         int[] rl = new int[count];
+
+         if(count > 0)
+         {
+            rl[0] = 0;
+         }
+
+         int mrl = MaxRepetitionLevel;
+         for(int i = 1; i < count; i++)
+         {
+            rl[i] = mrl;
+         }
+
+         return rl;
+      }
+
       internal virtual void Assign(Field field)
       {
          //only used by some schema fields internally to help construct a field hierarchy
       }
 
+      internal bool Equals(Thrift.SchemaElement tse)
+      {
+         if (ReferenceEquals(tse, null)) return false;
+
+         return tse.Name == Name;
+      }
+
       #endregion
+
+      /// <summary>
+      /// pretty prints
+      /// </summary>
+      public override string ToString()
+      {
+         return $"{SchemaType} {Path}";
+      }
    }
 }

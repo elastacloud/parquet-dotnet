@@ -8,6 +8,22 @@ namespace Parquet
 {
    static class TypeExtensions
    {
+      /// <summary>
+      /// Creates a generic typed list of elements of this type.
+      /// </summary>
+      public static IList CreateGenericList(this Type t)
+      {
+         Type rt = typeof(List<>).MakeGenericType(t);
+
+         return (IList)Activator.CreateInstance(rt);
+      }
+
+      /// <summary>
+      /// Checks if this type implements generic IEnumerable or an array.
+      /// </summary>
+      /// <param name="t"></param>
+      /// <param name="baseType"></param>
+      /// <returns></returns>
       public static bool TryExtractEnumerableType(this Type t, out Type baseType)
       {
          if(typeof(byte[]) == t)
@@ -86,6 +102,13 @@ namespace Parquet
             (ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(Nullable<>));
       }
 
+      public static bool IsSystemNullable(this Type t)
+      {
+         TypeInfo ti = t.GetTypeInfo();
+
+         return ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(Nullable<>);
+      }
+
       public static Type GetNonNullable(this Type t)
       {
          TypeInfo ti = t.GetTypeInfo();
@@ -94,10 +117,21 @@ namespace Parquet
          {
             return t;
          }
-         else
+
+         return ti.GenericTypeArguments[0];
+      }
+
+      public static Type GetNullable(this Type t)
+      {
+         TypeInfo ti = t.GetTypeInfo();
+
+         if(ti.IsClass)
          {
-            return ti.GenericTypeArguments[0];
+            return t;
          }
+
+         Type nt = typeof(Nullable<>);
+         return nt.MakeGenericType(t);
       }
 
       public static bool IsSimple(this Type t)

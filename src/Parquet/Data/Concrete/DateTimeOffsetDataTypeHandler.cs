@@ -56,26 +56,19 @@ namespace Parquet.Data.Concrete
 
       }
 
-      public override IList Read(Thrift.SchemaElement tse, BinaryReader reader, ParquetOptions formatOptions)
+      public override int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset, ParquetOptions formatOptions)
       {
-         IList result = CreateEmptyList(tse.IsNullable(), false, 0);
-
          switch(tse.Type)
          {
             case Thrift.Type.INT32:
-               ReadAsInt32(reader, result);
-               break;
+               return ReadAsInt32(reader, (DateTimeOffset[])dest, offset);
             case Thrift.Type.INT64:
-               ReadAsInt64(reader, result);
-               break;
+               return ReadAsInt64(reader, (DateTimeOffset[])dest, offset);
             case Thrift.Type.INT96:
-               ReadAsInt96(reader, result);
-               break;
+               return ReadAsInt96(reader, (DateTimeOffset[])dest, offset);
             default:
-               throw new InvalidDataException($"data type '{tse.Type}' does not represent any date types");
+               throw new NotSupportedException();
          }
-
-         return result;
       }
 
       public override void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values)
@@ -105,6 +98,19 @@ namespace Parquet.Data.Concrete
          }
       }
 
+      private int ReadAsInt32(BinaryReader reader, DateTimeOffset[] dest, int offset)
+      {
+         int idx = offset;
+         while (reader.BaseStream.Position + 4 <= reader.BaseStream.Length)
+         {
+            int iv = reader.ReadInt32();
+            DateTimeOffset e = new DateTimeOffset(iv.FromUnixTime(), TimeSpan.Zero);
+            dest[idx++] = e;
+         }
+
+         return idx - offset;
+      }
+
       private void WriteAsInt32(BinaryWriter writer, IList values)
       {
          foreach (DateTimeOffset dto in values)
@@ -121,6 +127,20 @@ namespace Parquet.Data.Concrete
             long lv = reader.ReadInt64();
             result.Add((DateTimeOffset)(lv.FromUnixTime()));
          }
+      }
+
+      private int ReadAsInt64(BinaryReader reader, DateTimeOffset[] dest, int offset)
+      {
+         int idx = offset;
+
+         while (reader.BaseStream.Position + 8 <= reader.BaseStream.Length)
+         {
+            long lv = reader.ReadInt64();
+            DateTimeOffset dto = (DateTimeOffset)(lv.FromUnixTime());
+            dest[idx++] = dto;
+         }
+
+         return idx - offset;
       }
 
       private void WriteAsInt64(BinaryWriter writer, IList values)
@@ -140,6 +160,18 @@ namespace Parquet.Data.Concrete
             DateTimeOffset dt = nano;
             result.Add(dt);
          }
+      }
+
+      private int ReadAsInt96(BinaryReader reader, DateTimeOffset[] dest, int offset)
+      {
+         int idx = offset;
+         while (reader.BaseStream.Position + 12 <= reader.BaseStream.Length)
+         {
+            var nano = new NanoTime(reader.ReadBytes(12), 0);
+            DateTimeOffset dt = nano;
+            dest[idx++] = dt;
+         }
+         return idx - offset;
       }
 
       private void WriteAsInt96(BinaryWriter writer, IList values)

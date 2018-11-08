@@ -1,46 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using Parquet.Data;
 using Xunit;
 
 namespace Parquet.Test
 {
-   public class RepeatableFieldsTest
+   public class RepeatableFieldsTest : TestBase
    {
       [Fact]
       public void Simple_repeated_field_write_read()
       {
-         var ds = new DataSet(
-            new DataField<int>("id"),
-            new DataField<IEnumerable<string>>("items"));
+         // arrange 
+         var field = new DataField<IEnumerable<int>>("items");
+         var column = new DataColumn(
+            field,
+            new int[] { 1, 2, 3, 4 },
+            new int[] { 0, 1, 0, 1 });
 
-         ds.Add(1, new[] { "one", "two" });
+         // act
+         DataColumn rc = WriteReadSingleColumn(field, column);
 
-         DataSet ds1 = DataSetGenerator.WriteRead(ds);
+         // assert
+         Assert.Equal(new int[] { 1, 2, 3, 4 }, rc.Data);
+         Assert.Equal(new int[] { 0, 1, 0, 1 }, rc.RepetitionLevels);
 
-         Assert.Equal(1, ds1[0][0]);
-         Assert.Equal(new[] { "one", "two" }, ds1[0][1]);
-      }
+         // https://github.com/elastacloud/parquet-dotnet/blob/final-v2/src/Parquet/File/RepetitionPack.cs
 
-      [Fact]
-      public void Repeatable_field_writes_reads()
-      {
-         var ds = new DataSet(new DataField<int>("id"), new DataField<IEnumerable<string>>("repeats"));
-         ds.Add(1, new[] { "one", "two", "three" });
+         // tests: https://github.com/elastacloud/parquet-dotnet/blob/final-v2/src/Parquet.Test/RepetitionsTest.cs
 
-         Assert.Equal("{1;[one;two;three]}", DataSetGenerator.WriteRead(ds)[0].ToString());
-      }
-
-      [Fact]
-      public void Repeatable_field_with_no_values_writes_reads()
-      {
-         var ds = new DataSet(new DataField<int>("id"), new DataField<IEnumerable<string>>("repeats"));
-         ds.Add(1, new string[0]);
-
-         DataSet ds1 = ds.WriteRead();
-
-         Assert.Equal("{1;[]}", ds1[0].ToString());
       }
    }
 }

@@ -4,20 +4,26 @@ using System.Collections.Generic;
 
 namespace Parquet.Data
 {
+   /// <summary>
+   /// Implements a dictionary field
+   /// </summary>
    public class MapField : Field
    {
       internal const string ContainerName = "key_value";
 
-      internal DataField Key { get; private set; }
+      /// <summary>
+      /// Data field used as a key
+      /// </summary>
+      public Field Key { get; private set; }
 
-      internal DataField Value { get; private set; }
+      /// <summary>
+      /// Data field used as a value
+      /// </summary>
+      public Field Value { get; private set; }
 
-      public DataType KeyType => Key.DataType;
-
-      public DataType ValueType => Value.DataType;
-
-      //todo: add overload for CLR generics
-
+      /// <summary>
+      /// Declares a map field
+      /// </summary>
       public MapField(string name, DataField keyField, DataField valueField)
          : base(name, SchemaType.Map)
       {
@@ -38,11 +44,11 @@ namespace Parquet.Data
       {
          if(Key == null)
          {
-            Key = (DataField)se;
+            Key = se;
          }
          else if(Value == null)
          {
-            Value = (DataField)se;
+            Value = se;
          }
          else
          {
@@ -60,43 +66,57 @@ namespace Parquet.Data
          }
       }
 
-      internal IDictionary CreateCellValue(IDictionary<string, IList> pathToValues, int index)
+      internal override void PropagateLevels(int parentRepetitionLevel, int parentDefinitionLevel)
       {
-         IList keys = (IList)(pathToValues[Key.Path][index]);
-         IList values = (IList)(pathToValues[Value.Path][index]);
+         int rl = parentRepetitionLevel;
+         int dl = parentDefinitionLevel;
 
-         Type gt = typeof(Dictionary<,>);
-         Type masterType = gt.MakeGenericType(Key.ClrType, Value.ClrType);
-         IDictionary result = (IDictionary)Activator.CreateInstance(masterType);
+         //"container" is optional and adds on 1 DL
+         dl += 1;
 
-         for (int i = 0; i < keys.Count; i++)
-         {
-            result.Add(keys[i], values[i]);
-         }
+         //"key_value" is repeated therefore it adds on 1 RL + 1 DL
+         rl += 1;
+         dl += 1;
 
-         return result;
+         //push to children
+         Key.PropagateLevels(rl, dl);
+         Value.PropagateLevels(rl, dl);
       }
 
-      internal void AddElement(IList keys, IList values, IDictionary dictionary)
+      /// <summary>
+      /// Creates an empty dictionary to keep values for this map field. Only works when both key and value are <see cref="DataField"/>
+      /// </summary>
+      /// <returns></returns>
+      internal IDictionary CreateSimpleDictionary()
       {
-         IDataTypeHandler keyHandler = DataTypeFactory.Match(Key.DataType);
-         IDataTypeHandler valueHandler = DataTypeFactory.Match(Value.DataType);
+         Type genericType = typeof(Dictionary<,>);
+         Type concreteType = genericType.MakeGenericType(
+            ((DataField)Key).ClrNullableIfHasNullsType,
+            ((DataField)Value).ClrNullableIfHasNullsType);
 
-         IList keysList = keyHandler.CreateEmptyList(Key.HasNulls, false, dictionary.Count);
-         IList valuesList = valueHandler.CreateEmptyList(Value.HasNulls, false, dictionary.Count);
-
-         foreach (object v in dictionary.Keys) keysList.Add(v);
-         foreach (object v in dictionary.Values) valuesList.Add(v);
-
-         keys.Add(keysList);
-         values.Add(valuesList);
+         return (IDictionary)Activator.CreateInstance(concreteType);
       }
 
-      public override bool Equals(Object obj)
+      /// <summary>
+      /// <see cref="Equals(object)"/>
+      /// </summary>
+      public override bool Equals(object obj)
       {
+         if (ReferenceEquals(obj, null)) return false;
+         if (ReferenceEquals(obj, this)) return true;
+         if (obj.GetType() != typeof(MapField)) return false;
+
          MapField other = (MapField)obj;
-         return Name.Equals(other.Name) && KeyType.Equals(other.KeyType) && ValueType.Equals(other.ValueType);
+
+         return Name.Equals(other.Name) && Key.Equals(other.Key) && Value.Equals(other.Value);
       }
-   
+
+      /// <summary>
+      /// <see cref="GetHashCode"/>
+      /// </summary>
+      public override int GetHashCode()
+      {
+         return Name.GetHashCode() * Key.GetHashCode() * Value.GetHashCode();
+      }
    }
 }

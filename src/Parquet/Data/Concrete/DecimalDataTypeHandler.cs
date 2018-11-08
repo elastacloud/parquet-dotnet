@@ -64,26 +64,22 @@ namespace Parquet.Data.Concrete
          }
       }
 
-      public override IList Read(Thrift.SchemaElement tse, BinaryReader reader, ParquetOptions formatOptions)
+      public override int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset, ParquetOptions formatOptions)
       {
-         IList result = CreateEmptyList(tse.IsNullable(), false, 0);
+         decimal[] ddest = (decimal[])dest;
 
-         switch(tse.Type)
+         switch (tse.Type)
          {
             case Thrift.Type.INT32:
-               ReadAsInt32(tse, reader, result);
-               break;
+               return ReadAsInt32(tse, reader, ddest, offset);
             case Thrift.Type.INT64:
-               ReadAsInt64(tse, reader, result);
-               break;
+               return ReadAsInt64(tse, reader, ddest, offset);
             case Thrift.Type.FIXED_LEN_BYTE_ARRAY:
-               ReadAsFixedLengthByteArray(tse, reader, result);
-               break;
+               return ReadAsFixedLengthByteArray(tse, reader, ddest, offset);
             default:
                throw new InvalidDataException($"data type '{tse.Type}' does not represent a decimal");
          }
 
-         return result;
       }
 
       public override void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values)
@@ -115,6 +111,20 @@ namespace Parquet.Data.Concrete
          }
       }
 
+      private int ReadAsInt32(Thrift.SchemaElement tse, BinaryReader reader, decimal[] dest, int offset)
+      {
+         int start = offset;
+         decimal scaleFactor = (decimal)Math.Pow(10, -tse.Scale);
+         while (reader.BaseStream.Position + 4 <= reader.BaseStream.Length)
+         {
+            int iv = reader.ReadInt32();
+            decimal dv = iv * scaleFactor;
+            dest[offset++] = dv;
+         }
+         return offset - start;
+      }
+
+
       private void WriteAsInt32(Thrift.SchemaElement tse, BinaryWriter writer, IList values)
       {
          double scaleFactor = Math.Pow(10, tse.Scale);
@@ -143,6 +153,20 @@ namespace Parquet.Data.Concrete
             result.Add(dv);
          }
       }
+
+      private int ReadAsInt64(Thrift.SchemaElement tse, BinaryReader reader, decimal[] dest, int offset)
+      {
+         int start = offset;
+         decimal scaleFactor = (decimal)Math.Pow(10, -tse.Scale);
+         while (reader.BaseStream.Position + 8 <= reader.BaseStream.Length)
+         {
+            long lv = reader.ReadInt64();
+            decimal dv = lv * scaleFactor;
+            dest[offset++] = dv;
+         }
+         return offset - start;
+      }
+
 
       private void WriteAsInt64(Thrift.SchemaElement tse, BinaryWriter writer, IList values)
       {
@@ -176,6 +200,24 @@ namespace Parquet.Data.Concrete
             decimal dc = new BigDecimal(itemData, tse);
             result.Add(dc);
          }
+      }
+
+      private int ReadAsFixedLengthByteArray(Thrift.SchemaElement tse, BinaryReader reader, decimal[] dest, int offset)
+      {
+         int start = offset;
+         int typeLength = tse.Type_length;
+
+         //can't read if there is no type length set
+         if (typeLength == 0) return 0;
+
+         while (reader.BaseStream.Position + typeLength <= reader.BaseStream.Length)
+         {
+            byte[] itemData = reader.ReadBytes(typeLength);
+            decimal dc = new BigDecimal(itemData, tse);
+            dest[offset++] = dc;
+         }
+
+         return offset - start;
       }
 
       private void WriteAsFixedLengthByteArray(Thrift.SchemaElement tse, BinaryWriter writer, IList values)

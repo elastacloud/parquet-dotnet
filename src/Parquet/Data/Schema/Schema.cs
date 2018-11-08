@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Parquet.Data.Predicates;
 
 namespace Parquet.Data
 {
@@ -27,34 +26,46 @@ namespace Parquet.Data
       /// Initializes a new instance of the <see cref="Schema"/> class from schema elements.
       /// </summary>
       /// <param name="fields">The elements.</param>
-      public Schema(IEnumerable<Field> fields)
+      public Schema(IReadOnlyCollection<Field> fields) : this(fields.ToList())
       {
-         _fields = fields.ToList();
+         if (fields == null)
+         {
+            throw new ArgumentNullException(nameof(fields));
+         }
       }
 
       /// <summary>
       /// Initializes a new instance of the <see cref="Schema"/> class.
       /// </summary>
       /// <param name="fields">The elements.</param>
-      public Schema(params Field[] fields)
+      public Schema(params Field[] fields) : this(fields.ToList())
       {
-         _fields = fields.ToList();
+         if (fields == null)
+         {
+            throw new ArgumentNullException(nameof(fields));
+         }
+      }
+
+      private Schema(List<Field> fields)
+      {
+         if(fields.Count == 0)
+         {
+            throw new ArgumentException("at least one field is required", nameof(fields));
+         }
+
+         _fields = fields;
+
+         //set levels now, after schema is constructeds
+         foreach(Field field in fields)
+         {
+            field.PropagateLevels(0, 0);
+         }
       }
 
       /// <summary>
       /// Gets the schema elements
       /// </summary>
       public IReadOnlyList<Field> Fields => _fields;
-
-      /// <summary>
-      /// Gets the number of elements in the schema
-      /// </summary>
-      public int Length => _fields.Count;
-
-      /// <summary>
-      /// Gets the column names as string array
-      /// </summary>
-      public string[] FieldNames => _fields.Select(e => e.Name).ToArray();
 
       /// <summary>
       /// Get schema element by index
@@ -67,39 +78,46 @@ namespace Parquet.Data
       }
 
       /// <summary>
-      /// Get schema element by name
+      /// Gets a flat list of all data fields in this schema
       /// </summary>
-      /// <param name="name">Schema element name</param>
-      /// <returns>Schema element</returns>
-      public Field this[string name]
+      /// <returns></returns>
+      public DataField[] GetDataFields()
       {
-         get
+         var result = new List<DataField>();
+
+         void analyse(Field f)
          {
-            Field result = _fields.FirstOrDefault(e => e.Name == name);
-
-            if (result == null) throw new ArgumentException($"schema element '{name}' not found", nameof(name));
-
-            return result;
+            switch (f.SchemaType)
+            {
+               case SchemaType.Data:
+                  result.Add((DataField)f);
+                  break;
+               case SchemaType.List:
+                  analyse(((ListField)f).Item);
+                  break;
+               case SchemaType.Map:
+                  MapField mf = (MapField)f;
+                  analyse(mf.Key);
+                  analyse(mf.Value);
+                  break;
+               case SchemaType.Struct:
+                  StructField sf = (StructField)f;
+                  traverse(sf.Fields);
+                  break;
+            }
          }
-      }
 
-      /// <summary>
-      /// Gets the column index by schema element
-      /// </summary>
-      /// <returns>Element index or -1 if not found</returns>
-      public int GetFieldIndex(Field field)
-      {
-         for (int i = 0; i < _fields.Count; i++)
-            if (field.Equals(_fields[i])) return i;
+         void traverse(IEnumerable<Field> fields)
+         {
+            foreach(Field f in fields)
+            {
+               analyse(f);
+            }
+         }
 
-         return -1;
-      }
+         traverse(Fields);
 
-      internal Schema Filter(FieldPredicate[] predicates)
-      {
-         if (predicates == null) return this;
-
-         return new Schema(_fields.Where(f => predicates.Any(p => p.IsMatch(f))));
+         return result.ToArray();
       }
 
       /// <summary>
@@ -124,6 +142,9 @@ namespace Parquet.Data
          return true;
       }
 
+      /// <summary>
+      /// Compares this schema to <paramref name="other"/> and produces a human readable message describing the differences.
+      /// </summary>
       public string GetNotEqualsMessage(Schema other, string thisName, string otherName)
       {
          if(_fields.Count != other._fields.Count)
@@ -184,6 +205,8 @@ namespace Parquet.Data
          return _fields.Aggregate(1, (current, se) => current * se.GetHashCode());
       }
 
+      /// <summary>
+      /// </summary>
       public override string ToString()
       {
          var sb = new StringBuilder();

@@ -1,23 +1,26 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2009
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parquet", "Parquet\Parquet.csproj", "{A0507D42-940E-4EF9-BD33-46BB6561A2F5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{C2CC1962-DE4B-4489-9EE7-C609A2C1BFBB}"
 	ProjectSection(SolutionItems) = preProject
-		..\doc\complex-list.md = ..\doc\complex-list.md
-		..\doc\complex-map.md = ..\doc\complex-map.md
-		..\doc\complex-struct.md = ..\doc\complex-struct.md
+		..\doc\arrow.md = ..\doc\arrow.md
+		..\doc\complex-types.md = ..\doc\complex-types.md
 		..\doc\dataset.md = ..\doc\dataset.md
+		..\doc\diagrams.vsdx = ..\doc\diagrams.vsdx
 		..\doc\features.md = ..\doc\features.md
-		..\doc\json.md = ..\doc\json.md
+		..\doc\parq.md = ..\doc\parq.md
 		..\doc\parquet-getting-started.md = ..\doc\parquet-getting-started.md
-		..\doc\performance.md = ..\doc\performance.md
+		..\doc\perf.md = ..\doc\perf.md
+		..\doc\PRIVACY.md = ..\doc\PRIVACY.md
 		..\doc\reading.md = ..\doc\reading.md
 		..\README.md = ..\README.md
+		..\doc\rows.md = ..\doc\rows.md
 		..\doc\schema.md = ..\doc\schema.md
+		..\doc\serialisation.md = ..\doc\serialisation.md
 		..\doc\types.md = ..\doc\types.md
 		..\doc\writing.md = ..\doc\writing.md
 		..\doc\xboxone.md = ..\doc\xboxone.md
@@ -33,8 +36,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{60294E19-6F8D-4D78-9A62-C50489095484}"
 	ProjectSection(SolutionItems) = preProject
 		..\.editorconfig = ..\.editorconfig
-		..\appveyor.ps1 = ..\appveyor.ps1
 		..\appveyor.yml = ..\appveyor.yml
+		..\build.ini = ..\build.ini
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
@@ -49,9 +52,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{AB82
 		..\.github\PULL_REQUEST_TEMPLATE.md = ..\.github\PULL_REQUEST_TEMPLATE.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parquet.Json", "Parquet.Json\Parquet.Json.csproj", "{08326D63-E89F-4DA0-90C8-91F5D2849B66}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpArrow", "SharpArrow\SharpArrow.csproj", "{066445DA-B273-4E70-A971-D56C8180F7BC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parquet.Json.Test", "Parquet.Json.Test\Parquet.Json.Test.csproj", "{544C299B-4CB6-47E8-96CA-B957F55E148F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpArrow.Test", "SharpArrow.Test\SharpArrow.Test.csproj", "{FC48854B-6732-4BCD-B6D3-F6AC35231EF0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parquet.CLI", "Parquet.CLI\Parquet.CLI.csproj", "{F2C35F5E-E92E-47F8-945C-DC6726FC3CF6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,14 +76,18 @@ Global
 		{CBF02EBF-EB36-42AA-8557-B95CEF5FD175}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CBF02EBF-EB36-42AA-8557-B95CEF5FD175}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CBF02EBF-EB36-42AA-8557-B95CEF5FD175}.Release|Any CPU.Build.0 = Release|Any CPU
-		{08326D63-E89F-4DA0-90C8-91F5D2849B66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{08326D63-E89F-4DA0-90C8-91F5D2849B66}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{08326D63-E89F-4DA0-90C8-91F5D2849B66}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{08326D63-E89F-4DA0-90C8-91F5D2849B66}.Release|Any CPU.Build.0 = Release|Any CPU
-		{544C299B-4CB6-47E8-96CA-B957F55E148F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{544C299B-4CB6-47E8-96CA-B957F55E148F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{544C299B-4CB6-47E8-96CA-B957F55E148F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{544C299B-4CB6-47E8-96CA-B957F55E148F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{066445DA-B273-4E70-A971-D56C8180F7BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{066445DA-B273-4E70-A971-D56C8180F7BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{066445DA-B273-4E70-A971-D56C8180F7BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{066445DA-B273-4E70-A971-D56C8180F7BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC48854B-6732-4BCD-B6D3-F6AC35231EF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC48854B-6732-4BCD-B6D3-F6AC35231EF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC48854B-6732-4BCD-B6D3-F6AC35231EF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC48854B-6732-4BCD-B6D3-F6AC35231EF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2C35F5E-E92E-47F8-945C-DC6726FC3CF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2C35F5E-E92E-47F8-945C-DC6726FC3CF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2C35F5E-E92E-47F8-945C-DC6726FC3CF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2C35F5E-E92E-47F8-945C-DC6726FC3CF6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -87,10 +96,31 @@ Global
 		{8B0A6566-6722-4550-8EF2-1D91DF188F9B} = {3F47B841-9074-4317-8ACA-0F2EEA34FA62}
 		{CBF02EBF-EB36-42AA-8557-B95CEF5FD175} = {3F47B841-9074-4317-8ACA-0F2EEA34FA62}
 		{AB829BBB-EF87-4038-8D32-E1C1629F357C} = {60294E19-6F8D-4D78-9A62-C50489095484}
-		{544C299B-4CB6-47E8-96CA-B957F55E148F} = {3F47B841-9074-4317-8ACA-0F2EEA34FA62}
+		{FC48854B-6732-4BCD-B6D3-F6AC35231EF0} = {3F47B841-9074-4317-8ACA-0F2EEA34FA62}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B5C12140-A3BF-47C9-A4AD-91F7C4682804}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true

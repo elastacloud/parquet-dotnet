@@ -5,6 +5,9 @@
    /// </summary>
    public enum DataType
    {
+      /// <summary>
+      /// Type is not specified, shouldn't be used.
+      /// </summary>
       Unspecified,
 
       /// <summary>
@@ -95,21 +98,6 @@
       /// <summary>
       /// Interval
       /// </summary>
-      Interval/*,
-
-      /// <summary>
-      /// List of elements
-      /// </summary>
-      List,
-
-      /// <summary>
-      /// Structure containing other elements
-      /// </summary>
-      Structure,
-
-      /// <summary>
-      /// Dictionary of key-value pairs
-      /// </summary>
-      Dictionary*/
+      Interval
    }
 }

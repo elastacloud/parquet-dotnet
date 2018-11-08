@@ -121,6 +121,8 @@ _TeamCity*
 _NCrunch_*
 .*crunch*.local.xml
 nCrunchTemp_*
+*.ncrunchsolution
+*.ncrunchproject
 
 # MightyMoose
 *.mm.*
@@ -287,3 +289,5 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 .vscode
+
+target/

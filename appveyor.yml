@@ -1,21 +1,35 @@
-version: 2.2.0-preview-{build}
+version: "{build}"
 pull_requests:
   do_not_increment_build_number: true
 skip_tags: true
 image: Visual Studio 2017
 configuration: Release
-platform: Any CPU
 before_build:
-- ps: .\appveyor.ps1
+- ps: >-
+    dotnet tool install -g housework -g
+
+    housework setbuildnumber %CiVersion% -s build.ini
+
+    housework author ./src/Parquet/Parquet.csproj -s build.ini
+
+    housework author ./src/SharpArrow/SharpArrow.csproj -s build.ini
+
+    housework author ./src/Parquet.CLI/Parquet.CLI.csproj -s build.ini
+
+    housework substitute ./src/Parquet/ThriftFooter.cs -s build.ini -r
+
+    dotnet restore src/Parquet.sln
 build:
   project: src/Parquet.sln
   verbosity: minimal
 test_script:
 - cmd: >-
    dotnet test src\Parquet.Test -c release
-
-   dotnet test src\Parquet.Json.Test -c release
 artifacts:
-- path: src/Parquet/bin/**/*.nupkg
-- path: src/Parquet.Json/bin/**/*.nupkg
-deploy: off
+- path: src/**/*.nupkg
+deploy:
+- provider: NuGet
+  api_key:
+    secure: hQlxhZb6uDjtZz4V+DZyAqjxnGjXqEokO/tckU14RDUP/AxTkFnX869pNsXCv+Ab
+  on:
+    branch: release

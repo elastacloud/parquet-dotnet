@@ -1,12 +1,11 @@
 ﻿using System;
-using Parquet;
-using Parquet.Data;
-using LogMagic;
-using NetBox;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using LogMagic;
+using Parquet.Data;
+using Parquet.File;
 using F = System.IO.File;
-using System.Runtime;
 
 namespace Parquet.Runner
 {
@@ -19,68 +18,92 @@ namespace Parquet.Runner
          L.Config
             .WriteTo.PoshConsole();
 
-         Debug();
-         //Perf();
-      }
-
-
-      private static void Debug()
-      {
-         //GCSettings.LatencyMode = GCLatencyMode.LowLatency;
-         DataSet ds = ParquetReader.ReadFile("c:\\tmp\\customer.impala.parquet", new ParquetOptions { TreatByteArrayAsString = true });
-      }
-
-      private static void Perf()
-      {
          var readTimes = new List<TimeSpan>();
-         var writeUncompressedTimes = new List<TimeSpan>();
-         var writeGzipTimes = new List<TimeSpan>();
-         var writeSnappyTimes = new List<TimeSpan>();
-
-         for (int i = 0; i < 4; i++)
+         var uwts = new List<TimeSpan>();
+         var gwts = new List<TimeSpan>();
+         for (int i = 0; i < 10; i++)
          {
-            DataSet ds;
-
-            using (var time = new TimeMeasure())
-            {
-               ds = ParquetReader.ReadFile("C:\\tmp\\customer.impala.parquet");
-               TimeSpan elapsed = time.Elapsed;
-               readTimes.Add(elapsed);
-               log.Trace("read in {0}", elapsed);
-            }
-
-            /*string dest = "c:\\tmp\\write.test.parquet";
-            if (F.Exists(dest)) F.Delete(dest);
-
-            using (var time = new TimeMeasure())
-            {
-               ParquetWriter.WriteFile(ds, dest, CompressionMethod.None);
-               writeUncompressedTimes.Add(time.Elapsed);
-            }
-
-            using (var time = new TimeMeasure())
-            {
-               ParquetWriter.WriteFile(ds, dest, CompressionMethod.Gzip);
-               writeGzipTimes.Add(time.Elapsed);
-            }
-
-            using (var time = new TimeMeasure())
-            {
-               ParquetWriter.WriteFile(ds, dest, CompressionMethod.Snappy);
-               writeSnappyTimes.Add(time.Elapsed);
-            }*/
-
-            log.Trace("run finished: {0}", i);
+            ReadLargeFile(out TimeSpan readTime, out TimeSpan uwt, out TimeSpan gwt);
+            readTimes.Add(readTime);
+            uwts.Add(uwt);
+            gwts.Add(gwt);
+            log.Trace("iteration #{0}: {1}, uwp: {2}, gwt: {3}", i, readTime, uwt, gwt);
          }
 
-         double avgRead = readTimes.Skip(1).Average(t => t.TotalMilliseconds);
-         log.Trace("avg: {0}", avgRead);
+         log.Trace("mean(read): {0}, mean(uw): {1}, mean(gw): {2}",
+            TimeSpan.FromTicks((long)readTimes.Average(t => t.Ticks)),
+            TimeSpan.FromTicks((long)uwts.Average(t => t.Ticks)),
+            TimeSpan.FromTicks((long)gwts.Average(t => t.Ticks)));
+      }
 
-         /*double avgUncompressed = writeUncompressedTimes.Skip(1).Average(t => t.TotalMilliseconds);
-         double avgGzip = writeGzipTimes.Skip(1).Average(t => t.TotalMilliseconds);
-         double avgSnappy = writeUncompressedTimes.Skip(1).Average(t => t.TotalMilliseconds);
 
-         log.Trace("averages => read: {0}, uncompressed: {1}, gzip: {2}, snappy: {3}", avgRead, avgUncompressed, avgGzip, avgSnappy);*/
+      private static void ReadLargeFile(out TimeSpan readTime,
+         out TimeSpan uncompressedWriteTime,
+         out TimeSpan gzipWriteTime)
+      {
+         Schema schema;
+         DataColumn[] columns;
+
+         using (var time = new TimeMeasure())
+         {
+            using (var reader = ParquetReader.OpenFromFile(@"C:\dev\parquet-dotnet\src\Parquet.Test\data\customer.impala.parquet", new ParquetOptions { TreatByteArrayAsString = true }))
+            {
+               schema = reader.Schema;
+               var cl = new List<DataColumn>();
+
+               using (ParquetRowGroupReader rgr = reader.OpenRowGroupReader(0))
+               {
+                  foreach (DataField field in reader.Schema.GetDataFields())
+                  {
+                     DataColumn dataColumn = rgr.ReadColumn(field);
+                     cl.Add(dataColumn);
+                  }
+               }
+               columns = cl.ToArray();
+            }
+            readTime = time.Elapsed;
+         }
+
+         using (FileStream dest = F.OpenWrite("perf.uncompressed.parquet"))
+         {
+            using (var time = new TimeMeasure())
+            {
+               using (var writer = new ParquetWriter(schema, dest))
+               {
+                  writer.CompressionMethod = CompressionMethod.None;
+                  using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+                  {
+                     foreach (DataColumn dc in columns)
+                     {
+                        rg.WriteColumn(dc);
+                     }
+                  }
+               }
+
+               uncompressedWriteTime = time.Elapsed;
+            }
+         }
+
+
+         using (FileStream dest = F.OpenWrite("perf.gzip.parquet"))
+         {
+            using (var time = new TimeMeasure())
+            {
+               using (var writer = new ParquetWriter(schema, dest))
+               {
+                  writer.CompressionMethod = CompressionMethod.Gzip;
+                  using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+                  {
+                     foreach (DataColumn dc in columns)
+                     {
+                        rg.WriteColumn(dc);
+                     }
+                  }
+               }
+
+               gzipWriteTime = time.Elapsed;
+            }
+         }
 
       }
    }

@@ -3,151 +3,146 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Parquet.Data;
-using System.Collections;
-using Parquet.Data.Predicates;
-using System.Linq;
+using Parquet.Data.Rows;
 
 namespace Parquet
 {
    /// <summary>
-   /// Implements Apache Parquet format reader
+   /// Implements Apache Parquet format reader, experimental version for next major release.
    /// </summary>
    public class ParquetReader : ParquetActor, IDisposable
    {
       private readonly Stream _input;
-      private Thrift.FileMetaData _meta;
-      private readonly ParquetOptions _formatOptions;
-      private readonly ReaderOptions _readerOptions;
-      private readonly FieldPredicate[] _fieldPredicates;
+      private readonly Thrift.FileMetaData _meta;
+      private readonly ThriftFooter _footer;
+      private readonly ParquetOptions _parquetOptions;
+      private readonly List<ParquetRowGroupReader> _groupReaders = new List<ParquetRowGroupReader>();
+      private readonly bool _leaveStreamOpen;
+
+      private ParquetReader(Stream input, bool leaveStreamOpen) : base(input)
+      {
+         _input = input ?? throw new ArgumentNullException(nameof(input));
+         _leaveStreamOpen = leaveStreamOpen;
+      }
 
       /// <summary>
       /// Creates an instance from input stream
       /// </summary>
       /// <param name="input">Input stream, must be readable and seekable</param>
-      /// <param name="formatOptions">Optional reader options</param>
-      /// <param name="readerOptions">The reader options.</param>
+      /// <param name="parquetOptions">Optional reader options</param>
+      /// <param name="leaveStreamOpen">When true, leaves the stream passed in <paramref name="input"/> open after disposing the reader.</param>
       /// <exception cref="ArgumentNullException">input</exception>
       /// <exception cref="ArgumentException">stream must be readable and seekable - input</exception>
       /// <exception cref="IOException">not a Parquet file (size too small)</exception>
-      public ParquetReader(Stream input, ParquetOptions formatOptions = null, ReaderOptions readerOptions = null) : base(input)
+      public ParquetReader(Stream input, ParquetOptions parquetOptions = null, bool leaveStreamOpen = true) : this(input, true)
       {
-         _input = input ?? throw new ArgumentNullException(nameof(input));
+         
          if (!input.CanRead || !input.CanSeek) throw new ArgumentException("stream must be readable and seekable", nameof(input));
          if (_input.Length <= 8) throw new IOException("not a Parquet file (size too small)");
 
          ValidateFile();
-         _formatOptions = formatOptions ?? new ParquetOptions();
-         _readerOptions = readerOptions ?? new ReaderOptions();
-         _fieldPredicates = PredicateFactory.CreateFieldPredicates(_readerOptions);
-      }
+         _parquetOptions = parquetOptions ?? new ParquetOptions();
 
-      /// <summary>
-      /// Reads the file
-      /// </summary>
-      /// <param name="fullPath">The full path.</param>
-      /// <param name="formatOptions">Optional reader options.</param>
-      /// <param name="readerOptions">The reader options.</param>
-      /// <returns><see cref="DataSet"/></returns>
-      public static DataSet ReadFile(string fullPath, ParquetOptions formatOptions = null, ReaderOptions readerOptions = null)
-      {
-         using (Stream fs = System.IO.File.OpenRead(fullPath))
-         {
-            using (var reader = new ParquetReader(fs, formatOptions, readerOptions))
-            {
-               return reader.Read();
-            }
-         }
-      }
-
-      /// <summary>
-      /// Reads <see cref="DataSet"/> from an open stream
-      /// </summary>
-      /// <param name="source">Input stream</param>
-      /// <param name="formatOptions">Parquet options, optional.</param>
-      /// <param name="readerOptions">Reader options, optional</param>
-      /// <returns><see cref="DataSet"/></returns>
-      public static DataSet Read(Stream source, ParquetOptions formatOptions = null, ReaderOptions readerOptions = null)
-      {
-         using (var reader = new ParquetReader(source, formatOptions, readerOptions))
-         {
-            return reader.Read();
-         }
-      }
-
-      /// <summary>
-      /// Test read, to be defined
-      /// </summary>
-      public DataSet Read()
-      {
-         _readerOptions.Validate();
-
+         //read metadata instantly, now
          _meta = ReadMetadata();
+         _footer = new ThriftFooter(_meta);
 
-         var footer = new ThriftFooter(_meta);
+         ParquetEventSource.Current.OpenStream(input.Length, leaveStreamOpen, _meta.Row_groups.Count, _meta.Num_rows);
 
-         var pathToValues = new Dictionary<string, IList>();
-         long pos = 0;
-         long rowsRead = 0;
+         InitRowGroupReaders();
+      }
 
-         foreach(Thrift.RowGroup rg in _meta.Row_groups)
+      /// <summary>
+      /// Opens reader from a file on disk. When the reader is disposed the file handle is automatically closed.
+      /// </summary>
+      /// <param name="filePath"></param>
+      /// <param name="parquetOptions"></param>
+      /// <returns></returns>
+      public static ParquetReader OpenFromFile(string filePath, ParquetOptions parquetOptions = null)
+      {
+         Stream fs = System.IO.File.OpenRead(filePath);
+
+         return new ParquetReader(fs, parquetOptions, false);
+      }
+
+      #region [ Helpers ]
+
+      /// <summary>
+      /// Reads entire file as a table
+      /// </summary>
+      public static Table ReadTableFromFile(string filePath, ParquetOptions parquetOptions = null)
+      {
+         using (ParquetReader reader = OpenFromFile(filePath, parquetOptions))
          {
-            //check whether to skip RG completely
-            if ((_readerOptions.Count != -1 && rowsRead >= _readerOptions.Count) ||
-               (_readerOptions.Offset > pos + rg.Num_rows - 1))
+            return reader.ReadAsTable();
+         }
+      }
+
+      /// <summary>
+      /// Reads entire stream as a table
+      /// </summary>
+      public static Table ReadTableFromStream(Stream stream, ParquetOptions parquetOptions = null)
+      {
+         using (var reader = new ParquetReader(stream, parquetOptions))
+         {
+            return reader.ReadAsTable();
+         }
+      }
+
+      #endregion
+
+      /// <summary>
+      /// Gets the number of rows groups in this file
+      /// </summary>
+      public int RowGroupCount => _meta.Row_groups.Count;
+
+      /// <summary>
+      /// Reader schema
+      /// </summary>
+      public Schema Schema => _footer.CreateModelSchema(_parquetOptions);
+
+      internal Thrift.FileMetaData ThriftMetadata => _meta;
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="index"></param>
+      /// <returns></returns>
+      public ParquetRowGroupReader OpenRowGroupReader(int index)
+      {
+         return _groupReaders[index];
+      }
+
+      /// <summary>
+      /// Reads entire row group's data columns in one go.
+      /// </summary>
+      /// <param name="rowGroupIndex">Index of the row group. Default to the first row group if not specified.</param>
+      /// <returns></returns>
+      public DataColumn[] ReadEntireRowGroup(int rowGroupIndex = 0)
+      {
+         DataField[] dataFields = Schema.GetDataFields();
+         DataColumn[] result = new DataColumn[dataFields.Length];
+
+         using (ParquetRowGroupReader reader = OpenRowGroupReader(rowGroupIndex))
+         {
+            for (int i = 0; i < dataFields.Length; i++)
             {
-               pos += rg.Num_rows;
-               continue;
+               DataColumn column = reader.ReadColumn(dataFields[i]);
+               result[i] = column;
             }
-
-            long offset = Math.Max(0, _readerOptions.Offset - pos);
-            long count = _readerOptions.Count == -1 ? rg.Num_rows : Math.Min(_readerOptions.Count - rowsRead, rg.Num_rows);
-
-            for(int icol = 0; icol < rg.Columns.Count; icol++)
-            {
-               Thrift.ColumnChunk cc = rg.Columns[icol];
-               string path = cc.GetPath();
-               if (_fieldPredicates != null && !_fieldPredicates.Any(p => p.IsMatch(cc, path))) continue;
-
-               var columnarReader = new ColumnarReader(_input, cc, footer, _formatOptions);
-
-               try
-               {
-                  IList chunkValues = columnarReader.Read(offset, count);
-
-                  if(!pathToValues.TryGetValue(path, out IList allValues))
-                  {
-                     pathToValues[path] = chunkValues;
-                  }
-                  else
-                  {
-                     foreach(object v in chunkValues)
-                     {
-                        allValues.Add(v);
-                     }
-                  }
-
-                  if(icol == 0)
-                  {
-                     //todo: this may not work
-                     rowsRead += chunkValues.Count;
-                  }
-               }
-               catch(Exception ex)
-               {
-                  throw new ParquetException($"fatal error reading column '{path}'", ex);
-               }
-            }
-
-            pos += rg.Num_rows;
          }
 
-         Schema schema = footer.CreateModelSchema(_formatOptions);
-         schema = schema.Filter(_fieldPredicates);
-         var ds = new DataSet(schema, pathToValues, _meta.Num_rows, _meta.Created_by);
-         Dictionary<string, string> customMetadata = footer.CustomMetadata;
-         if (customMetadata != null) ds.Metadata.Custom.AddRange(customMetadata);
-         ds.Thrift = _meta;
-         return ds;
+         return result;
+      }
+
+      private void InitRowGroupReaders()
+      {
+         _groupReaders.Clear();
+
+         foreach(Thrift.RowGroup thriftRowGroup in _meta.Row_groups)
+         {
+            _groupReaders.Add(new ParquetRowGroupReader(thriftRowGroup, _footer, Stream, ThriftStream, _parquetOptions));
+         }
       }
 
       /// <summary>
@@ -155,6 +150,10 @@ namespace Parquet
       /// </summary>
       public void Dispose()
       {
+         if(!_leaveStreamOpen)
+         {
+            _input.Dispose();
+         }
       }
    }
 }
