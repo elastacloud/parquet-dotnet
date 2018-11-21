@@ -8,6 +8,10 @@ before_build:
 - ps: >-
     dotnet tool install -g housework -g
 
+    dotnet tool install -g GitVersion.Tool --version 4.0.1-beta1-47
+
+    dotnet-gitversion /l console /output buildserver
+
     housework setbuildnumber %CiVersion% -s build.ini
 
     housework author ./src/Parquet/Parquet.csproj -s build.ini
