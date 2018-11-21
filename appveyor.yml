@@ -1,19 +1,13 @@
 version: "{build}"
-pull_requests:
-  do_not_increment_build_number: true
-skip_tags: true
+nuget:
+  disable_publish_on_pr: true
 image: Visual Studio 2017
 configuration: Release
 before_build:
 - ps: >-
-    dotnet tool install -g housework -g
+    dotnet tool install -g housework
 
-    dotnet tool install -g GitVersion.Tool --version 4.0.1-beta1-47
-- ps: dotnet-gitversion /l console /output buildserver
-- ps: >-
-    ls env:
-
-    housework setbuildnumber %CiVersion% -s build.ini
+    housework setbuildnumber %gitVersion.semVer% -s build.ini
 
     housework author ./src/Parquet/Parquet.csproj -s build.ini
 
@@ -37,4 +31,4 @@ deploy:
   api_key:
     secure: hQlxhZb6uDjtZz4V+DZyAqjxnGjXqEokO/tckU14RDUP/AxTkFnX869pNsXCv+Ab
   on:
-    branch: release
+    branch: master
