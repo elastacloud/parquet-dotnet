@@ -7,9 +7,9 @@ before_build:
 - ps: >-
     dotnet tool install -g housework
 
-    housework setbuildnumber %gitVersion.semVer% -s build.ini
+    housework setbuildnumber %gitVersion.legacySemVer% -s build.ini
 
-    housework author ./src/Parquet/Parquet.csproj -s build.ini --verbose
+    housework author ./src/Parquet/Parquet.csproj -s build.ini
 
     housework author ./src/SharpArrow/SharpArrow.csproj -s build.ini
 
