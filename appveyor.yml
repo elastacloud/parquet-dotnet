@@ -9,9 +9,8 @@ before_build:
     dotnet tool install -g housework -g
 
     dotnet tool install -g GitVersion.Tool --version 4.0.1-beta1-47
-
-    dotnet-gitversion /l console /output buildserver
-
+- ps: dotnet-gitversion /l console /output buildserver
+- ps: >-
     ls env:
 
     housework setbuildnumber %CiVersion% -s build.ini
