@@ -12,6 +12,8 @@ before_build:
 
     dotnet-gitversion /l console /output buildserver
 
+    ls env:
+
     housework setbuildnumber %CiVersion% -s build.ini
 
     housework author ./src/Parquet/Parquet.csproj -s build.ini
