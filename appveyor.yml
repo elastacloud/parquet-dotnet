@@ -9,7 +9,7 @@ before_build:
 
     housework setbuildnumber %gitVersion.semVer% -s build.ini
 
-    housework author ./src/Parquet/Parquet.csproj -s build.ini
+    housework author ./src/Parquet/Parquet.csproj -s build.ini --verbose
 
     housework author ./src/SharpArrow/SharpArrow.csproj -s build.ini
 
