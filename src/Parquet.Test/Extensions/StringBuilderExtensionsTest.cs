@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 using Parquet.Data.Rows;
 using Parquet.Extensions;
 using Xunit;
@@ -13,7 +11,7 @@ namespace Parquet.Test.Extensions
       public void NonNull_objects_create_string()
       {
          var sb = new StringBuilder();
-         StringFormat sf = StringFormat.Json;
+         const StringFormat sf = StringFormat.Json;
 
          sb.StartArray(sf, 1);
 
@@ -30,7 +28,7 @@ namespace Parquet.Test.Extensions
       public void Null_objects_create_json_null_value()
       {
          var sb = new StringBuilder();
-         StringFormat sf = StringFormat.Json;
+         const StringFormat sf = StringFormat.Json;
 
          sb.StartArray(sf, 1);
 
