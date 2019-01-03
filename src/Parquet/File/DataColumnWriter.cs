@@ -47,7 +47,7 @@ namespace Parquet.File
          Thrift.PageHeader ph = _footer.CreateDataPage(column.Data.Length);
          _footer.GetLevels(chunk, out int maxRepetitionLevel, out int maxDefinitionLevel);
 
-         List<PageTag> pages = WriteColumn(column, _schemaElement, dataTypeHandler, maxRepetitionLevel, maxDefinitionLevel);
+         List<PageTag> pages = WriteColumn(column, _schemaElement, dataTypeHandler, maxRepetitionLevel, maxDefinitionLevel, chunk.Meta_data.Statistics);
 
          //this count must be set to number of all values in the column, including nulls.
          //for hierarchy/repeated columns this is a count of flattened list, including nulls.
@@ -64,7 +64,8 @@ namespace Parquet.File
          Thrift.SchemaElement tse,
          IDataTypeHandler dataTypeHandler,
          int maxRepetitionLevel,
-         int maxDefinitionLevel)
+         int maxDefinitionLevel,
+         Thrift.Statistics statistics)
       {
          var pages = new List<PageTag>();
 
@@ -108,7 +109,7 @@ namespace Parquet.File
                      }
                   }
 
-                  dataTypeHandler.Write(tse, writer, data);
+                  dataTypeHandler.Write(tse, writer, data, statistics);
 
                   writer.Flush();
                }

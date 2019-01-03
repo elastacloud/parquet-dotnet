@@ -71,7 +71,7 @@ namespace Parquet.Data
          return idx - offset;
       }
 
-      public virtual void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values)
+      public virtual void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values, Thrift.Statistics statistics)
       {
          // casing to an array of TSystemType means we avoid Array.GetValue calls, which are slow
          var typedArray = (TSystemType[]) values;

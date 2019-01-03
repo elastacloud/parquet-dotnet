@@ -27,7 +27,7 @@ namespace Parquet.Data
 
       int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset, ParquetOptions formatOptions);
 
-      void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values);
+      void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values, Thrift.Statistics statistics);
 
       /// <summary>
       /// Creates or rents a native array

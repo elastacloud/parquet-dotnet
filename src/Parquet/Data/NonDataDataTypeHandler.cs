@@ -37,7 +37,7 @@ namespace Parquet.Data
          throw new NotSupportedException();
       }
 
-      public void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values)
+      public void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values, Thrift.Statistics statistics)
       {
          throw new NotSupportedException();
       }

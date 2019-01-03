@@ -46,7 +46,7 @@ namespace Parquet.Data.Concrete
          return idx - offset;
       }
 
-      public override void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values)
+      public override void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values, Thrift.Statistics statistics)
       {
          foreach(Interval interval in values)
          {
