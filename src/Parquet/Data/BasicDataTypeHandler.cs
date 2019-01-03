@@ -112,17 +112,17 @@ namespace Parquet.Data
 
       public abstract Array GetArray(int minCount, bool rent, bool isNullable);
 
-      public abstract Array PackDefinitions(Array data, int maxDefinitionLevel, out int[] definitions, out int definitionsLength);
+      public abstract Array PackDefinitions(Array data, int maxDefinitionLevel, out int[] definitions, out int definitionsLength, out int nullCount);
 
       public abstract Array UnpackDefinitions(Array src, int[] definitionLevels, int maxDefinitionLevel, out bool[] hasValueFlags);
 
-      protected TNullable[] PackDefinitions<TNullable>(TNullable[] data, int maxDefinitionLevel, out int[] definitionLevels, out int definitionsLength)
+      protected TNullable[] PackDefinitions<TNullable>(TNullable[] data, int maxDefinitionLevel, out int[] definitionLevels, out int definitionsLength, out int nullCount)
          where TNullable : class
       {
          definitionLevels = IntPool.Rent(data.Length);
          definitionsLength = data.Length;
 
-         int nullCount = data.Count(i => i == null);
+         nullCount = data.Count(i => i == null);
          TNullable[] result = new TNullable[data.Length - nullCount];
          int ir = 0;
 

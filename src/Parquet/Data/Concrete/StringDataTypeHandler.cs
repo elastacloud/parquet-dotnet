@@ -73,9 +73,9 @@ namespace Parquet.Data.Concrete
          return destIdx - offset;
       }
 
-      public override Array PackDefinitions(Array data, int maxDefinitionLevel, out int[] definitions, out int definitionsLength)
+      public override Array PackDefinitions(Array data, int maxDefinitionLevel, out int[] definitions, out int definitionsLength, out int nullCount)
       {
-         return PackDefinitions<string>((string[])data, maxDefinitionLevel, out definitions, out definitionsLength);
+         return PackDefinitions<string>((string[])data, maxDefinitionLevel, out definitions, out definitionsLength, out nullCount);
       }
 
       public override Array UnpackDefinitions(Array src, int[] definitionLevels, int maxDefinitionLevel, out bool[] hasValueFlags)

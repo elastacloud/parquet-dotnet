@@ -93,7 +93,7 @@ namespace Parquet.File
 
                   if (maxDefinitionLevel > 0)
                   {
-                     data = column.PackDefinitions(maxDefinitionLevel, out int[] definitionLevels, out int definitionLevelsLength);
+                     data = column.PackDefinitions(maxDefinitionLevel, out int[] definitionLevels, out int definitionLevelsLength, out int nullCount);
 
                      try
                      {
