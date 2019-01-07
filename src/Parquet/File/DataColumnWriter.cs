@@ -96,6 +96,9 @@ namespace Parquet.File
                   {
                      data = column.PackDefinitions(maxDefinitionLevel, out int[] definitionLevels, out int definitionLevelsLength, out int nullCount);
 
+                     //last chance to capture null count as null data is compressed now
+                     statistics.Null_count = nullCount;
+
                      try
                      {
                         WriteLevels(writer, definitionLevels, definitionLevelsLength, maxDefinitionLevel);
@@ -107,6 +110,11 @@ namespace Parquet.File
                            ArrayPool<int>.Shared.Return(definitionLevels);
                         }
                      }
+                  }
+                  else
+                  {
+                     //no defitions means no nulls
+                     statistics.Null_count = 0;
                   }
 
                   dataTypeHandler.Write(tse, writer, data, statistics);
@@ -125,6 +133,10 @@ namespace Parquet.File
             ms.Position = 0;
             ms.CopyTo(_stream);
 
+            dataPageHeader.Data_page_header.Statistics = new Thrift.Statistics
+            {
+               Distinct_count = statistics.Distinct_count
+            };
             var dataTag = new PageTag
             {
                HeaderMeta = dataPageHeader,

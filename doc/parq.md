@@ -62,6 +62,17 @@ As JSON is usually human readable you can use this command to view the file.
 
 By default **parq** displays the first 10 rows of the source file, however you can override it with `--max-rows` option.
 
+### Viewing Internal Metadata
+
+Internal metadata is grabbed from parquet file internals and describes pretty much everything we know about the file. This metadata is not by default exposed from Parquet.Net API as it's hard to work with from the user perspective, however it can be extremely useful for performance tuning and general understanding how a particular file is structured.
+
+To view this metadata, type
+
+```powershell
+parq meta <path-to-file>
+````
+
+> todo
 
 ### More Commands
 

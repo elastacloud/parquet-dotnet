@@ -101,7 +101,7 @@ namespace Parquet.Data.Concrete
 
       protected override void WriteOne(BinaryWriter writer, string value)
       {
-         if (value.Length == 0)
+         if (value == null || value.Length == 0)
          {
             writer.Write((int)0);
          }
