@@ -26,7 +26,7 @@ namespace Parquet.CLI.Commands
          t.AddRow("Created By", fileMeta.Created_by);
          t.AddRow("Total Rows", fileMeta.Num_rows);
          t.AddRow("Version", fileMeta.Version);
-         t.Render(false, T.HeadingTextColor, T.NormalTextColor);
+         t.Render(false, 0,  T.HeadingTextColor, T.NormalTextColor);
          WriteLine();
 
          //custom key-values
@@ -42,7 +42,7 @@ namespace Parquet.CLI.Commands
             {
                t.AddRow(kv.Key, kv.Value);
             }
-            t.Render(false, T.HeadingTextColor, T.NormalTextColor);
+            t.Render(false, 0, T.HeadingTextColor, T.NormalTextColor);
          }
          WriteLine();
 
@@ -58,11 +58,12 @@ namespace Parquet.CLI.Commands
       private void Print(Thrift.RowGroup rg, int index)
       {
          WriteLine();
-         PoshWriteLine($"Row Group #{{{index+1}}}", ConsoleColor.Red);
+         PoshWriteLine($"  Row Group #{{{index}}}", ConsoleColor.Red);
          var t = new Table("name", "value");
          t.AddRow("Total Rows", rg.Num_rows);
          t.AddRow("Total Byte Size", GetSizeString(rg.Total_byte_size));
-         t.Render(false, T.HeadingTextColor, T.NormalTextColor);
+         t.Render(false, 2, T.HeadingTextColor, T.NormalTextColor);
+         WriteLine();
 
          //columns
          int i = 0;
@@ -83,8 +84,8 @@ namespace Parquet.CLI.Commands
             t.AddRow("Uncompressed Size", GetSizeString(column.Meta_data.Total_uncompressed_size));
             t.AddRow("Type", column.Meta_data.Type);
             t.AddRow("Statistics", GetStatsString(column.Meta_data.Statistics));
-            PoshWriteLine($"Column #{{{i++}}}", ConsoleColor.Red);
-            t.Render(false, T.HeadingTextColor, T.NormalTextColor);
+            PoshWriteLine($"    Column #{{{i++}}}", ConsoleColor.Red);
+            t.Render(false, 4, T.HeadingTextColor, T.NormalTextColor);
             WriteLine();
          }
       }
