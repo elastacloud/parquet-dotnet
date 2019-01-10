@@ -1,12 +1,15 @@
-﻿using NetBox;
-using NetBox.IO;
+﻿using NetBox.IO;
 using Parquet.Data;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using Xunit;
+using NetBox.Extensions;
+using NetBox.Generator;
+using Parquet.Data.Rows;
+using System.Linq;
 
 namespace Parquet.Test
 {
@@ -39,224 +42,104 @@ namespace Parquet.Test
       [Fact]
       public void Opening_readable_but_not_seekable_stream_fails()
       {
-         Assert.Throws<ArgumentException>(() => new ParquetReader(new ReadableNonSeekableStream(new MemoryStream(Generator.GetRandomBytes(5, 6)))));
+         Assert.Throws<ArgumentException>(() => new ParquetReader(new ReadableNonSeekableStream(new MemoryStream(RandomGenerator.GetRandomBytes(5, 6)))));
       }
 
       [Fact]
       public void Opening_not_readable_but_seekable_stream_fails()
       {
-         Assert.Throws<ArgumentException>(() => new ParquetReader(new NonReadableSeekableStream(new MemoryStream(Generator.GetRandomBytes(5, 6)))));
-      }
+         Assert.Throws<ArgumentException>(() => new ParquetReader(new NonReadableSeekableStream(new MemoryStream(RandomGenerator.GetRandomBytes(5, 6)))));
+      }     
 
       [Fact]
-      public void Opening_readable_and_seekable_stream_succeeds()
+      public void Read_simple_map()
       {
-         new ParquetReader(new ReadableAndSeekableStream(new NonReadableSeekableStream("PAR1DATAPAR1".ToMemoryStream())));
-      }
+         using (var reader = new ParquetReader(OpenTestFile("map_simple.parquet"), leaveStreamOpen: false))
+         {
+            DataColumn[] data = reader.ReadEntireRowGroup();
 
-      [Fact]
-      public void Read_from_offset_in_first_chunk()
-      {
-         DataSet ds = DataSetGenerator.Generate(30);
-         var wo = new WriterOptions { RowGroupsSize = 5 };
-         var ro = new ReaderOptions { Offset = 0, Count = 2 };
-
-         var ms = new MemoryStream();
-         ParquetWriter.Write(ds, ms, CompressionMethod.None, null, wo);
-
-         ms.Position = 0;
-         DataSet ds1 = ParquetReader.Read(ms, null, ro);
-
-         Assert.Equal(ds1.TotalRowCount, 30);
-         Assert.Equal(2, ds1.RowCount);
-         Assert.Equal(0, ds[0][0]);
-         Assert.Equal(1, ds[1][0]);
-      }
-
-      [Fact]
-      public void Read_from_offset_in_second_chunk()
-      {
-         DataSet ds = DataSetGenerator.Generate(15);
-         var wo = new WriterOptions { RowGroupsSize = 5 };
-         var ro = new ReaderOptions { Offset = 5, Count = 2 };
-
-         var ms = new MemoryStream();
-         ParquetWriter.Write(ds, ms, CompressionMethod.None, null, wo);
-
-         ms.Position = 0;
-         DataSet ds1 = ParquetReader.Read(ms, null, ro);
-
-         Assert.Equal(ds1.TotalRowCount, 15);
-         Assert.Equal(2, ds1.RowCount);
-         Assert.Equal(5, ds1[0][0]);
-         Assert.Equal(6, ds1[1][0]);
-      }
-
-      [Fact]
-      public void Read_from_offset_across_chunks()
-      {
-         DataSet ds = DataSetGenerator.Generate(15);
-         var wo = new WriterOptions { RowGroupsSize = 5 };
-         var ro = new ReaderOptions { Offset = 4, Count = 2 };
-
-         var ms = new MemoryStream();
-         ParquetWriter.Write(ds, ms, CompressionMethod.None, null, wo);
-
-         ms.Position = 0;
-         DataSet ds1 = ParquetReader.Read(ms, null, ro);
-
-         Assert.Equal(ds1.TotalRowCount, 15);
-         Assert.Equal(2, ds1.RowCount);
-         Assert.Equal(4, ds1[0][0]);
-         Assert.Equal(5, ds1[1][0]);
-      }
-
-      [Fact]
-      public void Read_from_negative_offset_fails()
-      {
-         DataSet ds = DataSetGenerator.Generate(15);
-         var wo = new WriterOptions { RowGroupsSize = 5 };
-         var ro = new ReaderOptions { Offset = -4, Count = 2 };
-
-         var ms = new MemoryStream();
-         ParquetWriter.Write(ds, ms, CompressionMethod.None, null, wo);
-
-         ms.Position = 0;
-         Assert.Throws<ParquetException>(() => ParquetReader.Read(ms, null, ro));
-      }
-
-      [Fact]
-      public void Reads_created_by_metadata()
-      {
-         DataSet ds = DataSetGenerator.Generate(10);
-
-         var ms = new MemoryStream();
-         ParquetWriter.Write(ds, ms);
-
-         ms.Position = 0;
-         DataSet ds1 = ParquetReader.Read(ms);
-         Assert.True(ds1.Metadata.CreatedBy.StartsWith("parquet-dotnet"));
-      }
-
-      //this only tests that the file is readable as it used to completely crash before
-      [Fact]
-      public void Reads_compat_nation_impala_file()
-      {
-         DataSet nation = ParquetReader.ReadFile(GetDataFilePath("nation.impala.parquet"));
-
-         Assert.Equal(25, nation.RowCount);
-      }
-
-      //this only tests that the file is readable as it used to completely crash before
-      [Fact]
-      public void Reads_compat_customer_impala_file()
-      {
-         /*
-          * c_name:
-          *    45 pages (0-44)
-          */
-
-         DataSet customer = ParquetReader.ReadFile(GetDataFilePath("customer.impala.parquet"));
-
-         Assert.Equal(150000, customer.RowCount);
-      }
-
-      [Fact]
-      public void Reads_really_mad_nested_file()
-      {
-         /* Spark schema:
-root
-|-- addresses: array (nullable = true)
-|    |-- element: struct (containsNull = true)
-|    |    |-- line1: string (nullable = true)
-|    |    |-- name: string (nullable = true)
-|    |    |-- openingHours: array (nullable = true)
-|    |    |    |-- element: long (containsNull = true)
-|    |    |-- postcode: string (nullable = true)
-|-- cities: array (nullable = true)
-|    |-- element: string (containsNull = true)
-|-- comment: string (nullable = true)
-|-- id: long (nullable = true)
-|-- location: struct (nullable = true)
-|    |-- latitude: double (nullable = true)
-|    |-- longitude: double (nullable = true)
-|-- price: struct (nullable = true)
-|    |-- lunch: struct (nullable = true)
-|    |    |-- max: long (nullable = true)
-|    |    |-- min: long (nullable = true) 
-         */
-
-
-         Assert.Throws<NotSupportedException>(() => ParquetReader.ReadFile(GetDataFilePath("nested.parquet")));
-
-         //DataSet ds = ParquetReader.ReadFile(GetDataFilePath("nested.parquet"));
-
-         //Assert.Equal(2, ds.Count);
-         //Assert.Equal(6, ds.Schema.Length);
-
-         /*Assert.Equal(typeof(string), ds.Schema[0].ElementType);
-         Assert.Equal(typeof(long), ds.Schema[1].ElementType);
-         Assert.Equal(typeof(Row), ds.Schema[2].ElementType);
-         Assert.Equal(typeof(long), ds.Schema[3].ElementType);
-         Assert.Equal(typeof(Row), ds.Schema[4].ElementType);*/
-      }
-
-      [Fact]
-      public void Read_simple_repeated_field()
-      {
-         /*
-root
-|-- cities: array (nullable = true)
-|    |-- element: string (containsNull = true)
-|-- id: long (nullable = true)
-          */
-
-         DataSet ds = ParquetReader.ReadFile(GetDataFilePath("simplerepeated.parquet"));
-
-         Assert.Equal(2, ds.Schema.Length);
-         Assert.Equal(typeof(IEnumerable<string>), ds.Schema[0].ColumnType);
-         Assert.Equal(typeof(string), ds.Schema[0].ElementType);
-         Assert.Equal(typeof(long), ds.Schema[1].ElementType);
-
-         Assert.Equal("cities", ds.Schema[0].Name);
-         Assert.Equal("id", ds.Schema[1].Name);
-
-         Assert.True(ds.Schema[0].IsRepeated);
-         Assert.False(ds.Schema[1].IsRepeated);
-
-         Assert.Equal(ds[0][1], 1L);
-         Assert.Equal(ds[0][0], new[] { "London", "Derby", "Paris", "New York" });
+            Assert.Equal(new int?[] { 1 }, data[0].Data);
+            Assert.Equal(new int[] { 1, 2, 3 }, data[1].Data);
+            Assert.Equal(new string[] { "one", "two", "three" }, data[2].Data);
+         }
       }
 
       [Fact]
       public void Read_hardcoded_decimal()
       {
-         DataSet ds = ParquetReader.ReadFile(GetDataFilePath("complex-primitives.parquet"));
-
-         Assert.Equal((decimal)1.2, ds[0][1]);
-      }
-
-      [Fact]
-      public void Read_column_with_all_nulls()
-      {
-         var ds = new DataSet(new SchemaElement<int>("id"))
+         using (var reader = new ParquetReader(OpenTestFile("complex-primitives.parquet")))
          {
-            new object[] {null},
-            new object[] {null}
-         };
+            decimal value = (decimal)reader.ReadEntireRowGroup()[1].Data.GetValue(0);
+            Assert.Equal((decimal)1.2, value);
+         }
+      }
 
-         DataSet ds1 = DataSetGenerator.WriteRead(ds);
+
+      [Fact]
+      public void Reads_multi_page_file()
+      {
+         using (var reader = new ParquetReader(OpenTestFile("multi.page.parquet"), leaveStreamOpen: false))
+         {
+            DataColumn[] data = reader.ReadEntireRowGroup();
+            Assert.Equal(927861, data[0].Data.Length);
+
+            int[] firstColumn = (int[])data[0].Data;
+            Assert.Equal(30763, firstColumn[524286]);
+            Assert.Equal(30766, firstColumn[524287]);
+
+            //At row 524288 the data is split into another page
+            //The column makes use of a dictionary to reduce the number of values and the default dictionary index value is zero (i.e. the first record value)
+            Assert.NotEqual(firstColumn[0], firstColumn[524288]);
+
+            //The value should be 30768
+            Assert.Equal(30768, firstColumn[524288]);
+         }
       }
 
       [Fact]
-      public void Read_all_nulls_file()
+      public void Reads_byte_arrays()
       {
-         DataSet ds = ParquetReader.ReadFile(GetDataFilePath("all_nulls.parquet"));
+         byte[] nameValue;
+         byte[] expectedValue = Encoding.UTF8.GetBytes("ALGERIA");
+         using (var reader = new ParquetReader(OpenTestFile(@"real/nation.plain.parquet"), leaveStreamOpen: false))
+         {
+            DataColumn[] data = reader.ReadEntireRowGroup();
 
-         Assert.Equal(1, ds.Schema.Length);
-         Assert.Equal("lognumber", ds.Schema[0].Name);
-         Assert.Equal(1, ds.RowCount);
-         Assert.Null(ds[0][0]);
+            byte[][] nameColumn = (byte[][]) data[1].Data;
+            nameValue = nameColumn[0];
+            Assert.Equal<IEnumerable<byte>>(expectedValue, nameValue);
+
+         }
+         Assert.Equal<IEnumerable<byte>>(expectedValue, nameValue);
+      }
+
+      [Fact]
+      public void Read_multiple_data_pages()
+      {
+         using (var reader =
+            new ParquetReader(OpenTestFile("/special/multi_data_page.parquet"), leaveStreamOpen: false))
+         {
+            DataColumn[] columns = reader.ReadEntireRowGroup();
+
+            string[] s = (string[]) columns[0].Data;
+            double?[] d = (double?[]) columns[1].Data;
+
+            // check for nulls (issue #370)
+            for (int i = 0; i < s.Length; i++)
+            {
+               Assert.True(s[i] != null, "found null in s at " + i);
+               Assert.True(d[i] != null, "found null in d at " + i);
+            }
+
+            // run aggregations checking row alignment (issue #371)
+            var seq = s.Zip(d.Cast<double>(), (w, v) => new {w, v})
+               .Where(p => p.w == "general")
+               .ToList();
+
+            // double matching is fuzzy, but matching strings is enough for this test
+            Assert.Equal("0.754359925788497", seq.Min(p => p.v).ToString(CultureInfo.InvariantCulture));
+            Assert.Equal("0.85776", seq.Max(p => p.v).ToString(CultureInfo.InvariantCulture));
+         }
       }
 
       class ReadableNonSeekableStream : DelegatedStream

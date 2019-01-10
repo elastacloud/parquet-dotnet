@@ -1,35 +1,10 @@
-﻿/* MIT License
- *
- * Copyright (c) 2017 Elastacloud Limited
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
-using System;
-using System.IO;
-using Parquet.File;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using Parquet.File.Values;
-using Parquet.File.Data;
-using System.Collections;
 using Parquet.Data;
+using Parquet.File;
+using Parquet.File.Streams;
 
 namespace Parquet
 {
@@ -38,331 +13,113 @@ namespace Parquet
    /// </summary>
    public class ParquetWriter : ParquetActor, IDisposable
    {
-      private readonly Stream _output;
-      private readonly FileMetadataBuilder _meta;
+      private ThriftFooter _footer;
+      private readonly Schema _schema;
       private readonly ParquetOptions _formatOptions;
-      private readonly WriterOptions _writerOptions;
-      private readonly SchemaElement _definitionsSchema = new SchemaElement<bool>("definitions");
-      private readonly IValuesWriter _plainWriter;
-      private readonly IValuesWriter _rleWriter;
-      private readonly IValuesWriter _dicWriter;
-      private Schema _existingSchema;
       private bool _dataWritten;
+      private readonly List<ParquetRowGroupWriter> _openedWriters = new List<ParquetRowGroupWriter>();
 
-      private struct PageTag
-      {
-         public int HeaderSize;
-         public Thrift.PageHeader HeaderMeta;
-      }
+      /// <summary>
+      /// Type of compression to use, defaults to <see cref="CompressionMethod.Snappy"/>
+      /// </summary>
+      public CompressionMethod CompressionMethod { get; set; } = CompressionMethod.Snappy;
 
       /// <summary>
       /// Creates an instance of parquet writer on top of a stream
       /// </summary>
+      /// <param name="schema"></param>
       /// <param name="output">Writeable, seekable stream</param>
       /// <param name="formatOptions">Additional options</param>
-      /// <param name="writerOptions">The writer options.</param>
+      /// <param name="append"></param>
       /// <exception cref="ArgumentNullException">Output is null.</exception>
       /// <exception cref="ArgumentException">Output stream is not writeable</exception>
-      public ParquetWriter(Stream output, ParquetOptions formatOptions = null, WriterOptions writerOptions = null) : base(output)
+      public ParquetWriter(Schema schema, Stream output, ParquetOptions formatOptions = null, bool append = false)
+         : base(new GapStream(output))
       {
-         _output = output ?? throw new ArgumentNullException(nameof(output));
-         if (!output.CanWrite) throw new ArgumentException("stream is not writeable", nameof(output));
-         _formatOptions = formatOptions ?? new ParquetOptions();
-         _writerOptions = writerOptions ?? new WriterOptions();
-         _meta = new FileMetadataBuilder(_writerOptions);
+         if (output == null) throw new ArgumentNullException(nameof(output));
 
-         _plainWriter = new PlainValuesWriter(_formatOptions);
-         _rleWriter = new RunLengthBitPackingHybridValuesWriter();
-         _dicWriter = new PlainDictionaryValuesWriter(_rleWriter);
+         if (!output.CanWrite) throw new ArgumentException("stream is not writeable", nameof(output));
+         _schema = schema ?? throw new ArgumentNullException(nameof(schema));
+         _formatOptions = formatOptions ?? new ParquetOptions();
+
+         PrepareFile(append);
       }
 
       /// <summary>
-      /// Write out dataset to the output stream
+      /// Creates a new row group and a writer for it.
       /// </summary>
-      /// <param name="dataSet">Dataset to write</param>
-      /// <param name="compression">Compression method</param>
-      /// <param name="append">When true, appends to the file, otherwise creates a new file.</param>
-      public void Write(DataSet dataSet, CompressionMethod compression = CompressionMethod.Gzip, bool append = false)
+      public ParquetRowGroupWriter CreateRowGroup()
       {
-         PrepareFile(dataSet, append);
-
-         var stats = new DataSetStats(dataSet);
-
-         int offset = 0;
-         int count;
-         do
-         {
-            count = Math.Min(_writerOptions.RowGroupsSize, dataSet.Count - offset);
-            Thrift.RowGroup rg = _meta.AddRowGroup();
-            long rgStartPos = _output.Position;
-            rg.Columns = dataSet.Schema.Elements
-               .Select(c =>
-                  Write(c, dataSet.GetColumn(c.Name, offset, count), compression, stats.GetColumnStats(c)))
-               .ToList();
-
-            //row group's size is a sum of _uncompressed_ sizes of all columns in it, including the headers
-            //luckily ColumnChunk already contains sizes of page+header in it's meta
-            rg.Total_byte_size = rg.Columns.Sum(c => c.Meta_data.Total_compressed_size);
-            rg.Num_rows = count;
-
-            offset += _writerOptions.RowGroupsSize;
-         }
-         while (offset < dataSet.Count);
-
          _dataWritten = true;
+
+         var writer = new ParquetRowGroupWriter(_schema, Stream, ThriftStream, _footer, CompressionMethod, _formatOptions);
+
+         _openedWriters.Add(writer);
+
+         return writer;
       }
 
-      private void PrepareFile(DataSet ds, bool append)
+      private void PrepareFile(bool append)
       {
          if (append)
          {
-            if (!_output.CanSeek) throw new IOException("destination stream must be seekable for append operations.");
+            if (!Stream.CanSeek) throw new IOException("destination stream must be seekable for append operations.");
 
             ValidateFile();
 
             Thrift.FileMetaData fileMeta = ReadMetadata();
-            _meta.SetMeta(fileMeta);
+            _footer = new ThriftFooter(fileMeta);
 
-            Schema existingSchema = new FileMetadataParser(fileMeta).ParseSchema(_formatOptions);
-
-            if (!ds.Schema.Equals(existingSchema))
-            {
-               throw new ParquetException($"{nameof(DataSet)} schema does not match existing file schema");
-            }
+            ValidateSchemasCompatible(_footer, _schema);
 
             GoBeforeFooter();
          }
          else
          {
-            if (_existingSchema == null)
+            if (_footer == null)
             {
-               _existingSchema = ds.Schema;
+               _footer = new ThriftFooter(_schema, 0 /* todo: don't forget to set the total row count at the end!!! */);
 
                //file starts with magic
                WriteMagic();
-
-               _meta.AddSchema(ds);
             }
             else
             {
-               if(!_existingSchema.Equals(ds.Schema))
-               {
-                  throw new ParquetException($"expeted schema {_existingSchema} but found {ds.Schema}.");
-               }
+               ValidateSchemasCompatible(_footer, _schema);
+
+               _footer.Add(0 /* todo: don't forget to set the total row count at the end!!! */);
             }
          }
       }
 
-      /// <summary>
-      /// Writes <see cref="DataSet"/> to a target stream
-      /// </summary>
-      /// <param name="dataSet"><see cref="DataSet"/> to write</param>
-      /// <param name="destination">Destination stream</param>
-      /// <param name="compression">Compression method</param>
-      /// <param name="formatOptions">Parquet options, optional.</param>
-      /// <param name="writerOptions">Writer options, optional.</param>
-      /// <param name="append">When true, assumes that this stream contains existing file and appends data to it, otherwise writes a new Parquet file.</param>
-      public static void Write(DataSet dataSet, Stream destination, CompressionMethod compression = CompressionMethod.Gzip, ParquetOptions formatOptions = null, WriterOptions writerOptions = null, bool append = false)
+      private void ValidateSchemasCompatible(ThriftFooter footer, Schema schema)
       {
-         using (var writer = new ParquetWriter(destination, formatOptions, writerOptions))
+         Schema existingSchema = footer.CreateModelSchema(_formatOptions);
+
+         if (!schema.Equals(existingSchema))
          {
-            writer.Write(dataSet, compression, append);
+            string reason = schema.GetNotEqualsMessage(existingSchema, "appending", "existing");
+            throw new ParquetException($"passed schema does not match existing file schema, reason: {reason}");
          }
-      }
-
-      /// <summary>
-      /// Writes <see cref="DataSet"/> to a target file
-      /// </summary>
-      /// <param name="dataSet"><see cref="DataSet"/> to write</param>
-      /// <param name="fileName">Path to a file to write to.</param>
-      /// <param name="compression">Compression method</param>
-      /// <param name="formatOptions">Parquet options, optional.</param>
-      /// <param name="writerOptions">Writer options, optional.</param>
-      /// <param name="append">When true, assumes that this stream contains existing file and appends data to it, otherwise writes a new Parquet file.</param>
-      public static void WriteFile(DataSet dataSet, string fileName, CompressionMethod compression = CompressionMethod.Gzip, ParquetOptions formatOptions = null, WriterOptions writerOptions = null, bool append = false)
-      {
-         using (Stream fs = System.IO.File.Create(fileName))
-         {
-            using (var writer = new ParquetWriter(fs, formatOptions, writerOptions))
-            {
-               writer.Write(dataSet, compression);
-            }
-         }
-      }
-
-      private Thrift.ColumnChunk Write(SchemaElement schema, IList values,
-         CompressionMethod compression,
-         ColumnStats stats)
-      {
-         Thrift.ColumnChunk chunk = _meta.AddColumnChunk(compression, _output, schema, values.Count);
-         Thrift.PageHeader ph = _meta.CreateDataPage(values.Count);
-
-         List<PageTag> pages = WriteValues(schema, values, ph, compression, stats);
-
-         //the following counters must include both data size and header size
-         chunk.Meta_data.Total_compressed_size = pages.Sum(p => p.HeaderMeta.Compressed_page_size + p.HeaderSize);
-         chunk.Meta_data.Total_uncompressed_size = pages.Sum(p => p.HeaderMeta.Uncompressed_page_size + p.HeaderSize);
-
-         return chunk;
-      }
-
-      private List<PageTag> WriteValues(SchemaElement schema, IList values, Thrift.PageHeader ph, CompressionMethod compression, ColumnStats stats)
-      {
-         var result = new List<PageTag>();
-         byte[] dictionaryPageBytes = null;
-         int dictionaryPageCount = 0;
-         byte[] dataPageBytes;
-
-         //flatten values if the field is repeatable
-         if (schema.IsRepeated)
-         {
-            values = FlattenRepeatables(values, schema);
-         }
-
-         using (var ms = new MemoryStream())
-         {
-            using (var writer = new BinaryWriter(ms))
-            {
-               //write repetitions
-               if (schema.IsRepeated)
-               {
-                  List<int> repetitions = CreateRepetitions(values, schema);
-                  _rleWriter.Write(writer, _definitionsSchema, repetitions, out IList nullExtra);
-               }
-
-               //write definitions
-               if (schema.HasNulls || schema.IsRepeated)
-               {
-                  CreateDefinitions(values, schema, out IList newValues, out List<int> definitions);
-                  values = newValues;
-
-                  _rleWriter.Write(writer, _definitionsSchema, definitions, out IList nullExtra);
-               }
-
-               //write data
-               if (!_writerOptions.UseDictionaryEncoding || !_dicWriter.Write(writer, schema, values, out IList dicValues))
-               {
-                  _plainWriter.Write(writer, schema, values, out IList plainExtra);
-               }
-               else
-               {
-                  dictionaryPageCount = dicValues.Count;
-                  ph.Data_page_header.Encoding = Thrift.Encoding.PLAIN_DICTIONARY;
-                  using (var dms = new MemoryStream())
-                     using(var dwriter = new BinaryWriter(dms))
-                  {
-                     _plainWriter.Write(dwriter, schema, dicValues, out IList t0);
-                     dictionaryPageBytes = dms.ToArray();
-                  }
-               }
-
-               dataPageBytes = ms.ToArray();
-            }
-         }
-
-         if(dictionaryPageBytes != null)
-         {
-            Thrift.PageHeader dph = _meta.CreateDictionaryPage(dictionaryPageCount);
-            dictionaryPageBytes = Compress(dph, dictionaryPageBytes, compression);
-            int dictionaryHeaderSize = Write(dph, dictionaryPageBytes);
-            result.Add(new PageTag { HeaderSize = dictionaryHeaderSize, HeaderMeta = dph });
-         }
-
-         dataPageBytes = Compress(ph, dataPageBytes, compression);
-         int dataHeaderSize = Write(ph, dataPageBytes);
-         result.Add(new PageTag { HeaderSize = dataHeaderSize, HeaderMeta = ph });
-
-         return result;
-      }
-
-      private void CreateDefinitions(IList values, SchemaElement schema, out IList nonNullableValues, out List<int> definitions)
-      {
-         nonNullableValues = TypeFactory.Create(schema, _formatOptions, false);
-         definitions = new List<int>();
-
-         foreach(object value in values)
-         {
-            if(value == null)
-            {
-               definitions.Add(0);
-            }
-            else
-            {
-               definitions.Add(1);
-               nonNullableValues.Add(value);
-            }
-         }
-      }
-
-      private List<int> CreateRepetitions(IList values, SchemaElement schema)
-      {
-         var result = new List<int>();
-
-         result.Add(0);
-         result.AddRange(Enumerable.Repeat(1, values.Count - 1));
-
-         return result;
-      }
-
-      private IList FlattenRepeatables(IList values, SchemaElement se)
-      {
-         IList result = TypeFactory.Create(se.ElementType, se.IsNullable);
-
-         foreach(IEnumerable elementValues in values)
-         {
-            result.AddRange(elementValues);
-         }
-
-         return result;
-      }
-
-      private int Write(Thrift.PageHeader ph, byte[] data)
-      {
-         int headerSize = ThriftStream.Write(ph);
-         _output.Write(data, 0, data.Length);
-         return headerSize;
-      }
-
-      private byte[] Compress(Thrift.PageHeader ph, byte[] data, CompressionMethod compression)
-      {
-         //note that page size numbers do not include header size by spec
-
-         ph.Uncompressed_page_size = data.Length;
-         byte[] result;
-
-         if (compression != CompressionMethod.None)
-         {
-            IDataWriter writer = DataFactory.GetWriter(compression);
-            using (var ms = new MemoryStream())
-            {
-               writer.Write(data, ms);
-               result = ms.ToArray();
-            }
-            ph.Compressed_page_size = result.Length;
-         }
-         else
-         {
-            ph.Compressed_page_size = ph.Uncompressed_page_size;
-            result = data;
-         }
-
-         return result;
       }
 
       private void WriteMagic()
       {
-         _output.Write(MagicBytes, 0, MagicBytes.Length);
+         Stream.Write(MagicBytes, 0, MagicBytes.Length);
       }
 
       /// <summary>
-      /// Finalizes file, writes metadata and footer
+      /// Disposes the writer and writes the file footer.
       /// </summary>
       public void Dispose()
       {
          if (!_dataWritten) return;
 
+         //update row count (on append add row count to existing metadata)
+         _footer.Add(_openedWriters.Sum(w => w.RowCount ?? 0));
+
          //finalize file
-         long size = ThriftStream.Write(_meta.ThriftMeta);
+         long size = _footer.Write(ThriftStream);
 
          //metadata size
          Writer.Write((int)size);  //4 bytes
@@ -371,7 +128,7 @@ namespace Parquet
          WriteMagic();              //4 bytes
 
          Writer.Flush();
-         _output.Flush();
+         Stream.Flush();
       }
    }
 }

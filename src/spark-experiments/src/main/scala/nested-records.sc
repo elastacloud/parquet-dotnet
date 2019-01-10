@@ -42,7 +42,6 @@ def convertFromFormattedJson(name: String, writeFile: Boolean): DataFrame = {
    df
 }
 
-//val df = convertFromFormattedJson("nested", true)
-val df = convertFromFormattedJson("simplerepeated", true)
-
-df.printSchema()
+val dfSpark = convertFromFormattedJson("repeatedstruct", false)
+dfSpark.printSchema()
+dfSpark.show()

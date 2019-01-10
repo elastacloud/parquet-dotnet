@@ -1,12 +1,7 @@
 ﻿using System;
 using Parquet.Data;
 using System.IO;
-using Parquet.Thrift;
 using Xunit;
-using F = System.IO.File;
-using Type = Parquet.Thrift.Type;
-using NetBox.IO;
-using NetBox;
 using System.Collections.Generic;
 
 namespace Parquet.Test
@@ -14,301 +9,222 @@ namespace Parquet.Test
    public class ParquetWriterTest : TestBase
    {
       [Fact]
-      public void Write_different_compressions()
+      public void Cannot_write_columns_in_wrong_order()
       {
-         var ds = new DataSet(
-            new SchemaElement<int>("id"),
-            new SchemaElement<bool>("bool_col"),
-            new SchemaElement<string>("string_col")
-         )
+         var schema = new Schema(new DataField<int>("id"), new DataField<int>("id2"));
+
+         using (var writer = new ParquetWriter(schema, new MemoryStream()))
          {
-            //8 values for each column
 
-            { 4, true, "0" },
-            { 5, false, "1" },
-            { 6, true, "0" },
-            { 7, false, "1" },
-            { 2, true, "0" },
-            { 3, false, "1" },
-            { 0, true, "0" },
-            { 1, false, "0" }
-         };
-         var uncompressed = new MemoryStream();
-         ParquetWriter.Write(ds, uncompressed, CompressionMethod.None);
-
-         var compressed = new MemoryStream();
-         ParquetWriter.Write(ds, compressed, CompressionMethod.Gzip);
-
-         var compressedSnappy = new MemoryStream();
-         ParquetWriter.Write(ds, compressedSnappy, CompressionMethod.Snappy);
-      }
-
-      [Fact]
-      public void Write_int64datetimeoffset()
-      {
-         var element = new SchemaElement<DateTimeOffset>("timestamp_col");
-         /*{
-            ThriftConvertedType = ConvertedType.TIMESTAMP_MILLIS,
-            ThriftOriginalType = Type.INT64
-         };*/
-
-         var ds = new DataSet(
-            element  
-         )
-         {
-            new DateTimeOffset(new DateTime(2017, 1, 1, 12, 13, 22)),
-            new DateTimeOffset(new DateTime(2017, 1, 1, 12, 13, 24))
-         };
-
-         //8 values for each column
-
-
-         var uncompressed = new MemoryStream();
-         using (var writer = new ParquetWriter(uncompressed))
-         {
-            writer.Write(ds, CompressionMethod.None);
-         }
-      }
-
-      [Fact]
-      public void Write_and_read_nullable_integers()
-      {
-         var ds = new DataSet(new SchemaElement<int>("id"))
-         {
-            1,
-            2,
-            3,
-            (object)null,
-            4,
-            (object)null,
-            5
-         };
-         var ms = new MemoryStream();
-         ParquetWriter.Write(ds, ms);
-
-         ms.Position = 0;
-         DataSet ds1 = ParquetReader.Read(ms);
-
-         Assert.Equal(ds1[0].GetInt(0), 1);
-         Assert.Equal(ds1[1].GetInt(0), 2);
-         Assert.Equal(ds1[2].GetInt(0), 3);
-         Assert.True(ds1[3].IsNullAt(0));
-         Assert.Equal(ds1[4].GetInt(0), 4);
-         Assert.True(ds1[5].IsNullAt(0));
-         Assert.Equal(ds1[6].GetInt(0), 5);
-      }
-
-      [Fact]
-      public void Write_in_small_row_groups()
-      {
-         var options = new WriterOptions { RowGroupsSize = 5 };
-
-         var ds = new DataSet(new SchemaElement<int>("index"));
-         for(int i = 0; i < 103; i++)
-         {
-            ds.Add(new Row(i));
-         }
-
-         var ms = new MemoryStream();
-         ParquetWriter.Write(ds, ms, CompressionMethod.None, null, options);
-
-         ms.Position = 0;
-         DataSet ds1 = ParquetReader.Read(ms);
-         Assert.Equal(1, ds1.ColumnCount);
-         Assert.Equal(103, ds1.RowCount);
-      }
-
-      [Fact]
-      public void Write_supposably_in_dictionary_encoding()
-      {
-         var ds = new DataSet(new SchemaElement<int>("id"), new SchemaElement<string>("dic_col"));
-         ds.Add(1, "one");
-         ds.Add(2, "one");
-         ds.Add(3, "one");
-         ds.Add(4, "one");
-         ds.Add(5, "one");
-         ds.Add(6, "two");
-         ds.Add(7, "two");
-
-         ds = DataSetGenerator.WriteRead(ds);
-
-
-      }
-
-      [Fact]
-      public void Append_to_file_reads_all_dataset()
-      {
-         var ms = new MemoryStream();
-
-         var ds1 = new DataSet(new SchemaElement<int>("id"));
-         ds1.Add(1);
-         ds1.Add(2);
-         ParquetWriter.Write(ds1, ms);
-
-         //append to file
-         var ds2 = new DataSet(new SchemaElement<int>("id"));
-         ds2.Add(3);
-         ds2.Add(4);
-         ParquetWriter.Write(ds2, ms, CompressionMethod.Gzip, null, null, true);
-
-         ms.Position = 0;
-         DataSet dsAll = ParquetReader.Read(ms);
-
-         Assert.Equal(4, dsAll.RowCount);
-         Assert.Equal(new[] {1, 2, 3, 4}, dsAll.GetColumn(0));
-      }
-
-      [Fact]
-      public void Append_to_file_with_different_schema_fails()
-      {
-         var ms = new MemoryStream();
-
-         var ds1 = new DataSet(new SchemaElement<int>("id"));
-         ds1.Add(1);
-         ds1.Add(2);
-         ParquetWriter.Write(ds1, ms);
-
-         //append to file
-         var ds2 = new DataSet(new SchemaElement<double>("id"));
-         ds2.Add(3d);
-         ds2.Add(4d);
-         Assert.Throws<ParquetException>(() => ParquetWriter.Write(ds2, ms, CompressionMethod.Gzip, null, null, true));
-      }
-
-      [Fact]
-      public void Write_column_with_only_one_null_value()
-      {
-         var ds = new DataSet(
-           new SchemaElement<int>("id"),
-           new SchemaElement<int>("city")
-       );
-
-         ds.Add(0, null);
-
-         var ms = new MemoryStream();
-         ParquetWriter.Write(ds, ms);
-
-         ms.Position = 0;
-         DataSet ds1 = ParquetReader.Read(ms);
-
-         Assert.Equal(1, ds1.RowCount);
-         Assert.Equal(0, ds1[0][0]);
-         Assert.Null(ds1[0][1]);
-      }
-
-      [Fact]
-      public void Write_simple_repeated_field()
-      {
-         var ds = new DataSet(
-            new SchemaElement<int>("id"),
-            new SchemaElement<IEnumerable<string>>("cities"));
-
-         ds.Add(1, new[] { "London", "Derby" });
-
-         DataSet ds1 = DataSetGenerator.WriteRead(ds);
-
-         Assert.Equal("id", ds.Schema[0].Name);
-         Assert.Equal("cities", ds.Schema[1].Name);
-      }
-
-      [Fact]
-      public void Write_in_small_chunks_to_forward_only_stream()
-      {
-         var ms = new MemoryStream();
-         var forwardOnly = new WriteableNonSeekableStream(ms);
-
-         var ds = new DataSet(
-            new SchemaElement<int>("id"),
-            new SchemaElement<string>("nonsense"));
-         ds.Add(1, Generator.RandomString);
-
-         using (var writer = new ParquetWriter(forwardOnly))
-         {
-            writer.Write(ds);
-            writer.Write(ds);
-            writer.Write(ds);
-         }
-
-         ms.Position = 0;
-         DataSet ds1 = ParquetReader.Read(ms);
-
-         Assert.Equal(3, ds1.RowCount);
-
-      }
-
-      [Fact]
-      public void Writing_another_chunk_validates_schema()
-      {
-
-         var ds1 = new DataSet(new SchemaElement<int>("id"));
-         var ds2 = new DataSet(new SchemaElement<int>("id1"));
-
-         using (var ms = new MemoryStream())
-         {
-            using (var ps = new ParquetWriter(ms))
+            using (ParquetRowGroupWriter gw = writer.CreateRowGroup())
             {
-               ps.Write(ds1);
-
-               Assert.Throws<ParquetException>(() => ps.Write(ds2));
+               Assert.Throws<ArgumentException>(() =>
+               {
+                  gw.WriteColumn(new DataColumn((DataField)schema[1], new int[] { 1 }));
+               });
             }
          }
       }
 
       [Fact]
-      public void Datetime_as_null_writes()
+      public void Write_in_small_row_groups()
       {
-         var schemaElements = new List<Data.SchemaElement>();
-         schemaElements.Add(new SchemaElement<string>("primary-key"));
-         schemaElements.Add(new SchemaElement<DateTime>("as-at-date"));
+         //write a single file having 3 row groups
+         var id = new DataField<int>("id");
+         var ms = new MemoryStream();
 
-         var ds = new DataSet(schemaElements);
+         using (var writer = new ParquetWriter(new Schema(id), ms))
+         {
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new int[] { 1 }));
+            }
 
-         // row 1
-         var row1 = new List<object>(schemaElements.Count);
-         row1.Add(Guid.NewGuid().ToString());
-         row1.Add(DateTime.UtcNow.AddDays(-5));
-         ds.Add(new Row(row1));
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new int[] { 2 }));
+            }
 
-         // row 2
-         var row2 = new List<object>(schemaElements.Count);
-         row2.Add(Guid.NewGuid().ToString());
-         row2.Add(DateTime.UtcNow);
-         ds.Add(new Row(row2));
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new int[] { 3 }));
+            }
 
-         // row 3
-         var row3 = new List<object>(schemaElements.Count);
-         row3.Add(Guid.NewGuid().ToString());
-         row3.Add(null);
-         //objData3.Add(DateTime.UtcNow);
-         ds.Add(new Row(row3));
+         }
 
-         DataSet dsRead = DataSetGenerator.WriteRead(ds);
+         //read the file back and validate
+         ms.Position = 0;
+         using (var reader = new ParquetReader(ms))
+         {
+            Assert.Equal(3, reader.RowGroupCount);
 
-         Assert.Equal(3, dsRead.RowCount);
+            using (ParquetRowGroupReader rg = reader.OpenRowGroupReader(0))
+            {
+               Assert.Equal(1, rg.RowCount);
+               DataColumn dc = rg.ReadColumn(id);
+               Assert.Equal(new int[] { 1 }, dc.Data);
+            }
+
+            using (ParquetRowGroupReader rg = reader.OpenRowGroupReader(1))
+            {
+               Assert.Equal(1, rg.RowCount);
+               DataColumn dc = rg.ReadColumn(id);
+               Assert.Equal(new int[] { 2 }, dc.Data);
+            }
+
+            using (ParquetRowGroupReader rg = reader.OpenRowGroupReader(2))
+            {
+               Assert.Equal(1, rg.RowCount);
+               DataColumn dc = rg.ReadColumn(id);
+               Assert.Equal(new int[] { 3 }, dc.Data);
+            }
+         }
       }
 
-      public class WriteableNonSeekableStream : DelegatedStream
+      [Fact]
+      public void Append_to_file_reads_all_data()
       {
-         public WriteableNonSeekableStream(Stream master) : base(master)
+         //write a file with a single row group
+         var id = new DataField<int>("id");
+         var ms = new MemoryStream();
+
+         using (var writer = new ParquetWriter(new Schema(id), ms))
          {
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new int[] { 1, 2 }));
+            }
          }
 
-         public override bool CanSeek => false;
-
-         public override bool CanRead => true;
-
-         public override long Seek(long offset, SeekOrigin origin)
+         //append to this file. Note that you cannot append to existing row group, therefore create a new one
+         ms.Position = 0;
+         using (var writer = new ParquetWriter(new Schema(id), ms, append: true))
          {
-            throw new NotSupportedException();
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new int[] { 3, 4 }));
+            }
          }
 
-         public override long Position
+         //check that this file now contains two row groups and all the data is valid
+         ms.Position = 0;
+         using (var reader = new ParquetReader(ms))
          {
-            get => base.Position;
-            set => throw new NotSupportedException();
+            Assert.Equal(2, reader.RowGroupCount);
+
+            using (ParquetRowGroupReader rg = reader.OpenRowGroupReader(0))
+            {
+               Assert.Equal(2, rg.RowCount);
+               Assert.Equal(new int[] { 1, 2 }, rg.ReadColumn(id).Data);
+            }
+
+            using (ParquetRowGroupReader rg = reader.OpenRowGroupReader(1))
+            {
+               Assert.Equal(2, rg.RowCount);
+               Assert.Equal(new int[] { 3, 4 }, rg.ReadColumn(id).Data);
+            }
+
+         }
+      }
+      
+      public readonly static IEnumerable<object[]> NullableColumnContentCases = new List<object[]>()
+      {
+         new object[] { new int?[] { 1, 2 } },
+         new object[] { new int?[] { null } },
+         new object[] { new int?[] { 1, null, 2 } },
+         new object[] { new int[] { 1, 2 } },
+      };
+
+      [Theory]
+      [MemberData(nameof(NullableColumnContentCases))]
+      public void Write_read_nullable_column(Array input)
+      {
+         var id = new DataField<int?>("id");
+         var ms = new MemoryStream();
+
+         using (var writer = new ParquetWriter(new Schema(id), ms))
+         {
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, input));
+            }
+         }
+
+         ms.Position = 0;
+         using (var reader = new ParquetReader(ms))
+         {
+            Assert.Equal(1, reader.RowGroupCount);
+
+            using (ParquetRowGroupReader rg = reader.OpenRowGroupReader(0))
+            {
+               Assert.Equal(input.Length, rg.RowCount);
+               Assert.Equal(input, rg.ReadColumn(id).Data);
+            }
          }
       }
 
+      [Fact]
+      public void FileMetadata_sets_num_rows_on_file_and_row_group()
+      {
+         var ms = new MemoryStream();
+         var id = new DataField<int>("id");
 
+         //write
+         using (var writer = new ParquetWriter(new Schema(id), ms))
+         {
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new[] { 1, 2, 3, 4 }));
+            }
+         }
+
+         //read back
+         using (var reader = new ParquetReader(ms))
+         {
+            Assert.Equal(4, reader.ThriftMetadata.Num_rows);
+
+            using (ParquetRowGroupReader rg = reader.OpenRowGroupReader(0))
+            {
+               Assert.Equal(4, rg.RowCount);
+            }
+         }
+      }
+
+      [Fact]
+      public void FileMetadata_sets_num_rows_on_file_and_row_group_multiple_row_groups()
+      {
+         var ms = new MemoryStream();
+         var id = new DataField<int>("id");
+
+         //write
+         using (var writer = new ParquetWriter(new Schema(id), ms))
+         {
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new[] { 1, 2, 3, 4 }));
+            }
+
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new[] { 5, 6 }));
+            }
+         }
+
+         //read back
+         using (var reader = new ParquetReader(ms))
+         {
+            Assert.Equal(6, reader.ThriftMetadata.Num_rows);
+
+            using (ParquetRowGroupReader rg = reader.OpenRowGroupReader(0))
+            {
+               Assert.Equal(4, rg.RowCount);
+            }
+
+            using (ParquetRowGroupReader rg = reader.OpenRowGroupReader(1))
+            {
+               Assert.Equal(2, rg.RowCount);
+            }
+         }
+      }
    }
 }

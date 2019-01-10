@@ -1,17 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>    
-    <TargetFramework>netcoreapp1.1</TargetFramework>    
-    <SignAssembly>False</SignAssembly>    
-    <AssemblyOriginatorKeyFile>C:\dev\parquet-dotnet\src\pqnet.snk</AssemblyOriginatorKeyFile>
+   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
+      <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
+   </PropertyGroup>
+
+   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+      <TargetFrameworks>netcoreapp2.1;net452</TargetFrameworks>
+   </PropertyGroup>
+
+   <PropertyGroup>    
+    <SignAssembly>true</SignAssembly>    
+    <AssemblyOriginatorKeyFile>..\pqnet.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />
-    <PackageReference Include="NetBox" Version="1.4.22" />
-    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
-    <PackageReference Include="xunit" Version="2.2.0" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+    <PackageReference Include="NetBox" Version="2.1.5" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -19,127 +35,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="data\all_nulls.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\complex-primitives.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\nested.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\simplerepeated.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\nested2.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\nested1.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\alltypes_no_headers.csv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\alltypes.csv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\alltypes.gzip.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\alltypes.plain.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\alltypes.snappy.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\alltypes_dictionary.csv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\alltypes_dictionary.gzip.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\alltypes_dictionary.plain.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\alltypes_dictionary.plain-spark21.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\alltypes_plain.csv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\alltypes_plain.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\alltypes_dictionary.snappy.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\customer.impala.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\dates.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\fixedlenbytearray.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\gzip-nation.impala.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\map_array.parq">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\mr_times.parq">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\nation.csv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\nation.dict.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\nation.impala.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\nation.plain.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\postcodes.csv">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\postcodes.gzip.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\postcodes.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\postcodes.plain.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\postcodes.snappy.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\simplerepeated.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\snappy-nation.impala.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\test-converted-type-null.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\test-null-dictionary.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\test-null.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="data\test.parquet">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
 
   <ItemGroup>
-    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+     <None Update="data\**">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+     </None>
+
   </ItemGroup>
 
 </Project>

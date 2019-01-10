@@ -10,20 +10,25 @@ namespace Parquet
    /// </summary>
    public class ParquetActor
    {
+#pragma warning disable IDE1006
       internal const string MagicString = "PAR1";
       internal static readonly byte[] MagicBytes = Encoding.ASCII.GetBytes(MagicString);
+#pragma warning restore IDE1006
 
       private readonly Stream _fileStream;
       private BinaryReader _binaryReader;
       private BinaryWriter _binaryWriter;
       private ThriftStream _thriftStream;
 
-      //todo: comparer for Schema
-
       internal ParquetActor(Stream fileStream)
       {
-         _fileStream = fileStream ?? throw new ArgumentNullException(nameof(_fileStream));
+         _fileStream = fileStream ?? throw new ArgumentNullException(nameof(fileStream));
       }
+
+      /// <summary>
+      /// Original stream to write or read
+      /// </summary>
+      protected Stream Stream => _fileStream;
 
       internal BinaryReader Reader => _binaryReader ?? (_binaryReader = new BinaryReader(_fileStream));
 

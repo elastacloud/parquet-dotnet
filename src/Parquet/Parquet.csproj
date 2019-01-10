@@ -1,77 +1,92 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>netstandard1.4;netstandard1.6;net451</TargetFrameworks>
-    <Version>1.2.0.0</Version>
-    <FileVersion>1.2.3.4</FileVersion>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <DefineConstants>DEBUG</DefineConstants>
-    <SignAssembly>False</SignAssembly>
-    <AssemblyOriginatorKeyFile>C:\dev\parquet-dotnet\src\pqnet.snk</AssemblyOriginatorKeyFile>
-    <Description>A .NET library to read and write Apache Parquet files.</Description>
-    <Authors>Ivan Gavryliuk (@aloneguid); Richard Conway (@azurecoder)</Authors>
+
+   <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\pqnet.snk</AssemblyOriginatorKeyFile>
+    <Description>Pure .NET library to read and write Apache Parquet files, targeting .NET 4.5 and .NET Standand 1.4 and up. Linux, Windows and Mac are first class citizens, but also works everywhere .NET is running (Android, iOS, IOT). Has zero dependencies on thrid-party libraries or any native code. Provides both low-level access to Apache Parquet files, and high-level utilities for more traditional and humanly understandable row-based access. Includes automatic serializer/deserializer from C# classes into parquet files that works by generating MSIL (bytecode) on the fly and is therefore super fast.</Description>
     <Company>Elastacloud</Company>
-    <RepositoryUrl>https://github.com/elastacloud/parquet-dotnet</RepositoryUrl>
-    <RepositoryType>GitHub</RepositoryType>
-    <PackageProjectUrl>https://github.com/elastacloud/parquet-dotnet</PackageProjectUrl>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>Parquet.Net</PackageId>
-    <PackageIconUrl>http://i.isolineltd.com/nuget/parquet.png</PackageIconUrl>
-    <PackageLicenseUrl>https://github.com/elastacloud/parquet-dotnet/blob/master/LICENSE</PackageLicenseUrl>
-    <Copyright>Copyright (c) 2017 by Elastacloud Ltd.</Copyright>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PackageReleaseNotes>v1.3
-new features:
-- .NET byte and sbyte type is supported
-- DataSet has got a new .Merge method that allows to merge two datasets, even if rows and columns are incompatible
+    <PackageReleaseNotes>3.2.3:
+- bug fixed: multiple nesting levels were not correctly read by row-based helpers (#363)
+- bug fixed: Equals method on Row didn't compare list elements correctly (#361)
+- bug fixed: multi-page columns were not read to end if their order is not what parquet-dotnet expects (#370)
 
-improvements:
-- we have removed a dependency on Snappy.Sharp completely which conflicted with projects targeting .NET 4.5
-- dependency on System.ValueTuple is removed
-- Apache Thrift dependency was replaced by a custom build which has zero downstream dependencies now. This was causing problems for projects using ASP.NET Core and specific Kestrel version, as stupidly enough Apache Thrift was referencing web hosting framework!
+3.2.0:
+- new feature: POCO serialiser support for repeatable fields POCO (#358)
+- bug fixed: --max-rows 10 not honored by PARQ Global Tool 📺 (#357)
+- bug fixed: failure to read columns if data page is larger than it should be (supposably padded by Spark) 🐛
+(#330)
+- improvement: Limit number of rows printed by parq. By default only show the first 10 rows in PARQ Global Tool 📺
+(#351)
 
-v1.2
-new features:
-- INT64 (C# long) type is supported (#194)
-- Decimal datatype is fully supported (#209). This includes support for simple System.Decimal, and decimal types with different scales and precisions. Decimals are encoded by utilising all three encodings from parquet specs, however this can be switched off for compatibility with older system. Decimals are fully compatible with Hive and Impala which have some edge cases not complying with parquet specifications. Thanks to @dmitryPavliv and @nzapolski for making this possible
+3.1.3, 3.1.4:
+- includes massive performance improvements in parquet reader, now we are faster than fastparquet (python lib)  
 
-bugs fixed:
-- fixed a flaw in dictionary encoding implementation affecting files written for AWS Impala (#193)
-- when a column contains only single value and it's null Parquet.Net was crashing (#198)
+3.1.2:
+- new feature: replaced default ToString() method in Table and Row object to produce json (#346)
+- new feature: parquet CLI supports conversion from parquet to json (#341)
 
-v1.1
-new features:
-- Reader supports nested structures.
-- Parquet output is now compatible with AWS Athena
-- Writer can append data to existing file
+3.1.1:
+parq cli improvements
 
-improvements:
-- Parquet metadata sets page sizes according to standard
-- Schema and SchemaElement has Show method allowing to get user readable representation 
+3.1.0:
+- re-introducing utilities for row-based access allowing you to access and create parquet files in more readable format.
+- Field class now supports MaxRepetitionLevel and MaxDefinitionLevel
+- fixed bug #334 preventing reading generated files in Impala
+- parquet.net library supports SourceLink
 
-bug fixes:
-- some files mix encodings between data pages resulting in wrong count of rows and occasional crashes (#183)
-- some string encoded fields not annotated properly were crashing Parquet.Net reader (#138)</PackageReleaseNotes>
+3.0.5:
+- #321 bug fixed: a nullable field should support all-non-nullable values 
+- performance improvement around packing definition levels
+
+3.0.4:
+- bug fixed: Cannot read schema where map elements are structures (#320)
+
+3.0.3
+- critical bug fixed: reading parquet files with multiple pages doesn't read beyond 1st page (#318)
+    
+3.0.2
+- performance improvements (#317)
+
+3.0.1
+- improvement: better column validation in row group writer
+- bug fixed: Snappy compression writer fails on certain encodings (#315)
+
+3.0.0
+the first release of a major rewrite</PackageReleaseNotes>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+     <DocumentationFile>bin\Debug\$(TargetFramework)\Parquet.xml</DocumentationFile>
+     <DebugType>full</DebugType>
+     <DebugSymbols>true</DebugSymbols>
+     <PackageTags>apache parquet dotnet core net c# f# windows linux macos ios android xboxone xbox</PackageTags>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard1.6|AnyCPU'">
-    <DocumentationFile>bin\Debug\netstandard1.6\Parquet.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard1.6|AnyCPU'">
-    <DocumentationFile>bin\Release\netstandard1.6\Parquet.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard1.4|AnyCPU'">
-    <DocumentationFile>bin\Debug\netstandard1.4\Parquet.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard1.4|AnyCPU'">
-    <DocumentationFile>bin\Release\netstandard1.4\Parquet.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net451|AnyCPU'">
-    <DocumentationFile>bin\Debug\net451\Parquet.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net451|AnyCPU'">
-    <DocumentationFile>bin\Release\net451\Parquet.xml</DocumentationFile>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Apache.Thrift" Version="1.0.2" />
-    <PackageReference Include="NetBox" Version="1.4.22" />
+
+   <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
+      <TargetFrameworks>netstandard1.4</TargetFrameworks>
+   </PropertyGroup>
+
+   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+      <TargetFrameworks>netstandard1.4;net45</TargetFrameworks>
+   </PropertyGroup>
+
+   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+      <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+      <PublishRepositoryUrl>true</PublishRepositoryUrl>
+      <EmbedUntrackedSources>true</EmbedUntrackedSources>
+      <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+   </PropertyGroup>
+
+   <ItemGroup Condition="'$(Configuration)' == 'Release'">
+      <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All" />
+   </ItemGroup>
+
+   <ItemGroup>
+    <PackageReference Include="System.Buffers" Version="4.5.0" />
+    <PackageReference Include="System.Memory" Version="4.5.1" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
   </ItemGroup>
+
 </Project>

@@ -3,10 +3,17 @@ using System.IO;
 using System.Reflection;
 using Xunit;
 
+
 namespace Parquet.Test.Reader
 {
+   [UseCulture("en-US")]
+   // [UseCulture("da-DK")] // FAILS
    public class TestDataTest : ParquetCsvComparison
    {
+      public TestDataTest()
+      {
+      }
+
       /// <summary>
       /// +---+--------+-----------+------------+-------+----------+---------+----------+-------------------------+----------+---------------------+
       /// |id |bool_col|tinyint_col|smallint_col|int_col|bigint_col|float_col|double_col|date_string_col          |string_col|timestamp_col        |
@@ -24,7 +31,7 @@ namespace Parquet.Test.Reader
       [Fact]
       public void Alltypes_plain_no_compression()
       {
-         CompareFiles("alltypes", "plain",
+         CompareFiles("types/alltypes", "plain",
             typeof(int?),
             typeof(bool?),
             typeof(int?),
@@ -41,7 +48,7 @@ namespace Parquet.Test.Reader
       [Fact]
       public void Alltypes_gzip_compression()
       {
-         CompareFiles("alltypes", "gzip",
+         CompareFiles("types/alltypes", "gzip",
             typeof(int?),
             typeof(bool?),
             typeof(int?),
@@ -58,7 +65,7 @@ namespace Parquet.Test.Reader
       [Fact]
       public void Alltypes_snappy_compression()
       {
-         CompareFiles("alltypes", "snappy",
+         CompareFiles("types/alltypes", "snappy",
             typeof(int?),
             typeof(bool?),
             typeof(int?),
@@ -83,48 +90,7 @@ namespace Parquet.Test.Reader
       [Fact]
       public void Alltypes_dictionary_no_compression()
       {
-         CompareFiles("alltypes_dictionary", "plain",
-            typeof(int?),
-            typeof(bool?),
-            typeof(int?),
-            typeof(int?),
-            typeof(int?),
-            typeof(long?),
-            typeof(float?),
-            typeof(double?),
-            typeof(string),
-            typeof(string),
-            typeof(DateTimeOffset?));
-      }
-
-      [Fact]
-      public void Alltypes_dictionary_no_strings()
-      {
-         string path = GetDataFilePath("alltypes_dictionary.plain.parquet");
-         ParquetReader.ReadFile(path); //test that this doesn't crash
-      }
-
-      //[Fact]
-      public void Alltypes_dictionary_gzip_compression()
-      {
-         CompareFiles("alltypes_dictionary", "gzip",
-            typeof(int?),
-            typeof(bool?),
-            typeof(int?),
-            typeof(int?),
-            typeof(int?),
-            typeof(long?),
-            typeof(float?),
-            typeof(double?),
-            typeof(string),
-            typeof(string),
-            typeof(DateTimeOffset?));
-      }
-
-      //[Fact]
-      public void Alltypes_dictionary_snappy_compression()
-      {
-         CompareFiles("alltypes_dictionary", "snappyS",
+         CompareFiles("types/alltypes_dictionary", "plain",
             typeof(int?),
             typeof(bool?),
             typeof(int?),
@@ -141,7 +107,7 @@ namespace Parquet.Test.Reader
       [Fact]
       public void Alltypes_dictionary_no_compression_by_spark()
       {
-         CompareFiles("alltypes_dictionary", "plain-spark21",
+         CompareFiles("types/alltypes_dictionary", "plain-spark21",
             typeof(int?),
             typeof(bool?),
             typeof(int?),
@@ -158,7 +124,7 @@ namespace Parquet.Test.Reader
       [Fact]
       public void Alltypes_dictionary_gzipped()
       {
-         CompareFiles("alltypes_dictionary", "gzip",
+         CompareFiles("types/alltypes_dictionary", "gzip",
             typeof(int?),
             typeof(bool?),
             typeof(int?),
@@ -183,7 +149,7 @@ namespace Parquet.Test.Reader
             typeof(double?),
             typeof(int?),     //Easting
             typeof(int?),     //Northing
-            typeof(string),   
+            typeof(string),
             typeof(string),
             typeof(string),
             typeof(string),
@@ -207,12 +173,5 @@ namespace Parquet.Test.Reader
             typeof(int?),
             typeof(string));
       }
-
-      private string GetDataFilePath(string name)
-      {
-         string thisPath = typeof(TestDataTest).GetTypeInfo().Assembly.Location;
-         return Path.Combine(Path.GetDirectoryName(thisPath), "data", name);
-      }
-
    }
 }

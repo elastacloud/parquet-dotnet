@@ -13,7 +13,7 @@ If this is something you think you can fix, then
 [fork parquet-dotnet](https://help.github.com/articles/fork-a-repo)
 and create a branch with a descriptive name.
 
-If you need a started guide to understand Parquet format please read [this guide](doc/parquet-getting-started.md)
+If you need a started guide to understand Parquet format please read [this guide](../doc/parquet-getting-started.md)
 
 A good branch name would be (where issue #325 is the ticket you're working on):
 
@@ -23,7 +23,7 @@ git checkout -b 325-add-japanese-translations
 
 ## 3. Get the fix working
 
-Make the changes and make sure they are working locally. In case of code changes we strongly advise to create a unit/integration test before finishing your work.
+Make the changes and make sure they are working locally. In case of code changes we strongly advise to create a unit/integration test before finishing your work. We will not accept any code (unless it's a trivial change or documentation) without any tests because we won't know if it fixes anything at all.
 
 ## 4. Make a Pull Request
 

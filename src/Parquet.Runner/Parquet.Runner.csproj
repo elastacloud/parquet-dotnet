@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LogMagic" Version="2.4.29" />
+    <PackageReference Include="LogMagic" Version="2.17.3" />
   </ItemGroup>
 
   <ItemGroup>
