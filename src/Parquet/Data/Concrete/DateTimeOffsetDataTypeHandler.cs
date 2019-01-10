@@ -56,7 +56,7 @@ namespace Parquet.Data.Concrete
 
       }
 
-      public override int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset, ParquetOptions formatOptions)
+      public override int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset)
       {
          switch(tse.Type)
          {

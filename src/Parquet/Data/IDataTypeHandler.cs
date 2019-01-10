@@ -25,7 +25,12 @@ namespace Parquet.Data
 
       Type ClrType { get; }
 
-      int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset, ParquetOptions formatOptions);
+      int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset);
+
+      /// <summary>
+      /// Reads a single value from the current stream position
+      /// </summary>
+      //object Read(BinaryReader reader, Thrift.SchemaElement tse, ParquetOptions formatOptions);
 
       void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values, Thrift.Statistics statistics);
 

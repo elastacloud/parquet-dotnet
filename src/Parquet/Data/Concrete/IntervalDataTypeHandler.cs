@@ -25,7 +25,7 @@ namespace Parquet.Data.Concrete
          tse.Type_length = 12;
       }
 
-      public override int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset, ParquetOptions formatOptions)
+      public override int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset)
       {
          int typeLength = tse.Type_length;
          if (typeLength == 0) return 0;

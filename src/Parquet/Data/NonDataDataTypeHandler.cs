@@ -27,12 +27,7 @@ namespace Parquet.Data
          throw new NotSupportedException();
       }
 
-      public IList Read(Thrift.SchemaElement tse, BinaryReader reader, ParquetOptions formatOptions)
-      {
-         throw new NotSupportedException();
-      }
-
-      public int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset, ParquetOptions formatOptions)
+      public int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset)
       {
          throw new NotSupportedException();
       }

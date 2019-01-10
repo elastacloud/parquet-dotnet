@@ -32,7 +32,7 @@ namespace Parquet.Data.Concrete
                                  && !tse.__isset.converted_type;
       }
 
-      public override int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset, ParquetOptions formatOptions)
+      public override int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset)
       {
          int remLength = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
 

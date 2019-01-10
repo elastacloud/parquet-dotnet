@@ -51,12 +51,12 @@ namespace Parquet.Data
          return new DataField(tse.Name, DataType, hasNulls, isArray);
       }
 
-      public virtual int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset, ParquetOptions formatOptions)
+      public virtual int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset)
       {
-         return Read(tse, reader, formatOptions, (TSystemType[])dest, offset);
+         return Read(tse, reader, (TSystemType[])dest, offset);
       }
 
-      private int Read(Thrift.SchemaElement tse, BinaryReader reader, ParquetOptions formatOptions, TSystemType[] dest, int offset)
+      private int Read(Thrift.SchemaElement tse, BinaryReader reader, TSystemType[] dest, int offset)
       {
          int totalLength = (int)reader.BaseStream.Length;
          int idx = offset;
