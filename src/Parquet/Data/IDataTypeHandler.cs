@@ -28,9 +28,9 @@ namespace Parquet.Data
       int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset);
 
       /// <summary>
-      /// Reads a single value from the current stream position
+      /// Reads a single value from the current stream position. This shouldn't be used normally, however it's useful when decoding parquet stats.
       /// </summary>
-      //object Read(BinaryReader reader, Thrift.SchemaElement tse, ParquetOptions formatOptions);
+      object Read(BinaryReader reader, Thrift.SchemaElement tse);
 
       void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values, Thrift.Statistics statistics);
 

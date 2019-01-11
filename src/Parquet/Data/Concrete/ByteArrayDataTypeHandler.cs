@@ -67,6 +67,15 @@ namespace Parquet.Data.Concrete
          return destIdx - offset;
       }
 
+      protected override byte[] ReadSingle(BinaryReader reader, Thrift.SchemaElement tse)
+      {
+         //length
+         int length = reader.ReadInt32();
+
+         //data
+         return reader.ReadBytes(length);
+      }
+
       public override Array MergeDictionary(Array dictionary, int[] indexes)
       {
          throw new NotImplementedException();
@@ -80,13 +89,6 @@ namespace Parquet.Data.Concrete
       public override Array UnpackDefinitions(Array src, int[] definitionLevels, int maxDefinitionLevel, out bool[] hasValueFlags)
       {
          return UnpackGenericDefinitions((byte[][])src, definitionLevels, maxDefinitionLevel, out hasValueFlags);
-      }
-
-      protected override byte[] ReadOne(BinaryReader reader)
-      {
-         int length = reader.ReadInt32();
-         byte[] data = reader.ReadBytes(length);
-         return data;
       }
 
       protected override void WriteOne(BinaryWriter writer, byte[] value)

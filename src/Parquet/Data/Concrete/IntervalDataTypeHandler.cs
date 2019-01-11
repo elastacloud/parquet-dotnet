@@ -46,6 +46,14 @@ namespace Parquet.Data.Concrete
          return idx - offset;
       }
 
+      protected override Interval ReadSingle(BinaryReader reader, Thrift.SchemaElement tse)
+      {
+         int months = reader.ReadInt32();
+         int days = reader.ReadInt32();
+         int millis = reader.ReadInt32();
+         return new Interval(months, days, millis);
+      }
+
       public override void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values, Thrift.Statistics statistics)
       {
          foreach(Interval interval in values)

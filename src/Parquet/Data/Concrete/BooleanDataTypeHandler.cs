@@ -34,6 +34,14 @@ namespace Parquet.Data.Concrete
          return offset - start;
       }
 
+      /// <summary>
+      /// Normally bools are packed, which is implemented in <see cref="Read(BinaryReader, Thrift.SchemaElement, Array, int)"/>
+      /// </summary>
+      protected override bool ReadSingle(BinaryReader reader, Thrift.SchemaElement tse)
+      {
+         return reader.ReadBoolean();
+      }
+
       public override void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values, Thrift.Statistics statistics)
       {
          int n = 0;

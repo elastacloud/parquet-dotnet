@@ -14,7 +14,7 @@ namespace Parquet.Data.Concrete
 
       }
 
-      protected override sbyte ReadOne(BinaryReader reader)
+      protected override sbyte ReadSingle(BinaryReader reader, Thrift.SchemaElement tse)
       {
          return reader.ReadSByte();
       }

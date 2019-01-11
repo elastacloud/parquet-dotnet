@@ -73,6 +73,14 @@ namespace Parquet.Data.Concrete
          return destIdx - offset;
       }
 
+      protected override string ReadSingle(BinaryReader reader, Thrift.SchemaElement tse)
+      {
+         int length = reader.ReadInt32();
+
+         byte[] data = reader.ReadBytes(length);
+         return Encoding.UTF8.GetString(data);
+      }
+
       public override Array PackDefinitions(Array data, int maxDefinitionLevel, out int[] definitions, out int definitionsLength, out int nullCount)
       {
          return PackDefinitions<string>((string[])data, maxDefinitionLevel, out definitions, out definitionsLength, out nullCount);
@@ -81,22 +89,6 @@ namespace Parquet.Data.Concrete
       public override Array UnpackDefinitions(Array src, int[] definitionLevels, int maxDefinitionLevel, out bool[] hasValueFlags)
       {
          return UnpackGenericDefinitions((string[])src, definitionLevels, maxDefinitionLevel, out hasValueFlags);
-      }
-
-      protected override string ReadOne(BinaryReader reader)
-      {
-         int length = reader.ReadInt32();
-
-         byte[] buffer = _bytePool.Rent(length);
-         reader.Read(buffer, 0, length);
-         string s = E.GetString(buffer, 0, length);   //can't avoid this :(
-         _bytePool.Return(buffer);
-
-         //non-optimised version
-         //byte[] data = reader.ReadBytes(length);
-         //string s = Encoding.UTF8.GetString(data);
-
-         return s;
       }
 
       protected override void WriteOne(BinaryWriter writer, string value)
