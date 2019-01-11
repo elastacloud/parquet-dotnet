@@ -33,9 +33,9 @@ namespace Parquet.Data.Concrete
 
          //modify annotations
          Thrift.SchemaElement tse = container.Last();
-         if(se is DateTimeDataField dse)
+         if (se is DateTimeDataField dse)
          {
-            switch(dse.DateTimeFormat)
+            switch (dse.DateTimeFormat)
             {
                case DateTimeFormat.DateAndTime:
                   tse.Type = Thrift.Type.INT64;
@@ -58,7 +58,7 @@ namespace Parquet.Data.Concrete
 
       public override int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset)
       {
-         switch(tse.Type)
+         switch (tse.Type)
          {
             case Thrift.Type.INT32:
                return ReadAsInt32(reader, (DateTimeOffset[])dest, offset);
@@ -77,10 +77,10 @@ namespace Parquet.Data.Concrete
          {
             case Thrift.Type.INT32:
                int iv = reader.ReadInt32();
-               return new DateTimeOffset(iv.FromUnixTime(), TimeSpan.Zero);
+               return iv.FromUnixDays();
             case Thrift.Type.INT64:
                long lv = reader.ReadInt64();
-               return lv.FromUnixTime();
+               return lv.FromUnixMilliseconds();
             case Thrift.Type.INT96:
                return new NanoTime(reader.ReadBytes(12), 0);
             default:
@@ -90,7 +90,7 @@ namespace Parquet.Data.Concrete
 
       public override void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values, Thrift.Statistics statistics)
       {
-         switch(tse.Type)
+         switch (tse.Type)
          {
             case Thrift.Type.INT32:
                WriteAsInt32(writer, values);
@@ -112,7 +112,7 @@ namespace Parquet.Data.Concrete
          while (reader.BaseStream.Position + 4 <= reader.BaseStream.Length)
          {
             int iv = reader.ReadInt32();
-            DateTimeOffset e = new DateTimeOffset(iv.FromUnixTime(), TimeSpan.Zero);
+            DateTimeOffset e = iv.FromUnixDays();
             dest[idx++] = e;
          }
 
@@ -124,7 +124,7 @@ namespace Parquet.Data.Concrete
          foreach (DateTimeOffset dto in values)
          {
             int days = (int)dto.ToUnixDays();
-            writer.Write(days + 1);
+            writer.Write(days);
          }
       }
 
@@ -133,7 +133,7 @@ namespace Parquet.Data.Concrete
          while (reader.BaseStream.Position + 8 <= reader.BaseStream.Length)
          {
             long lv = reader.ReadInt64();
-            result.Add((DateTimeOffset)(lv.FromUnixTime()));
+            result.Add(lv.FromUnixMilliseconds());
          }
       }
 
@@ -144,7 +144,7 @@ namespace Parquet.Data.Concrete
          while (reader.BaseStream.Position + 8 <= reader.BaseStream.Length)
          {
             long lv = reader.ReadInt64();
-            DateTimeOffset dto = (DateTimeOffset)(lv.FromUnixTime());
+            DateTimeOffset dto = lv.FromUnixMilliseconds();
             dest[idx++] = dto;
          }
 
@@ -155,7 +155,7 @@ namespace Parquet.Data.Concrete
       {
          foreach (DateTimeOffset dto in values)
          {
-            long unixTime = dto.ToUnixTime();
+            long unixTime = dto.ToUnixMilliseconds();
             writer.Write(unixTime);
          }
       }
@@ -184,7 +184,7 @@ namespace Parquet.Data.Concrete
 
       private void WriteAsInt96(BinaryWriter writer, IList values)
       {
-         foreach(DateTimeOffset dto in values)
+         foreach (DateTimeOffset dto in values)
          {
             var nano = new NanoTime(dto);
             nano.Write(writer);
