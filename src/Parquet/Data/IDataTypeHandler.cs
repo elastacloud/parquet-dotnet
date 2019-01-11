@@ -30,7 +30,10 @@ namespace Parquet.Data
       /// <summary>
       /// Reads a single value from the current stream position. This shouldn't be used normally, however it's useful when decoding parquet stats.
       /// </summary>
-      object Read(BinaryReader reader, Thrift.SchemaElement tse);
+      /// <param name="reader">Incoming data</param>
+      /// <param name="tse">Schema element</param>
+      /// <param name="length">Number of bytes to read (type specific). Pass -1 to read the length from incoming stream if you don't know how long the buffer is.</param>
+      object Read(BinaryReader reader, Thrift.SchemaElement tse, int length);
 
       void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values, Thrift.Statistics statistics);
 

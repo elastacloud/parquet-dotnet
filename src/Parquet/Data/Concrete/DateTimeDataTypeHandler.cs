@@ -23,7 +23,7 @@ namespace Parquet.Data.Concrete
             (tse.Type == Thrift.Type.INT32 && tse.__isset.converted_type && tse.Converted_type == Thrift.ConvertedType.DATE);
       }
 
-      protected override DateTime ReadSingle(BinaryReader reader, Thrift.SchemaElement tse)
+      protected override DateTime ReadSingle(BinaryReader reader, Thrift.SchemaElement tse, int length)
       {
          throw new NotSupportedException("this stub should never be called");
       }

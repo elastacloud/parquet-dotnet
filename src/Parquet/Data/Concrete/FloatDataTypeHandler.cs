@@ -8,7 +8,7 @@ namespace Parquet.Data.Concrete
       {
       }
 
-      protected override float ReadSingle(BinaryReader reader, Thrift.SchemaElement tse)
+      protected override float ReadSingle(BinaryReader reader, Thrift.SchemaElement tse, int length)
       {
          return reader.ReadSingle();
       }

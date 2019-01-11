@@ -29,7 +29,7 @@ namespace Parquet.Data
 
       public int Read(BinaryReader reader, Thrift.SchemaElement tse, Array dest, int offset) => throw new NotSupportedException();
 
-      public object Read(BinaryReader reader, Thrift.SchemaElement tse) => throw new NotSupportedException();
+      public object Read(BinaryReader reader, Thrift.SchemaElement tse, int length) => throw new NotSupportedException();
 
 
       public void Write(Thrift.SchemaElement tse, BinaryWriter writer, IList values, Thrift.Statistics statistics)

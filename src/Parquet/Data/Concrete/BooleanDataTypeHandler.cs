@@ -37,7 +37,7 @@ namespace Parquet.Data.Concrete
       /// <summary>
       /// Normally bools are packed, which is implemented in <see cref="Read(BinaryReader, Thrift.SchemaElement, Array, int)"/>
       /// </summary>
-      protected override bool ReadSingle(BinaryReader reader, Thrift.SchemaElement tse)
+      protected override bool ReadSingle(BinaryReader reader, Thrift.SchemaElement tse, int length)
       {
          return reader.ReadBoolean();
       }

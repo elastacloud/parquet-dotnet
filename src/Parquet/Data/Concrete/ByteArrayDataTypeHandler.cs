@@ -67,10 +67,10 @@ namespace Parquet.Data.Concrete
          return destIdx - offset;
       }
 
-      protected override byte[] ReadSingle(BinaryReader reader, Thrift.SchemaElement tse)
+      protected override byte[] ReadSingle(BinaryReader reader, Thrift.SchemaElement tse, int length)
       {
          //length
-         int length = reader.ReadInt32();
+         if(length == -1) length = reader.ReadInt32();
 
          //data
          return reader.ReadBytes(length);

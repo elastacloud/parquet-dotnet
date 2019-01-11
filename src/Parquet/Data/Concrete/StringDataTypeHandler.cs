@@ -73,9 +73,9 @@ namespace Parquet.Data.Concrete
          return destIdx - offset;
       }
 
-      protected override string ReadSingle(BinaryReader reader, Thrift.SchemaElement tse)
+      protected override string ReadSingle(BinaryReader reader, Thrift.SchemaElement tse, int length)
       {
-         int length = reader.ReadInt32();
+         if(length == -1) length = reader.ReadInt32();
 
          byte[] data = reader.ReadBytes(length);
          return Encoding.UTF8.GetString(data);

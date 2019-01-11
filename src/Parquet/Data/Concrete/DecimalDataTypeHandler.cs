@@ -82,7 +82,7 @@ namespace Parquet.Data.Concrete
 
       }
 
-      protected override decimal ReadSingle(BinaryReader reader, Thrift.SchemaElement tse)
+      protected override decimal ReadSingle(BinaryReader reader, Thrift.SchemaElement tse, int length)
       {
          switch (tse.Type)
          {

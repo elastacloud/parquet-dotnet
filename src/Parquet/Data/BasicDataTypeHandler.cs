@@ -56,12 +56,12 @@ namespace Parquet.Data
          return Read(tse, reader, (TSystemType[])dest, offset);
       }
 
-      public virtual object Read(BinaryReader reader, Thrift.SchemaElement tse)
+      public virtual object Read(BinaryReader reader, Thrift.SchemaElement tse, int length)
       {
-         return ReadSingle(reader, tse);
+         return ReadSingle(reader, tse, length);
       }
 
-      protected abstract TSystemType ReadSingle(BinaryReader reader, Thrift.SchemaElement tse);
+      protected abstract TSystemType ReadSingle(BinaryReader reader, Thrift.SchemaElement tse, int length);
 
       private int Read(Thrift.SchemaElement tse, BinaryReader reader, TSystemType[] dest, int offset)
       {
@@ -71,7 +71,7 @@ namespace Parquet.Data
 
          while (s.Position < totalLength && idx < dest.Length)
          {
-            TSystemType element = ReadSingle(reader, tse);  //potential performance hit on calling a method
+            TSystemType element = ReadSingle(reader, tse, -1);  //potential performance hit on calling a method
             dest[idx++] = element;
          }
 

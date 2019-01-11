@@ -46,7 +46,7 @@ namespace Parquet.Data.Concrete
          return idx - offset;
       }
 
-      protected override Interval ReadSingle(BinaryReader reader, Thrift.SchemaElement tse)
+      protected override Interval ReadSingle(BinaryReader reader, Thrift.SchemaElement tse, int length)
       {
          int months = reader.ReadInt32();
          int days = reader.ReadInt32();

@@ -26,7 +26,7 @@ namespace Parquet.CLI.Commands
          t.AddRow("Created By", fileMeta.Created_by);
          t.AddRow("Total Rows", fileMeta.Num_rows);
          t.AddRow("Version", fileMeta.Version);
-         t.Render(false, 0,  T.HeadingTextColor, T.NormalTextColor);
+         t.Render(false, 0, T.HeadingTextColor, T.NormalTextColor);
          WriteLine();
 
          //custom key-values
@@ -51,11 +51,11 @@ namespace Parquet.CLI.Commands
          int i = 0;
          foreach(Thrift.RowGroup rg in fileMeta.Row_groups)
          {
-            Print(rg, i++);
+            Print(fileMeta, rg, i++);
          }
       }
 
-      private void Print(Thrift.RowGroup rg, int index)
+      private void Print(Thrift.FileMetaData fileMeta, Thrift.RowGroup rg, int index)
       {
          WriteLine();
          PoshWriteLine($"  Row Group #{{{index}}}", ConsoleColor.Red);
@@ -83,9 +83,10 @@ namespace Parquet.CLI.Commands
             t.AddRow("Compressed Size", GetSizeString(column.Meta_data.Total_compressed_size));
             t.AddRow("Uncompressed Size", GetSizeString(column.Meta_data.Total_uncompressed_size));
             t.AddRow("Type", column.Meta_data.Type);
-            t.AddRow("Statistics", GetStatsString(column.Meta_data.Statistics));
             PoshWriteLine($"    Column #{{{i++}}}", ConsoleColor.Red);
             t.Render(false, 4, T.HeadingTextColor, T.NormalTextColor);
+            PrintStatistics(fileMeta, column, column.Meta_data.Statistics);
+
             WriteLine();
          }
       }
@@ -95,34 +96,24 @@ namespace Parquet.CLI.Commands
          return $"{size} ({size.ToFileSizeString()})";
       }
 
-      private string GetStatsString(Thrift.Statistics stats)
+      private void PrintStatistics(Thrift.FileMetaData fileMeta, Thrift.ColumnChunk column, Thrift.Statistics stats)
       {
-         var sb = new StringBuilder();
+         WriteLine("    Statistics", T.HeadingTextColor);
 
-         sb.Append("nulls: ");
-         if (stats.__isset.null_count)
-            sb.Append(stats.Null_count);
-         else
-            sb.Append("?");
+         if(stats == null || !(stats.__isset.null_count || stats.__isset.distinct_count || stats.__isset.min || stats.__isset.max))
+         {
+            WriteLine("      none defined", T.ErrorTextColor);
+            return;
+         }
 
-         sb.Append(", distincts: ");
-         if (stats.__isset.distinct_count)
-            sb.Append(stats.Distinct_count);
-         else sb.Append("?");
+         const string undefined = "undefined";
 
-         sb.Append(", min: ");
-         if (stats.__isset.min)
-            sb.Append("(hex) " + stats.Min.ToHexString());
-         else
-            sb.Append("?");
-
-         sb.Append(", max: ");
-         if (stats.__isset.max)
-            sb.Append("(hex) " + stats.Max.ToHexString());
-         else
-            sb.Append("?");
-
-         return sb.ToString();
+         var t = new Table("name", "value");
+         t.AddRow("Null Count", stats.__isset.null_count ? stats.Null_count.ToString() : undefined);
+         t.AddRow("Distinct Count", stats.__isset.distinct_count ? stats.Distinct_count.ToString() : undefined);
+         t.AddRow("Min", stats.__isset.min ? fileMeta.DecodeSingleStatsValue(column, stats.Min) : undefined);
+         t.AddRow("Max", stats.__isset.max ? fileMeta.DecodeSingleStatsValue(column, stats.Max) : undefined);
+         t.Render(false, 6, T.HeadingTextColor, T.NormalTextColor);
       }
    }
 }

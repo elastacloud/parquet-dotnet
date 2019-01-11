@@ -71,7 +71,7 @@ namespace Parquet.Data.Concrete
          }
       }
 
-      protected override DateTimeOffset ReadSingle(BinaryReader reader, Thrift.SchemaElement tse)
+      protected override DateTimeOffset ReadSingle(BinaryReader reader, Thrift.SchemaElement tse, int length)
       {
          switch (tse.Type)
          {
