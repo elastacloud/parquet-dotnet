@@ -116,5 +116,28 @@ namespace Parquet.Test.Rows
          Assert.Empty(topLevel[1].ToDataArray());
          Assert.Equal(2, topLevel[2].ToDataArray().Length);
       }
+
+      [Fact]
+      public void Single_element_in_list_of_elements_in_a_structure()
+      {
+         var dc = new DataColumn(new DataField<double>("leftCategoriesOrThreshold") { MaxRepetitionLevel = 1 },
+            new double[]
+            {
+               1.7,
+               4.9,
+               1.6
+            },
+            new int[]
+            {
+               0,
+               0,
+               0
+            });
+
+         var e = new LazyColumnEnumerator(dc);
+         List<LazyColumnEnumerator> topLevel = e.ToEnumeratorList();
+         Assert.Equal(3, topLevel.Count);
+         Assert.Equal(1, topLevel[0].ToDataArray().Length);
+      }
    }
 }
