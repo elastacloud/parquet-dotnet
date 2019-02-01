@@ -137,7 +137,20 @@ namespace Parquet.Test.Rows
          var e = new LazyColumnEnumerator(dc);
          List<LazyColumnEnumerator> topLevel = e.ToEnumeratorList();
          Assert.Equal(3, topLevel.Count);
-         Assert.Equal(1, topLevel[0].ToDataArray().Length);
+
+         double[] list0 = (double[])topLevel[0].ToDataArray();
+         double[] list1 = (double[])topLevel[1].ToDataArray();
+         double[] list2 = (double[])topLevel[2].ToDataArray();
+
+         //three lists with one element
+         Assert.Single(list0);
+         Assert.Single(list1);
+         Assert.Single(list2);
+
+         //compare values
+         Assert.Equal(1.7, list0[0], 3);
+         Assert.Equal(4.9, list1[0], 3);
+         Assert.Equal(1.6, list2[0], 3);
       }
    }
 }
