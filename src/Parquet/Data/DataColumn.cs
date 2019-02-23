@@ -44,7 +44,7 @@ namespace Parquet.Data
          // 1. Dictionary merge
          if (dictionary != null)
          {
-            Data = _dataTypeHandler.MergeDictionary(dictionary, dictionaryIndexes);
+            Data = _dataTypeHandler.MergeDictionary(dictionary, dictionaryIndexes, definedData);
          }
 
          // 2. Apply definitions

@@ -140,7 +140,7 @@ namespace Parquet.File
             {
                using (var dataReader = new BinaryReader(ms))
                {
-                  dictionary = _dataTypeHandler.GetArray((int)_thriftColumnChunk.Meta_data.Num_values, false, false);
+                  dictionary = _dataTypeHandler.GetArray(ph.Dictionary_page_header.Num_values, false, false);
 
                   dictionaryOffset = _dataTypeHandler.Read(dataReader, _thriftSchemaElement, dictionary, 0);
 
@@ -224,21 +224,38 @@ namespace Parquet.File
          {
             case Thrift.Encoding.PLAIN:
                if (values == null) values = _dataTypeHandler.GetArray((int)totalValues, false, false);
+               int startIndex = valuesOffset;
                valuesOffset += _dataTypeHandler.Read(reader, _thriftSchemaElement, values, valuesOffset);
+               if (indexes != null) InitIndexes(indexes, startIndex, valuesOffset);
                break;
 
             case Thrift.Encoding.RLE:
-               if (indexes == null) indexes = new int[(int)totalValues];
+               if (indexes == null) indexes = InitIndexes((int)totalValues, indexesOffset);
                indexesOffset += RunLengthBitPackingHybridValuesReader.Read(reader, _thriftSchemaElement.Type_length, indexes, indexesOffset);
                break;
 
             case Thrift.Encoding.PLAIN_DICTIONARY:
-               if (indexes == null) indexes = new int[(int)totalValues];
+               if (indexes == null) indexes = InitIndexes((int)totalValues, indexesOffset);
                indexesOffset += ReadPlainDictionary(reader, currValues, indexes, indexesOffset);
                break;
 
             default:
                throw new ParquetException($"encoding {encoding} is not supported.");
+         }
+      }
+
+      private int[] InitIndexes(int totalValues, int currOffset)
+      {
+         int[] indexes = new int[totalValues];
+         InitIndexes(indexes, 0, currOffset);
+         return indexes;
+      }
+
+      private void InitIndexes(int[] indexes, int startOffset, int endOffset)
+      {
+         for (int i = startOffset; i < endOffset; i++)
+         {
+            indexes[i] = -1;
          }
       }
 
