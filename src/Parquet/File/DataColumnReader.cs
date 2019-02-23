@@ -243,21 +243,6 @@ namespace Parquet.File
          }
       }
 
-      private int[] InitIndexes(int totalValues, int currOffset)
-      {
-         int[] indexes = new int[totalValues];
-         InitIndexes(indexes, 0, currOffset);
-         return indexes;
-      }
-
-      private void InitIndexes(int[] indexes, int startOffset, int endOffset)
-      {
-         for (int i = startOffset; i < endOffset; i++)
-         {
-            indexes[i] = -1;
-         }
-      }
-
       private static int ReadPlainDictionary(BinaryReader reader, long maxValues, int[] dest, int offset)
       {
          int start = offset;
