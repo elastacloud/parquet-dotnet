@@ -188,7 +188,7 @@ namespace Parquet.File
                      if (cd.repetitions == null)
                         cd.repetitions = new int[cd.maxCount];
 
-                     cd.repetitionsOffset += ReadLevels(reader, _maxRepetitionLevel, cd.repetitions, cd.repetitionsOffset);
+                     cd.repetitionsOffset += ReadLevels(reader, _maxRepetitionLevel, cd.repetitions, cd.repetitionsOffset, ph.Data_page_header.Num_values);
                   }
 
                   if (_maxDefinitionLevel > 0)
@@ -196,7 +196,7 @@ namespace Parquet.File
                      if (cd.definitions == null)
                         cd.definitions = new int[cd.maxCount];
 
-                     cd.definitionsOffset += ReadLevels(reader, _maxDefinitionLevel, cd.definitions, cd.definitionsOffset);
+                     cd.definitionsOffset += ReadLevels(reader, _maxDefinitionLevel, cd.definitions, cd.definitionsOffset, ph.Data_page_header.Num_values);
                   }
 
                   ReadColumn(reader, ph.Data_page_header.Encoding, maxValues, ph.Data_page_header.Num_values,
@@ -207,14 +207,14 @@ namespace Parquet.File
          }
       }
 
-      private int ReadLevels(BinaryReader reader, int maxLevel, int[] dest, int offset)
+      private int ReadLevels(BinaryReader reader, int maxLevel, int[] dest, int offset, int pageSize)
       {
          int bitWidth = maxLevel.GetBitWidth();
 
-         return RunLengthBitPackingHybridValuesReader.ReadRleBitpackedHybrid(reader, bitWidth, 0, dest, offset);
+         return RunLengthBitPackingHybridValuesReader.ReadRleBitpackedHybrid(reader, bitWidth, 0, dest, offset, pageSize);
       }
 
-      private void ReadColumn(BinaryReader reader, Thrift.Encoding encoding, long totalValues, long currValues,
+      private void ReadColumn(BinaryReader reader, Thrift.Encoding encoding, long totalValues, int maxReadCount,
          ref Array values, ref int valuesOffset,
          ref int[] indexes, ref int indexesOffset)
       {
@@ -229,12 +229,12 @@ namespace Parquet.File
 
             case Thrift.Encoding.RLE:
                if (indexes == null) indexes = new int[(int)totalValues];
-               indexesOffset += RunLengthBitPackingHybridValuesReader.Read(reader, _thriftSchemaElement.Type_length, indexes, indexesOffset);
+               indexesOffset += RunLengthBitPackingHybridValuesReader.Read(reader, _thriftSchemaElement.Type_length, indexes, indexesOffset, maxReadCount);
                break;
 
             case Thrift.Encoding.PLAIN_DICTIONARY:
                if (indexes == null) indexes = new int[(int)totalValues];
-               indexesOffset += ReadPlainDictionary(reader, currValues, indexes, indexesOffset);
+               indexesOffset += ReadPlainDictionary(reader, maxReadCount, indexes, indexesOffset);
                break;
 
             default:
@@ -242,7 +242,7 @@ namespace Parquet.File
          }
       }
 
-      private static int ReadPlainDictionary(BinaryReader reader, long maxValues, int[] dest, int offset)
+      private static int ReadPlainDictionary(BinaryReader reader, int maxReadCount, int[] dest, int offset)
       {
          int start = offset;
          int bitWidth = reader.ReadByte();
@@ -250,7 +250,7 @@ namespace Parquet.File
          //when bit width is zero reader must stop and just repeat zero maxValue number of times
          if (bitWidth == 0)
          {
-            for (int i = 0; i < maxValues; i++)
+            for (int i = 0; i < maxReadCount; i++)
             {
                dest[offset++] = 0;
             }
@@ -258,13 +258,10 @@ namespace Parquet.File
          else
          {
             int length = GetRemainingLength(reader);
-            offset += RunLengthBitPackingHybridValuesReader.ReadRleBitpackedHybrid(reader, bitWidth, length, dest, offset);
+            offset += RunLengthBitPackingHybridValuesReader.ReadRleBitpackedHybrid(reader, bitWidth, length, dest, offset, maxReadCount);
          }
 
-         // the above might end up reading a few more elements than what we should read
-         // Let's just fix the offset if we're over the total length
-         // todo: longs, ints - maybe return long?
-         return (offset - start > maxValues) ? (int)maxValues : (offset - start);
+         return offset - start;
       }
 
       private static int GetRemainingLength(BinaryReader reader)
