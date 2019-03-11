@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using NetBox.Extensions;
 using Parquet.Data;
+using Parquet.Serialization;
 using Xunit;
 
 namespace Parquet.Test.Serialisation
@@ -67,6 +68,41 @@ namespace Parquet.Test.Serialisation
          Assert.Equal(new[] { 1, 2, 3 }, s[1].Areas);
       }
 
+      [Fact]
+      public void Serialize_structure_with_DateTime()
+      {
+         TestRoundTripSerialization<DateTime>(DateTime.UtcNow.RoundToSecond());
+      }
+
+      [Fact]
+      public void Serialize_structure_with_nullable_DateTime()
+      {
+         TestRoundTripSerialization<DateTime?>(DateTime.UtcNow.RoundToSecond());
+         TestRoundTripSerialization<DateTime?>(null);
+      }
+
+      void TestRoundTripSerialization<T>(T value)
+      {
+         StructureWithTestType<T> input = new StructureWithTestType<T>
+         {
+            Id = "1",
+            TestValue = value,
+         };
+
+         Schema schema = SchemaReflector.Reflect<StructureWithTestType<T>>();
+
+         using (MemoryStream stream = new MemoryStream())
+         {
+            ParquetConvert.Serialize<StructureWithTestType<T>>(new StructureWithTestType<T>[] { input }, stream, schema);
+
+            stream.Position = 0;
+            StructureWithTestType<T>[] output = ParquetConvert.Deserialize<StructureWithTestType<T>>(stream);
+            Assert.Single(output);
+            Assert.Equal("1", output[0].Id);
+            Assert.Equal(value, output[0].TestValue);
+         }
+      }
+
       public class SimpleRepeated
       {
          public int Id { get; set; }
@@ -85,5 +121,14 @@ namespace Parquet.Test.Serialisation
          public DateTimeOffset Date { get; set; }
       }
 
+      public class StructureWithTestType<T>
+      {
+         T testValue;
+
+         public string Id { get; set; }
+
+         // public T TestValue { get; set; }
+         public T TestValue { get { return testValue; } set { testValue = value; } }
+      }
    }
 }

@@ -12,6 +12,14 @@ namespace Parquet.Serialization.Values
 {
    class MSILGenerator
    {
+      private static readonly TypeConversion[] conversions = new TypeConversion[]
+      {
+         DateTimeToDateTimeOffsetConversion.Instance,
+         DateTimeOffsetToDateTimeConversion.Instance,
+         NullableDateTimeToDateTimeOffsetConversion.Instance,
+         NullableDateTimeOffsetToDateTimeConversion.Instance,
+      };
+
       public delegate object PopulateListDelegate(object instances,
          object resultItemsList,
          object resultRepetitionsList,
@@ -42,13 +50,16 @@ namespace Parquet.Serialization.Values
             methodArgs,
             GetType().GetTypeInfo().Module);
 
+         TypeConversion conversion = GetConversion(pi.PropertyType, field.ClrNullableIfHasNullsType);
+
          ILGenerator il = runMethod.GetILGenerator();
 
          GenerateCollector(il, classType,
             field,
             getValueMethod,
             addToListMethod,
-            addRepLevelMethod);
+            addRepLevelMethod,
+            conversion);
 
          return (PopulateListDelegate)runMethod.CreateDelegate(typeof(PopulateListDelegate));
       }
@@ -57,7 +68,8 @@ namespace Parquet.Serialization.Values
          DataField f,
          MethodInfo getValueMethod,
          MethodInfo addToListMethod,
-         MethodInfo addRepLevelMethod)
+         MethodInfo addRepLevelMethod,
+         TypeConversion conversion)
       {
          //arg 0 - collection of classes, clr objects
          //arg 1 - data items (typed list)
@@ -69,21 +81,12 @@ namespace Parquet.Serialization.Values
          il.Emit(Ldarg_0);
          il.Emit(Stloc, collection.LocalIndex);
 
-         //hold item
-         LocalBuilder item = il.DeclareLocal(f.ClrNullableIfHasNullsType);
-
-         //current repetition level
-         LocalBuilder rl = null;
-         if(f.IsArray)
-         {
-            rl = il.DeclareLocal(typeof(int));
-         }
-
          using (il.ForEachLoop(classType, collection, out LocalBuilder currentElement))
          {
             if (f.IsArray)
             {
                //reset repetition level to 0
+               LocalBuilder rl = il.DeclareLocal(typeof(int));
                il.Emit(Ldc_I4_0);
                il.StLoc(rl);
 
@@ -108,13 +111,19 @@ namespace Parquet.Serialization.Values
                   il.Emit(Ldarg_3);
                   il.StLoc(rl);
                }
-
             }
             else
             {
-               //get current value
+               //hold item
+               LocalBuilder item = il.DeclareLocal(f.ClrNullableIfHasNullsType);
+
+               //get current value, converting if necessary
                il.Emit(Ldloc, currentElement.LocalIndex);
                il.Emit(Callvirt, getValueMethod);
+               if (conversion != null)
+               {
+                  conversion.Emit(il);
+               }
                il.Emit(Stloc, item.LocalIndex);
 
                //store in destination list
@@ -150,10 +159,13 @@ namespace Parquet.Serialization.Values
          MethodInfo getDataMethod = dcti.GetDeclaredProperty(nameof(DataColumn.Data)).GetMethod;
          MethodInfo getRepsMethod = dcti.GetDeclaredProperty(nameof(DataColumn.RepetitionLevels)).GetMethod;
 
+         TypeConversion conversion = GetConversion(dataColumn.Field.ClrNullableIfHasNullsType, pi.PropertyType);
+
          GenerateAssigner(il, classType, field,
             setValueMethod,
             getDataMethod,
-            getRepsMethod);
+            getRepsMethod,
+            conversion);
 
          return (AssignArrayDelegate)runMethod.CreateDelegate(typeof(AssignArrayDelegate));
       }
@@ -161,7 +173,8 @@ namespace Parquet.Serialization.Values
       private void GenerateAssigner(ILGenerator il, Type classType, DataField field,
          MethodInfo setValueMethod,
          MethodInfo getDataMethod,
-         MethodInfo getRepsMethod)
+         MethodInfo getRepsMethod,
+         TypeConversion conversion)
       {
          //arg 0 - DataColumn
          //arg 1 - class intances array (Array)
@@ -193,7 +206,6 @@ namespace Parquet.Serialization.Values
 
                il.Increment(ci);
             }
-
          }
          else
          {
@@ -219,12 +231,130 @@ namespace Parquet.Serialization.Values
                //get class instance
                il.GetArrayElement(Ldarg_1, iData, true, classType, classInstance);
 
+               il.LdLoc(classInstance);
+
+               //convert if necessary
+               if (conversion != null)
+               {
+                  il.LdLoc(dataItem);
+                  conversion.Emit(il);
+               }
+               else
+               {
+                  il.Emit(Ldloc, dataItem.LocalIndex);
+               }
+
                //assign data item to class property
-               il.CallVirt(setValueMethod, classInstance, dataItem);
+               il.Emit(Callvirt, setValueMethod);
             }
          }
 
          il.Emit(Ret);
+      }
+
+      private TypeConversion GetConversion(Type fromType, Type toType)
+      {
+         if (fromType == toType) { return null; }
+         return conversions.FirstOrDefault(c => c.FromType == fromType && c.ToType == toType);
+      }
+
+      private abstract class TypeConversion
+      {
+         public abstract Type FromType { get; }
+         public abstract Type ToType { get; }
+         public abstract void Emit(ILGenerator il);
+      }
+
+      private abstract class TypeConversion<TFrom, TTo> : TypeConversion
+      {
+         public override Type FromType { get { return typeof(TFrom); } }
+         public override Type ToType { get { return typeof(TTo); } }
+      }
+
+      sealed private class DateTimeToDateTimeOffsetConversion : TypeConversion<DateTime, DateTimeOffset>
+      {
+         public static readonly TypeConversion<DateTime, DateTimeOffset> Instance = new DateTimeToDateTimeOffsetConversion();
+
+         private static readonly ConstructorInfo method = typeof(DateTimeOffset).GetTypeInfo().DeclaredConstructors
+            .First(c => c.GetParameters().Matches(new[] { typeof(DateTime) }));
+
+         public override void Emit(ILGenerator il)
+         {
+            il.Emit(OpCodes.Newobj, method);
+         }
+      }
+
+      sealed class DateTimeOffsetToDateTimeConversion : TypeConversion<DateTimeOffset, DateTime>
+      {
+         public static readonly TypeConversion<DateTimeOffset, DateTime> Instance = new DateTimeOffsetToDateTimeConversion();
+
+         private static readonly MethodInfo method = typeof(ConversionHelpers).GetTypeInfo().GetDeclaredMethod("DateTimeFromDateTimeOffset");
+
+         public override void Emit(ILGenerator il)
+         {
+            il.Emit(OpCodes.Call, method);
+         }
+      }
+
+      sealed private class NullableDateTimeToDateTimeOffsetConversion : TypeConversion<DateTime?, DateTimeOffset?>
+      {
+         public static readonly TypeConversion<DateTime?, DateTimeOffset?> Instance = new NullableDateTimeToDateTimeOffsetConversion();
+
+         private static readonly MethodInfo method = typeof(ConversionHelpers).GetTypeInfo().GetDeclaredMethod("NullableDateTimeOffsetFromDateTime");
+
+         public override void Emit(ILGenerator il)
+         {
+            il.Emit(OpCodes.Call, method);
+         }
+      }
+
+      sealed class NullableDateTimeOffsetToDateTimeConversion : TypeConversion<DateTimeOffset?, DateTime?>
+      {
+         public static readonly TypeConversion<DateTimeOffset?, DateTime?> Instance = new NullableDateTimeOffsetToDateTimeConversion();
+
+         private static readonly MethodInfo method = typeof(ConversionHelpers).GetTypeInfo().GetDeclaredMethod("NullableDateTimeFromDateTimeOffset");
+
+         public override void Emit(ILGenerator il)
+         {
+            il.Emit(OpCodes.Call, method);
+         }
+      }
+   }
+
+   /// <summary>
+   /// This class is public to simplify use from Reflection
+   /// </summary>
+   public static class ConversionHelpers
+   {
+      /// <summary>
+      /// Convert DateTimeOffset to DateTime
+      /// </summary>
+      /// <param name="value">DateTimeOffset</param>
+      /// <returns>DateTime</returns>
+      public static DateTime DateTimeFromDateTimeOffset(DateTimeOffset value)
+      {
+         return value.DateTime;
+      }
+
+      /// <summary>
+      /// Convert DateTimeOffset? to DateTime?
+      /// </summary>
+      /// <param name="value">DateTimeOffset?</param>
+      /// <returns>DateTime?</returns>
+      public static DateTime? NullableDateTimeFromDateTimeOffset(DateTimeOffset? value)
+      {
+         return value?.DateTime;
+      }
+
+      /// <summary>
+      /// Convert DateTime? to DateTimeOffset?
+      /// </summary>
+      /// <param name="value">DateTime?</param>
+      /// <returns>DateTimeOffset?</returns>
+      public static DateTimeOffset? NullableDateTimeOffsetFromDateTime(DateTime? value)
+      {
+         if (value == null) { return null; }
+         return new DateTimeOffset(value.Value);
       }
    }
 }
