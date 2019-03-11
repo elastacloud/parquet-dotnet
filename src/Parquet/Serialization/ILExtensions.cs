@@ -36,7 +36,9 @@ namespace Parquet.Serialization
          Label lWork = il.DefineLabel();
          currentElement = il.DeclareLocal(elementType);
 
+#if DEBUG
          il.EmitWriteLine("foreach-begin");
+#endif
 
          //immediately move to "move next" to start enumeration
          il.Emit(Br, lMoveNext);
@@ -266,6 +268,22 @@ namespace Parquet.Serialization
       private static IDisposable After(this ILGenerator thisIl, Action ilAction)
       {
          return new CodeAfter(thisIl, ilAction);
+      }
+
+      public static bool Matches(this ParameterInfo[] parameters, Type[] types)
+      {
+         if (parameters.Length != types.Length)
+         {
+            return false;
+         }
+         for (int i = 0; i < parameters.Length; i++)
+         {
+            if (parameters[i].ParameterType != types[i])
+            {
+               return false;
+            }
+         }
+         return true;
       }
 
       class CodeAfter : IDisposable
