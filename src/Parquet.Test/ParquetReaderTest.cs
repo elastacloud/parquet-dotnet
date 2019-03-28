@@ -133,13 +133,72 @@ namespace Parquet.Test
 
             // run aggregations checking row alignment (issue #371)
             var seq = s.Zip(d.Cast<double>(), (w, v) => new {w, v})
-               .Where(p => p.w == "general")
+               .Where(p => p.w == "favorable")
                .ToList();
 
             // double matching is fuzzy, but matching strings is enough for this test
-            Assert.Equal("0.754359925788497", seq.Min(p => p.v).ToString(CultureInfo.InvariantCulture));
-            Assert.Equal("0.85776", seq.Max(p => p.v).ToString(CultureInfo.InvariantCulture));
+            // ground truth was computed using Spark
+            Assert.Equal("26706.6185312147", seq.Sum(p => p.v).ToString(CultureInfo.InvariantCulture));
+            Assert.Equal("0.808287234987281", seq.Average(p => p.v).ToString(CultureInfo.InvariantCulture));
+            Assert.Equal("0.71523915461624", seq.Min(p => p.v).ToString(CultureInfo.InvariantCulture));
+            Assert.Equal("0.867111980015206", seq.Max(p => p.v).ToString(CultureInfo.InvariantCulture));
          }
+      }
+
+      [Fact]
+      public void Read_bit_packed_at_page_boundary()
+      {
+         using (var reader = new ParquetReader(OpenTestFile("/special/multi_page_bit_packed_near_page_border.parquet")))
+         {
+            DataColumn[] columns = reader.ReadEntireRowGroup();
+            var data = (string[])columns[0].Data;
+         
+            // ground truth from spark
+            Assert.Equal(30855, data.Count(string.IsNullOrEmpty));
+            // check page boundary
+            Assert.Equal("collateral_natixis_fr_vol5010", data[60355]);
+            Assert.Equal("BRAZ82595832_vol16239", data[60356]);
+         }
+      }
+
+      [Fact]
+      public void ReadLargeTimestampData()
+      {
+         using (var reader = new ParquetReader(OpenTestFile("/mixed-dictionary-plain.parquet"), leaveStreamOpen: false))
+         {
+            DataColumn[] columns = reader.ReadEntireRowGroup();
+
+            DateTimeOffset?[] col0 = (DateTimeOffset?[])columns[0].Data;
+            Assert.Equal(440773, col0.Length);
+
+            long ticks = col0[0].Value.Ticks;
+            for (int i = 1; i < 132000; i++)
+            {
+               long now = col0[i].Value.Ticks;
+               Assert.NotEqual(ticks, now);
+            }
+         }
+      }
+
+      [Fact]
+      public void ParquetReader_OpenFromFile_Close_Stream()
+      {
+         // copy a file to a temp location
+         var tempFile = Path.GetTempFileName();
+         using (var fr = OpenTestFile("map_simple.parquet"))
+         using (var fw = System.IO.File.OpenWrite(tempFile))
+         {
+            fr.CopyTo(fw);
+         }
+               
+         // open the copy
+         using (var reader = ParquetReader.OpenFromFile(tempFile))
+         {
+            // do nothing
+         }
+         
+         // now try to delete this temp file. If the stream is properly closed, this should succeed
+         System.IO.File.Delete(tempFile);
       }
 
       class ReadableNonSeekableStream : DelegatedStream
