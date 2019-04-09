@@ -37,7 +37,7 @@ namespace Parquet.Data
          throw new NotSupportedException();
       }
 
-      public Array MergeDictionary(Array dictionary, int[] indexes, Array data, int offset, int length)
+      public Array MergeDictionary(Array dictionary, int[] indexes, Array data, int offset, int[] definitions, int maxDefinitionLevel, int length)
       {
          throw new NotSupportedException();
       }

@@ -227,14 +227,14 @@ namespace Parquet.File
             case Thrift.Encoding.RLE:
                if (cd.indexes == null) cd.indexes = new int[(int)totalValues];
                int indexCount = RunLengthBitPackingHybridValuesReader.Read(reader, _thriftSchemaElement.Type_length, cd.indexes, 0, maxReadCount);
-               _dataTypeHandler.MergeDictionary(cd.dictionary, cd.indexes, cd.values, cd.valuesOffset, indexCount);
+               _dataTypeHandler.MergeDictionary(cd.dictionary, cd.indexes, cd.values, cd.valuesOffset, cd.definitions, _maxDefinitionLevel, indexCount);
                cd.valuesOffset += indexCount;
                break;
 
             case Thrift.Encoding.PLAIN_DICTIONARY:
                if (cd.indexes == null) cd.indexes = new int[(int)totalValues];
                indexCount = ReadPlainDictionary(reader, maxReadCount, cd.indexes, 0);
-               _dataTypeHandler.MergeDictionary(cd.dictionary, cd.indexes, cd.values, cd.valuesOffset, indexCount);
+               _dataTypeHandler.MergeDictionary(cd.dictionary, cd.indexes, cd.values, cd.valuesOffset, cd.definitions, _maxDefinitionLevel, indexCount);
                cd.valuesOffset += indexCount;
                break;
 

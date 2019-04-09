@@ -101,16 +101,19 @@ namespace Parquet.Data
          parent.Num_children += 1;
       }
 
-      public virtual Array MergeDictionary(Array untypedDictionary, int[] indexes, Array data, int offset, int length)
+      public virtual Array MergeDictionary(Array untypedDictionary, int[] indexes, Array data, int offset, int[] definitions, int maxDefinitionLevel, int length)
       {
          TSystemType[] dictionary = (TSystemType[])untypedDictionary;
          TSystemType[] result = (TSystemType[])data;
 
          for (int i = 0; i < length; i++)
          {
-            int index = indexes[i];
-            TSystemType value = dictionary[index];
-            result[offset + i] = value;
+            if (definitions[offset + i] == maxDefinitionLevel)
+            {
+               int index = indexes[i];
+               TSystemType value = dictionary[index];
+               result[offset + i] = value;
+            }
          }
 
          return result;

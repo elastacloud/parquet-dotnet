@@ -76,7 +76,7 @@ namespace Parquet.Data.Concrete
          return reader.ReadBytes(length);
       }
 
-      public override Array MergeDictionary(Array dictionary, int[] indexes, Array data, int offset, int length)
+      public override Array MergeDictionary(Array dictionary, int[] indexes, Array data, int offset, int[] definitions, int maxDefinitionLevel, int length)
       {
          throw new NotImplementedException();
       }
