@@ -98,7 +98,7 @@ namespace Parquet
       /// <typeparam name="T"></typeparam>
       /// <param name="input"></param>
       /// <returns></returns>
-      public static IEnumerable<T> Deserialize<T>(Stream input) where T : new()
+      public static IEnumerable<T[]> DeserializeByGroup<T>(Stream input) where T : new()
       {
          var bridge = new ClrBridge(typeof(T));
 
@@ -124,13 +124,18 @@ namespace Parquet
                   {
                      bridge.AssignColumn(groupColumns[ic], rb);
                   }
-                  foreach (T item in rb)
-                  {
-                     yield return item;
-                  }
+                  yield return rb;
                }
             }
          }
       }
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <typeparam name="T"></typeparam>
+      /// <param name="input"></param>
+      /// <returns></returns>
+      public static IEnumerable<T> Deserialize<T>(Stream input) where T : new() => DeserializeByGroup<T>(input).SelectMany(g => g);
    }
 }
