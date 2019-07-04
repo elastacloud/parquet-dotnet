@@ -104,13 +104,13 @@ stages:
     strategy:
       matrix:
         Windows:
-           vmImage: 'ubuntu-16.04'
+           image: 'ubuntu-16.04'
         Linux:
-           vmImage: 'ubuntu-16.04'
+           image: 'ubuntu-16.04'
         MacOSX:
-           vmImage: 'ubuntu-16.04'
+           image: 'ubuntu-16.04'
     pool:
-      vmImage: $(vmImage)
+      vmImage: $(image)
     steps:
     - task: DotNetCoreCLI@2
       displayName: 'run tests'
