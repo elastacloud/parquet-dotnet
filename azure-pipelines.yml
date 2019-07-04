@@ -95,13 +95,14 @@ stages:
       displayName: 'SonarQube: Publish Quality Gate Result'
 
   - job: MultiOSTest
-    matrix:
-      Windows:
-        vmImage: 'windows-2019'
-      Linux:
-        vmImage: 'ubuntu-16.04'
-      MacOSX:
-        vmImage: 'ubuntu-16.04'
+    strategy:
+      matrix:
+        Windows:
+           vmImage: 'windows-2019'
+        Linux:
+           vmImage: 'ubuntu-16.04'
+        MacOSX:
+           vmImage: 'ubuntu-16.04'
     pool:
       vmImage: $(vmImage)
     steps:
