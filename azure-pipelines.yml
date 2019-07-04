@@ -99,12 +99,12 @@ stages:
   condition: succeeded('Build')
   dependsOn: [] # remove explicit dependency, so it runs in parallel
   jobs:
-  - job: Test
+  - job: Platform
     displayName: 'Tests'
     strategy:
       matrix:
         Windows:
-           vmImage: 'windows-2019'
+           vmImage: 'ubuntu-16.04'
         Linux:
            vmImage: 'ubuntu-16.04'
         MacOSX:
