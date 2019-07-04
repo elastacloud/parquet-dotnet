@@ -93,3 +93,21 @@ stages:
       displayName: 'SonarQube: Run Code Analysis'
     - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@1
       displayName: 'SonarQube: Publish Quality Gate Result'
+
+  - job: MultiOSTest
+    matrix:
+      Windows:
+        vmImage: 'windows-2019'
+      Linux:
+        vmImage: 'ubuntu-16.04'
+      MacOSX:
+        vmImage: 'ubuntu-16.04'
+    pool:
+      vmImage: $(vmImage)
+    steps:
+    - task: petersendev.dotnet-global-tool-installer.DotnetGlobalToolInstaller.DotnetGlobalToolInstaller@0
+      displayName: 'install housework'
+      inputs:
+        name: housework
+
+
