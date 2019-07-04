@@ -124,6 +124,7 @@ stages:
   condition: "and( eq(variables['Build.SourceBranch'], 'refs/heads/master'), succeeded('Build'), succeeded('Test') )"
   jobs:
   - deployment: NugetOrg
+    displayName: 'nuget.org public feed'
     pool:
       vmImage: $(vmImage)
     environment: live
