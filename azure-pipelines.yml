@@ -97,6 +97,7 @@ stages:
 
 - stage: Test
   condition: succeeded('Build')
+  dependsOn: [] # remove explicit dependency, so it runs in parallel
   jobs:
   - job: Test
     displayName: 'Tests'
@@ -111,9 +112,12 @@ stages:
     pool:
       vmImage: $(vmImage)
     steps:
-    - task: petersendev.dotnet-global-tool-installer.DotnetGlobalToolInstaller.DotnetGlobalToolInstaller@0
-      displayName: 'install housework'
+    - task: DotNetCoreCLI@2
+      displayName: 'run tests'
       inputs:
-        name: housework
+        command: test
+        projects: ./src/Parquet.sln
+        arguments: '-c release'
+
 
 
