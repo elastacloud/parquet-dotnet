@@ -96,7 +96,7 @@ stages:
     #  displayName: 'SonarQube: Publish Quality Gate Result'
 
 - stage: Test
-  condition: succeeded('Build')
+  #condition: succeeded('Build')
   dependsOn: [] # remove explicit dependency, so it runs in parallel
   jobs:
   - job: Platform
@@ -104,14 +104,13 @@ stages:
     strategy:
       matrix:
         Windows:
-           image: 'ubuntu-16.04'
+           image: 'windows-2019'
         Linux:
            image: 'ubuntu-16.04'
         MacOSX:
-           image: 'ubuntu-16.04'
+           image: 'macOS-10.14'
     pool:
-      #vmImage: $(image)
-      vmImage: 'ubuntu-16.04'
+      vmImage: $(image)
     steps:
     - task: DotNetCoreCLI@2
       displayName: 'run tests'
