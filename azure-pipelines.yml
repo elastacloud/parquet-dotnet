@@ -26,6 +26,7 @@ stages:
 - stage: Build
   jobs:
   - job: Core
+    displayName: 'Core Build'
     pool:
       vmImage: $(vmImage)
 
@@ -95,6 +96,7 @@ stages:
       displayName: 'SonarQube: Publish Quality Gate Result'
 
   - job: MultiOSTest
+    display: 'Tests'
     strategy:
       matrix:
         Windows:
