@@ -110,7 +110,8 @@ stages:
         MacOSX:
            image: 'ubuntu-16.04'
     pool:
-      vmImage: $(image)
+      #vmImage: $(image)
+      vmImage: 'ubuntu-16.04'
     steps:
     - task: DotNetCoreCLI@2
       displayName: 'run tests'
