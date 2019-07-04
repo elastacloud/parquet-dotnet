@@ -51,14 +51,14 @@ stages:
 
 
     # init SonarCloud
-    - task: SonarSource.sonarcloud.14d9cde6-c1da-4d55-aa01-2965cd301255.SonarCloudPrepare@1
-      displayName: 'Prepare analysis on SonarCloud'
-      inputs:
-        SonarCloud: SonarCloud
-        organization: aloneguid-github
-        projectKey: parquet_dotnet
-        projectName: 'Parquet.Net'
-        projectVersion: '$(Version)'
+    #- task: SonarSource.sonarcloud.14d9cde6-c1da-4d55-aa01-2965cd301255.SonarCloudPrepare@1
+    #  displayName: 'Prepare analysis on SonarCloud'
+    #  inputs:
+    #    SonarCloud: SonarCloud
+    #    organization: aloneguid-github
+    #    projectKey: parquet_dotnet
+    #    projectName: 'Parquet.Net'
+    #    projectVersion: '$(Version)'
 
     - task: DotNetCoreCLI@2
       displayName: 'build all'
@@ -66,13 +66,13 @@ stages:
         projects: src/Parquet.sln
         arguments: '-c release'
 
-    - task: DotNetCoreCLI@2
-      displayName: 'Integration and Unit Test'
-      continueOnError: true
-      inputs:
-        command: test
-        projects: ./src/Parquet.sln
-        arguments: '-c release'
+    #- task: DotNetCoreCLI@2
+    #  displayName: 'Integration and Unit Test'
+    #  continueOnError: true
+    #  inputs:
+    #    command: test
+    #    projects: ./src/Parquet.sln
+    #    arguments: '-c release'
 
     - task: CopyFiles@2
       displayName: 'copy generated nugets'
@@ -90,12 +90,13 @@ stages:
         ArtifactName: nuget
 
     # finish Sonar analysis
-    - task: SonarSource.sonarcloud.ce096e50-6155-4de8-8800-4221aaeed4a1.SonarCloudAnalyze@1
-      displayName: 'SonarQube: Run Code Analysis'
-    - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@1
-      displayName: 'SonarQube: Publish Quality Gate Result'
+    #- task: SonarSource.sonarcloud.ce096e50-6155-4de8-8800-4221aaeed4a1.SonarCloudAnalyze@1
+    #  displayName: 'SonarQube: Run Code Analysis'
+    #- task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@1
+    #  displayName: 'SonarQube: Publish Quality Gate Result'
 
 - stage: Test
+  condition: succeeded('Build')
   jobs:
   - job: Test
     displayName: 'Tests'
