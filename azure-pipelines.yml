@@ -98,7 +98,7 @@ stages:
 - stage: Test
   jobs:
   - job: Test
-    display: 'Tests'
+    displayName: 'Tests'
     strategy:
       matrix:
         Windows:
