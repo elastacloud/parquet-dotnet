@@ -30,4 +30,12 @@ namespace Parquet.Attributes
       /// </summary>
       public string Name { get; set; }
    }
+
+   /// <summary>
+   /// Annotates a class property as marker to ignore while serializing to parquet file
+   /// </summary>
+   [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+   internal class ParquetIgnoreAttribute : Attribute
+   {
+   }
 }
