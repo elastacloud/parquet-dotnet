@@ -135,5 +135,47 @@ namespace Parquet
 
          return result.ToArray();
       }
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <typeparam name="T"></typeparam>
+      /// <param name="input"></param>
+      /// <param name="rowGroupIndex"></param>
+      /// <returns></returns>
+      public static T[] Deserialize<T>(Stream input, int rowGroupIndex) where T : new()
+      {
+         var result = new List<T>();
+
+         var bridge = new ClrBridge(typeof(T));
+
+         using (var reader = new ParquetReader(input))
+         {
+            Schema fileSchema = reader.Schema;
+            DataField[] dataFields = fileSchema.GetDataFields();
+
+            using (ParquetRowGroupReader groupReader = reader.OpenRowGroupReader(rowGroupIndex))
+            {
+               DataColumn[] groupColumns = dataFields
+                  .Select(df => groupReader.ReadColumn(df))
+                  .ToArray();
+
+               T[] rb = new T[groupReader.RowCount];
+               for (int ie = 0; ie < rb.Length; ie++)
+               {
+                  rb[ie] = new T();
+               }
+
+               for (int ic = 0; ic < groupColumns.Length; ic++)
+               {
+                  bridge.AssignColumn(groupColumns[ic], rb);
+               }
+
+               result.AddRange(rb);
+            }
+         }
+
+         return result.ToArray();
+      }
    }
 }
