@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Parquet.Data;
 using Parquet.File;
-using Parquet.File.Values;
 
 namespace Parquet
 {
@@ -47,6 +45,16 @@ namespace Parquet
       internal long? RowCount { get; private set; }
 
       /// <summary>
+      /// Total written compressed size in bytes
+      /// </summary>
+      public long TotalCompressedSize { get; private set; }
+
+      /// <summary>
+      /// Total written uncompressed size in bytes
+      /// </summary>
+      public long TotalUncompressedSize { get; private set; }
+
+      /// <summary>
       /// Writes next data column to parquet stream. Note that columns must be written in the order they are declared in the
       /// file schema.
       /// </summary>
@@ -75,6 +83,8 @@ namespace Parquet
          Thrift.ColumnChunk chunk = writer.Write(path, column, dataTypeHandler);
          _thriftRowGroup.Columns.Add(chunk);
 
+         TotalCompressedSize += chunk.Meta_data.Total_compressed_size;
+         TotalUncompressedSize += chunk.Meta_data.Total_uncompressed_size;
       }
 
       /// <summary>
@@ -89,7 +99,7 @@ namespace Parquet
 
          //row group's size is a sum of _uncompressed_ sizes of all columns in it, including the headers
          //luckily ColumnChunk already contains sizes of page+header in it's meta
-         _thriftRowGroup.Total_byte_size = _thriftRowGroup.Columns.Sum(c => c.Meta_data.Total_compressed_size);
+         _thriftRowGroup.Total_byte_size = TotalCompressedSize;
       }
    }
 }

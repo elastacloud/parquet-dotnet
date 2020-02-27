@@ -126,7 +126,7 @@ namespace Parquet.Test
 
          }
       }
-      
+
       public readonly static IEnumerable<object[]> NullableColumnContentCases = new List<object[]>()
       {
          new object[] { new int?[] { 1, 2 } },
@@ -224,6 +224,35 @@ namespace Parquet.Test
             {
                Assert.Equal(2, rg.RowCount);
             }
+         }
+      }
+
+      [Fact]
+      public void Writer_returns_total_written_size()
+      {
+         var ms = new MemoryStream();
+         var id = new DataField<int>("id");
+
+         long totalCompressedSize;
+         long totalUncompressedSize;
+
+         //write
+         using (var writer = new ParquetWriter(new Schema(id), ms))
+         {
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new[] { 1, 2, 3, 4 }));
+               totalCompressedSize = rg.TotalCompressedSize;
+               totalUncompressedSize = rg.TotalUncompressedSize;
+            }
+         }
+
+         //read back
+         using (var reader = new ParquetReader(ms))
+         {
+            Thrift.ColumnMetaData rgMetadata = reader.ThriftMetadata.Row_groups[0].Columns[0].Meta_data;
+            Assert.Equal(rgMetadata.Total_compressed_size, totalCompressedSize);
+            Assert.Equal(rgMetadata.Total_uncompressed_size, totalUncompressedSize);
          }
       }
    }
