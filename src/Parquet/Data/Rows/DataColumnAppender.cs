@@ -11,7 +11,7 @@ namespace Parquet.Data.Rows
       private readonly List<object> _values = new List<object>();
       private readonly List<int> _rls = new List<int>();
       private readonly bool _isRepeated;
-      private LevelIndex[] _lastIndixes;
+      private LevelIndex[] _lastIndexes;
 
       public DataColumnAppender(DataField dataField)
       {
@@ -23,7 +23,7 @@ namespace Parquet.Data.Rows
       {
          if (_isRepeated)
          {
-            int rl = GetRepetitionLevel(indexes, _lastIndixes);
+            int rl = GetRepetitionLevel(indexes, _lastIndexes);
 
             if (!(value is string) && value is IEnumerable valueItems)
             {
@@ -49,7 +49,7 @@ namespace Parquet.Data.Rows
                _rls.Add(rl);
             }
 
-            _lastIndixes = indexes;
+            _lastIndexes = indexes;
          }
          else
          {
