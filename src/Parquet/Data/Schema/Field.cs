@@ -43,7 +43,7 @@ namespace Parquet.Data
       internal virtual string PathPrefix { set { } }
 
       /// <summary>
-      /// Constructs a field with only requiremd parameters
+      /// Constructs a field with only required parameters
       /// </summary>
       /// <param name="name">Field name, required</param>
       /// <param name="schemaType">Type of schema of this field</param>
