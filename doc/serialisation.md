@@ -36,7 +36,7 @@ Here is what you can do to write out those classes in a single file:
 ParquetConvert.Serialize(structures, stream);
 ```
 
-That's it! Of course `.Serialise()` method also has overloads and optional parameters allowing you to control the serialisation process slightly, such as selecting compression method, row group size etc.
+That's it! Of course `.Serialize()` method also has overloads and optional parameters allowing you to control the serialisation process slightly, such as selecting compression method, row group size etc.
 
 Parquet.Net will automatically figure out file schema by reflecting class structure, types, nullability and other parameters for you.
 
