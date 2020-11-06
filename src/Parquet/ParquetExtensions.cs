@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using Parquet.Data;
 using Parquet.Data.Rows;
@@ -68,7 +69,7 @@ namespace Parquet
       }
 
       /// <summary>
-      /// Reads the first row group as a table
+      /// Reads the data from all row groups as a table
       /// </summary>
       /// <param name="reader">Open reader</param>
       /// <returns></returns>
@@ -76,7 +77,7 @@ namespace Parquet
       {
          Table result = null;
 
-         for(int i = 0; i < reader.RowGroupCount; i++)
+         for (int i = 0; i < reader.RowGroupCount; i++)
          {
             using (ParquetRowGroupReader rowGroupReader = reader.OpenRowGroupReader(i))
             {
@@ -84,13 +85,13 @@ namespace Parquet
 
                var t = new Table(reader.Schema, allData, rowGroupReader.RowCount);
 
-               if(result == null)
+               if (result == null)
                {
                   result = t;
                }
                else
                {
-                  foreach(Row row in t)
+                  foreach (Row row in t)
                   {
                      result.Add(row);
                   }
@@ -99,6 +100,27 @@ namespace Parquet
          }
 
          return result;
+      }
+
+      /// <summary>
+      /// Reads the provided row group as a table
+      /// </summary>
+      /// <param name="reader">Open reader</param>
+      /// <param name="rowGroupIndex">Index of RowGroup</param>
+      /// <returns></returns>
+      public static Table ReadAsTable(this ParquetReader reader, int rowGroupIndex)
+      {
+         if (rowGroupIndex >= reader.RowGroupCount || rowGroupIndex < 0)
+         {
+            throw new ArgumentOutOfRangeException($"{nameof(rowGroupIndex)}={rowGroupIndex} is above number of RowGroups in provided ParquetReader");
+         }
+
+         using (ParquetRowGroupReader rowGroupReader = reader.OpenRowGroupReader(rowGroupIndex))
+         {
+            DataColumn[] allData = reader.Schema.GetDataFields().Select(df => rowGroupReader.ReadColumn(df)).ToArray();
+
+            return new Table(reader.Schema, allData, rowGroupReader.RowCount);
+         }
       }
 
       /// <summary>

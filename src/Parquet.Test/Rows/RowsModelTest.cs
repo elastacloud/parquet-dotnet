@@ -532,5 +532,95 @@ namespace Parquet.Test.Rows
       }
 
       #endregion
+
+      #region [ Row Group Read as Table]
+
+      /// <summary>
+      ///  Reads different row groups as tables and verifies data of each table
+      /// </summary>
+      [Fact]
+      public void Read_Two_RowGroups_As_Tables()
+      {
+         //write a single file having 3 row groups
+         var id = new DataField<int>("id");
+         var name = new DataField<string>("name");
+         var ms = new MemoryStream();
+
+         using (var writer = new ParquetWriter(new Schema(id, name), ms))
+         {
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new int[] { 1, 2 }));
+               rg.WriteColumn(new DataColumn(name, new string[] { "Name1", "Name2" }));
+            }
+
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new int[] { 3, 4, 5 }));
+               rg.WriteColumn(new DataColumn(name, new string[] { "Name3", "Name4", "Name5" }));
+            }
+
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new int[] { 6 }));
+               rg.WriteColumn(new DataColumn(name, new string[] { "Name6" }));
+            }
+         }
+
+         //read the file back and validate
+         ms.Position = 0;
+         using (var reader = new ParquetReader(ms))
+         {
+            Table tableOne = reader.ReadAsTable(0);
+            this.AssertTableContents(1, 2, tableOne);
+
+            Table tableTwo = reader.ReadAsTable(1);
+            this.AssertTableContents(3, 3, tableTwo);
+
+            Table tableThree = reader.ReadAsTable(2);
+            this.AssertTableContents(6, 1, tableThree);
+         }
+      }
+
+      /// <summary>
+      ///  ArgumentOutOfRangeException when trying to read non-existing row group as table
+      /// </summary>
+      [Fact]
+      public void Read_NonExisting_RowGroup()
+      {
+         var id = new DataField<int>("id");
+         var name = new DataField<string>("name");
+         var ms = new MemoryStream();
+
+         using (var writer = new ParquetWriter(new Schema(id, name), ms))
+         {
+            using (ParquetRowGroupWriter rg = writer.CreateRowGroup())
+            {
+               rg.WriteColumn(new DataColumn(id, new int[] { 1, 2 }));
+               rg.WriteColumn(new DataColumn(name, new string[] { "Name1", "Name2" }));
+            }
+         }
+
+         //read the file back and validate
+         ms.Position = 0;
+         using (var reader = new ParquetReader(ms))
+         {
+            Assert.Throws<ArgumentOutOfRangeException>(() => reader.ReadAsTable(1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => reader.ReadAsTable(-1));
+         }
+      }
+
+      private void AssertTableContents(int initialCount, int count, Table table)
+      {
+         Assert.Equal<int>(count, table.Count);
+
+         for (int i = initialCount, rowIndex = 0; i < table.Count + initialCount; i++, rowIndex++)
+         {
+            Assert.Equal(i, table[rowIndex].GetInt(0));
+            Assert.Equal($"Name{i}", table[rowIndex].GetString(1));
+         }
+      }
+
+      #endregion
    }
 }
