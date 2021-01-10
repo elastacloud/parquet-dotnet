@@ -208,7 +208,7 @@ namespace Parquet.File
       {
          int bitWidth = maxLevel.GetBitWidth();
 
-         return RunLengthBitPackingHybridValuesReader.ReadRleBitpackedHybrid(reader, bitWidth, 0, dest, offset, pageSize);
+         return RunLengthBitPackingHybridValuesReader.ReadRleBitpackedHybrid(reader, bitWidth, -1, dest, offset, pageSize);
       }
 
       private void ReadColumn(BinaryReader reader, Thrift.Encoding encoding, long totalValues, int maxReadCount, ColumnRawData cd)

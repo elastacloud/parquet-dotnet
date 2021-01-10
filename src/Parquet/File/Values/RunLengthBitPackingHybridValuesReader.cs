@@ -34,7 +34,7 @@ namespace Parquet.File.Values
 
       public static int ReadRleBitpackedHybrid(BinaryReader reader, int bitWidth, int length, int[] dest, int offset, int pageSize)
       {
-         if (length == 0) length = reader.ReadInt32();
+         if (length == -1) length = reader.ReadInt32();
 
          long start = reader.BaseStream.Position;
          int startOffset = offset;
