@@ -16,6 +16,7 @@ namespace Parquet
       private ThriftFooter _footer;
       private readonly Schema _schema;
       private readonly ParquetOptions _formatOptions;
+      private bool _disposed;
       private bool _dataWritten;
       private readonly List<ParquetRowGroupWriter> _openedWriters = new List<ParquetRowGroupWriter>();
 
@@ -113,6 +114,8 @@ namespace Parquet
       /// </summary>
       public void Dispose()
       {
+         if (_disposed) return;
+
          if (_dataWritten)
          {
             //update row count (on append add row count to existing metadata)
@@ -130,6 +133,8 @@ namespace Parquet
 
          Writer.Flush();
          Stream.Flush();
+
+         _disposed = true;
       }
    }
 }
