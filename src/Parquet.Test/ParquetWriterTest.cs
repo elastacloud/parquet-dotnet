@@ -164,6 +164,30 @@ namespace Parquet.Test
       }
 
       [Fact]
+      public void Lifecycle_allow_multiple_dispose_calls()
+      {
+         using (var ms = new MemoryStream())
+         {
+            var id = new DataField<int>("id");
+
+            var writer = new ParquetWriter(new Schema(id), ms);
+            ParquetRowGroupWriter rg = writer.CreateRowGroup();
+            rg.WriteColumn(new DataColumn(id, new[] { 1, 2, 3, 4 }));
+
+            rg.Dispose();
+            writer.Dispose();
+
+            long correctLength = ms.Length;
+
+            //extra dispose should not do anything further to stream
+            rg.Dispose();
+            writer.Dispose();
+
+            Assert.Equal(correctLength, ms.Length);
+         }
+      }
+
+      [Fact]
       public void FileMetadata_sets_num_rows_on_file_and_row_group()
       {
          var ms = new MemoryStream();
